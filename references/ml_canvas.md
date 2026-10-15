@@ -14,7 +14,7 @@ Plantilla: *Machine Learning Canvas* de Louis Dorard (OWNML). Versión gráfica:
 
 - **P1 · Regresión de conteo**: estación × hora de servicio del día D → nº de viajes iniciados (entero ≥ 0). Horizonte: D+1 (se predice al cierre de D-1).
 - **P2 · Clasificación binaria**: estación × hora de decisión *t* → riesgo (1/0) de ocupación estimada ≤ 10 % (sin bicis) o ≥ 90 % (sin anclajes) en (t, t+3 h], con probabilidad.
-- **P3 · Clustering**: perfil de uso de cada estación → grupo (k elegido por silueta) y su ubicación en el mapa.
+- **P3 · Clustering**: patrón de uso de cada estación (cuándo y en qué dirección se usa) → grupo (k elegido por silueta) y su ubicación en el mapa.
 
 ## Decisiones
 *¿Cómo se usan las predicciones para decidir?*
@@ -59,7 +59,7 @@ Plantilla: *Machine Learning Canvas* de Louis Dorard (OWNML). Versión gráfica:
 - Calendario: hora, día, fin de semana, feriado, hora operativa.
 - P1: rezagos 24/48/168/336 h, promedios misma hora (7 d, 4 sem), total del día previo, media 28 d, perfil histórico de la estación (solo train), capacidad.
 - P2: ocupación estimada actual, flujo neto acumulado, salidas/llegadas última hora y 3 h, flujo de la misma ventana ayer y hace una semana, tasa histórica de riesgo (solo train).
-- P3: proporción de salidas/llegadas por bloque horario, fin de semana, volumen (log), balance neto, duración media, viajes circulares.
+- P3: proporción de salidas y llegadas por bloque horario, balance neto y fin de semana (agrupamiento); volumen, duración media y viajes circulares (descriptivas).
 
 ## Construir modelos
 *¿Cuándo se crean o actualizan?*
