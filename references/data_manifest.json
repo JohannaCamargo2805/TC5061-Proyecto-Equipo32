@@ -1,0 +1,1179 @@
+{
+  "dataset": "MiBici - viajes por mes y nomenclatura de estaciones",
+  "source": "https://mibici.net/es/datos-abiertos/",
+  "date_start": "2024-10-01",
+  "date_end": "2026-09-30",
+  "pipeline_version": "1.0",
+  "cleaning_rules": {
+    "min_trip_seconds": 60,
+    "max_trip_hours": 24,
+    "personal_columns_dropped": [
+      "user_id",
+      "gender",
+      "birth_year",
+      "age"
+    ]
+  },
+  "totals": {
+    "months": 24,
+    "raw_rows": 9043925,
+    "clean_trips": 8770923,
+    "stations_in_nomenclature": 484,
+    "stations_with_trips": 472,
+    "stations_with_trips_in_nomenclature": 470,
+    "station_ids_not_in_nomenclature": [
+      405,
+      407
+    ]
+  },
+  "stations": {
+    "name": "nomenclatura_2026_09.csv",
+    "url": "https://mibici.net/site/assets/files/1118/nomenclatura_2026_09.csv",
+    "raw_sha256": "206e45fe633922b634d858142fa21e6fd9f4c421b6435c02980ef290cc2df90d",
+    "raw_bytes": 40841,
+    "encoding": "utf-8-sig",
+    "delimiter": ",",
+    "original_columns": [
+      "id",
+      "name",
+      "latitude",
+      "longitude",
+      "dpcapacity"
+    ],
+    "rows": 484,
+    "stations_with_capacity": 480,
+    "processed_file": "data/interim/stations.parquet",
+    "processed_content_sha256": "4c7e30d6c6db5fe11fa6cfaf24b3b02cba3bca296f0c13db8713d960b22eee8a"
+  },
+  "files": [
+    {
+      "name": "datos_abiertos_2024_10.csv",
+      "month": "2024_10",
+      "url": "https://mibici.net/site/assets/files/91758/datos_abiertos_2024_10.csv",
+      "raw_sha256": "9146623af19ea413a817a5077048b605ac5f4cd1bbe65f0d161ae39d2a9258c7",
+      "raw_bytes": 27315974,
+      "encoding": "cp1252",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%d/%m/%Y %H:%M",
+      "datetime_format_end": "%d/%m/%Y %H:%M",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 418690,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 7732,
+        "duracion_mayor_24_h": 2
+      },
+      "processed_file": "data/interim/trips/trips_2024_10.parquet",
+      "processed_rows": 410956,
+      "processed_content_sha256": "e3bfb478b536aeef4e05ef6a508ead9e868063137b5309303d900cd96306c2e4"
+    },
+    {
+      "name": "datos_abiertos_2024_11.csv",
+      "month": "2024_11",
+      "url": "https://mibici.net/site/assets/files/93516/datos_abiertos_2024_11.csv",
+      "raw_sha256": "85607feef22f75f1a1893ec5dbd3f8cfc1d01a2ef1c206418629ef672b2582ac",
+      "raw_bytes": 33902108,
+      "encoding": "cp1252",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 391089,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10151,
+        "duracion_mayor_24_h": 2
+      },
+      "processed_file": "data/interim/trips/trips_2024_11.parquet",
+      "processed_rows": 380936,
+      "processed_content_sha256": "f6a8593cb50a124bcb7168c06d42987329660a69442c8f9ead2e9c299820522c"
+    },
+    {
+      "name": "datos_abiertos_2024_12.csv",
+      "month": "2024_12",
+      "url": "https://mibici.net/site/assets/files/94962/datos_abiertos_2024_12.csv",
+      "raw_sha256": "4541d595fb6c539007b9309d128036356c128f2f523fe8b009050e3bf633c7d0",
+      "raw_bytes": 29469190,
+      "encoding": "cp1252",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 340049,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 9040,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2024_12.parquet",
+      "processed_rows": 331009,
+      "processed_content_sha256": "5482858cb7f5dcc42c1b820c7a4fd095e2db21fb7b5562b4cf53fe51a25fde8c"
+    },
+    {
+      "name": "datos_abiertos_2025_01.csv",
+      "month": "2025_01",
+      "url": "https://mibici.net/site/assets/files/97653/datos_abiertos_2025_01.csv",
+      "raw_sha256": "90ee75701a69374926af0400d204f3280baed0e3c1a1f97d9e6c0b283757125a",
+      "raw_bytes": 32959338,
+      "encoding": "cp1252",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 380184,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 9282,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2025_01.parquet",
+      "processed_rows": 370902,
+      "processed_content_sha256": "db64d2447d983cd7861d34598314826769a8c39626635d41b8677ee120da1d46"
+    },
+    {
+      "name": "datos_abiertos_2025_02.csv",
+      "month": "2025_02",
+      "url": "https://mibici.net/site/assets/files/99879/datos_abiertos_2025_02.csv",
+      "raw_sha256": "f52f13f59eb2f1517e05c72f0a3d3d70c5b0fa6b86626c7325e8ca3b15ff74f8",
+      "raw_bytes": 32304810,
+      "encoding": "cp1252",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 372529,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 9018,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2025_02.parquet",
+      "processed_rows": 363510,
+      "processed_content_sha256": "7736653d9ab4498cf1c1457acf86e526dc97b5d5e034f0e80ddf94aca7dd3156"
+    },
+    {
+      "name": "datos_abiertos_2025_03.csv",
+      "month": "2025_03",
+      "url": "https://mibici.net/site/assets/files/101986/datos_abiertos_2025_03.csv",
+      "raw_sha256": "e5aa1b5d197f294022d3f0ff1b55bf553fcbdb697b50d43deaddf8dca36fed64",
+      "raw_bytes": 35131572,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 405110,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10351,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2025_03.parquet",
+      "processed_rows": 394759,
+      "processed_content_sha256": "5f3c1b44a27d9b273cfd04fa76dc95f9ebc681f517ef923a875d9cbd037870a0"
+    },
+    {
+      "name": "datos_abiertos_2025_04.csv",
+      "month": "2025_04",
+      "url": "https://mibici.net/site/assets/files/103813/datos_abiertos_2025_04.csv",
+      "raw_sha256": "630e637d6611aadc67aad321edcd541361220473bddf8e34ecba46c0e29d7341",
+      "raw_bytes": 31755599,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 366193,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 9137,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2025_04.parquet",
+      "processed_rows": 357056,
+      "processed_content_sha256": "62d1d708179364938ec1788bd3491078f69ae7cd78deea2c9bb73f4ee436bb1f"
+    },
+    {
+      "name": "datos_abiertos_2025_05.csv",
+      "month": "2025_05",
+      "url": "https://mibici.net/site/assets/files/105513/datos_abiertos_2025_05.csv",
+      "raw_sha256": "e0a744412a1e840c1d24c24269565a123b35739c0bac494b9c0f53ba0a2c43c2",
+      "raw_bytes": 34332994,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 395891,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10051,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2025_05.parquet",
+      "processed_rows": 385839,
+      "processed_content_sha256": "8bb0575b510bccea00fdaab18f98ea2c7ea40d1b988b5a4f0189dfdaac5650aa"
+    },
+    {
+      "name": "datos_abiertos_2025_06.csv",
+      "month": "2025_06",
+      "url": "https://mibici.net/site/assets/files/107088/datos_abiertos_2025_06.csv",
+      "raw_sha256": "063e3523db00c90899f08fb134c4c382667eb0e4d8b6358890d426409c6f4c9e",
+      "raw_bytes": 30924814,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 356611,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 9726,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2025_06.parquet",
+      "processed_rows": 346885,
+      "processed_content_sha256": "55b680114a8a3de4cf136c7748698aeb2c2e948b0264827d51183647b435fb8c"
+    },
+    {
+      "name": "datos_abiertos_2025_07.csv",
+      "month": "2025_07",
+      "url": "https://mibici.net/site/assets/files/108898/datos_abiertos_2025_07.csv",
+      "raw_sha256": "a71a9e2a629ff91b021f57e302958e64fa545678d6373aaf0fed62dfc7bebd29",
+      "raw_bytes": 31932339,
+      "encoding": "cp1252",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 368186,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 9773,
+        "duracion_mayor_24_h": 2
+      },
+      "processed_file": "data/interim/trips/trips_2025_07.parquet",
+      "processed_rows": 358411,
+      "processed_content_sha256": "4cfa5aba7da1b7c7263cf70ccc407da622892f89a496685ae8aa091bec772e9f"
+    },
+    {
+      "name": "datos_abiertos_2025_08.csv",
+      "month": "2025_08",
+      "url": "https://mibici.net/site/assets/files/111021/datos_abiertos_2025_08.csv",
+      "raw_sha256": "382e62f3eb878e13faf4c93d031c8efcf765c392b3402d27b264613f9ff4a56d",
+      "raw_bytes": 32506714,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 374727,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10099,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2025_08.parquet",
+      "processed_rows": 364628,
+      "processed_content_sha256": "f763b057b6ff1c306f49b1a181622a92ce2452f7048feb490a0b760db7f53d17"
+    },
+    {
+      "name": "datos_abiertos_2025_09.csv",
+      "month": "2025_09",
+      "url": "https://mibici.net/site/assets/files/113216/datos_abiertos_2025_09.csv",
+      "raw_sha256": "218bed1587a70ec5fc5e8589a04783532301f19c55acd3633fa219c96860e720",
+      "raw_bytes": 32686988,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 376789,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10190,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2025_09.parquet",
+      "processed_rows": 366599,
+      "processed_content_sha256": "b7e4683a877fc0771ffea3499df15870746f5e0aeddd149a19bb4fe15509be41"
+    },
+    {
+      "name": "datos_abiertos_2025_10.csv",
+      "month": "2025_10",
+      "url": "https://mibici.net/site/assets/files/115104/datos_abiertos_2025_10.csv",
+      "raw_sha256": "505d9b8b59f65fa223f7889189b74b9fe167c9dda11c7e7053536a360c611370",
+      "raw_bytes": 36442309,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 420064,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10524,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2025_10.parquet",
+      "processed_rows": 409540,
+      "processed_content_sha256": "4305dbdcccad0ee6554a32c8342902f415e64c273b7b29e1817a2e93421c940f"
+    },
+    {
+      "name": "datos_abiertos_2025_11.csv",
+      "month": "2025_11",
+      "url": "https://mibici.net/site/assets/files/116773/datos_abiertos_2025_11.csv",
+      "raw_sha256": "f5c4f1b0c0842339dfdfaac756607314bdf5b64d17cde58d754f5a5a2e1a5fbe",
+      "raw_bytes": 32997087,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 380328,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10077,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2025_11.parquet",
+      "processed_rows": 370250,
+      "processed_content_sha256": "64a34fbeb8a72b99e9c5c9847203d1158f7759cd414f1e3cf5ef69514e90e50d"
+    },
+    {
+      "name": "datos_abiertos_2025_12.csv",
+      "month": "2025_12",
+      "url": "https://mibici.net/site/assets/files/118153/datos_abiertos_2025_12.csv",
+      "raw_sha256": "b9fbb7386666ac3d452e3d3ef40ab443c39eef349cd9c97207230371e1d2d001",
+      "raw_bytes": 29089463,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 335420,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 8998,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2025_12.parquet",
+      "processed_rows": 326421,
+      "processed_content_sha256": "d285ff2bfc312c9b0088fda2c9a738547b8be5c9a50c873ac8614deae387a1e6"
+    },
+    {
+      "name": "datos_abiertos_2026_01.csv",
+      "month": "2026_01",
+      "url": "https://mibici.net/site/assets/files/120163/datos_abiertos_2026_01.csv",
+      "raw_sha256": "c40d7a43eb1c0b1523d6267bcdfac1daad04179ef1f0a7cf93f09b2df82285c2",
+      "raw_bytes": 30985189,
+      "encoding": "cp1252",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 357180,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10535,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2026_01.parquet",
+      "processed_rows": 346645,
+      "processed_content_sha256": "d01cec3e6245d1b57572dbf12b367c5d26e1776cbdd424478444fb59ce5a99c1"
+    },
+    {
+      "name": "datos_abiertos_2026_02.csv",
+      "month": "2026_02",
+      "url": "https://mibici.net/site/assets/files/121761/datos_abiertos_2026_02.csv",
+      "raw_sha256": "2d78fa9686477bdedbf333423e6aadc63b265aaef038eb0b09701746a155ae1f",
+      "raw_bytes": 28953901,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 333756,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 14696,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2026_02.parquet",
+      "processed_rows": 319059,
+      "processed_content_sha256": "f86c45db83badb49d0efa0a443dd4bbf1d8ab0a0914d0ef00a390fabbc5d7424"
+    },
+    {
+      "name": "datos_abiertos_2026_03.csv",
+      "month": "2026_03",
+      "url": "https://mibici.net/site/assets/files/123236/datos_abiertos_2026_03.csv",
+      "raw_sha256": "97c273aa7465c99d509dfc58436122a979ad51af00bd527cef6144210375d16e",
+      "raw_bytes": 32640591,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 376243,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 11427,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2026_03.parquet",
+      "processed_rows": 364815,
+      "processed_content_sha256": "be530531659f30af90dd704d6ce9bb757190e7a5aab04c6a949539ee8894d408"
+    },
+    {
+      "name": "datos_abiertos_2026_04.csv",
+      "month": "2026_04",
+      "url": "https://mibici.net/site/assets/files/124927/datos_abiertos_2026_04.csv",
+      "raw_sha256": "9165342d0169f2c0ba4fb2c944003147c8a95d77f9058361b451cadf141b2483",
+      "raw_bytes": 30523683,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 351851,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10135,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2026_04.parquet",
+      "processed_rows": 341716,
+      "processed_content_sha256": "3d28430eb734c8726d954157e49f3bbb12cf83ddb17a8a249448f748edcdee35"
+    },
+    {
+      "name": "datos_abiertos_2026_05.csv",
+      "month": "2026_05",
+      "url": "https://mibici.net/site/assets/files/125943/datos_abiertos_2026_05.csv",
+      "raw_sha256": "d0ac16ae3a75b8ac40565176e2e607c99c756a385860caa7e2ffb351082c9d45",
+      "raw_bytes": 27427394,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 315895,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 10777,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2026_05.parquet",
+      "processed_rows": 305117,
+      "processed_content_sha256": "86ea6051491bc2ce035d3d49ae8550e3edc38896a8f57c87879b951e66f8d31f"
+    },
+    {
+      "name": "datos_abiertos_2026_06.csv",
+      "month": "2026_06",
+      "url": "https://mibici.net/site/assets/files/127734/datos_abiertos_2026_06.csv",
+      "raw_sha256": "a4d195786a3599b155829288a0432cd9e76c6780dc693c0e9579d11e11c49a27",
+      "raw_bytes": 30826027,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 355303,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 17725,
+        "duracion_mayor_24_h": 6
+      },
+      "processed_file": "data/interim/trips/trips_2026_06.parquet",
+      "processed_rows": 337572,
+      "processed_content_sha256": "1cb7ef5fd6bac5e97fb43ac53975e96a13ec69087371fbff9ec46fd4aa0c83db"
+    },
+    {
+      "name": "datos_abiertos_2026_07.csv",
+      "month": "2026_07",
+      "url": "https://mibici.net/site/assets/files/129006/datos_abiertos_2026_07.csv",
+      "raw_sha256": "3f9db9fed985977b175001a984302eae7c61326a75ed93afae9c8fc17bbdb922",
+      "raw_bytes": 33696291,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 388257,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 16627,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2026_07.parquet",
+      "processed_rows": 371629,
+      "processed_content_sha256": "f64c23bb8f09ae51dcc142de3097ed1d9b90005a61e03aa2c4caed582a886db3"
+    },
+    {
+      "name": "datos_abiertos_2026_08.csv",
+      "month": "2026_08",
+      "url": "https://mibici.net/site/assets/files/130362/datos_abiertos_2026_08.csv",
+      "raw_sha256": "e34f39b9ad204ae0b66f3538894a5f86ed03f46d98701169d3e4d95952d5f671",
+      "raw_bytes": 34158210,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 393524,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 0,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 17203,
+        "duracion_mayor_24_h": 0
+      },
+      "processed_file": "data/interim/trips/trips_2026_08.parquet",
+      "processed_rows": 376321,
+      "processed_content_sha256": "1cd755c08d4e89325b5d3af90781a5c60315cef2ded869e8c1dda6a05cb9d17b"
+    },
+    {
+      "name": "datos_abiertos_2026_09.csv",
+      "month": "2026_09",
+      "url": "https://mibici.net/site/assets/files/131825/datos_abiertos_2026_09.csv",
+      "raw_sha256": "00b5cf64cc31a502d01044d905f6e033f9bc1db962e771119742fd25c6cb58b3",
+      "raw_bytes": 42566896,
+      "encoding": "utf-8-sig",
+      "delimiter": ",",
+      "original_columns": [
+        "Viaje_Id",
+        "Usuario_Id",
+        "Genero",
+        "Año_de_nacimiento",
+        "Inicio_del_viaje",
+        "Fin_del_viaje",
+        "Origen_Id",
+        "Destino_Id"
+      ],
+      "column_mapping": {
+        "Viaje_Id": "trip_id",
+        "Usuario_Id": "user_id",
+        "Genero": "gender",
+        "Año_de_nacimiento": "birth_year",
+        "Inicio_del_viaje": "start_time",
+        "Fin_del_viaje": "end_time",
+        "Origen_Id": "origin_station_id",
+        "Destino_Id": "destination_station_id"
+      },
+      "datetime_format_start": "%Y-%m-%d %H:%M:%S",
+      "datetime_format_end": "%Y-%m-%d %H:%M:%S",
+      "personal_columns_dropped": [
+        "user_id",
+        "gender",
+        "birth_year"
+      ],
+      "raw_rows": 490056,
+      "dropped": {
+        "campos_obligatorios_nulos": 0,
+        "trip_id_duplicado": 758,
+        "inicio_fuera_del_mes": 0,
+        "duracion_menor_1_min": 18949,
+        "duracion_mayor_24_h": 1
+      },
+      "processed_file": "data/interim/trips/trips_2026_09.parquet",
+      "processed_rows": 470348,
+      "processed_content_sha256": "1e70489976fe1f3391df5f4007b42ef6d9238580d751cc1279a15c5b69af081b"
+    }
+  ],
+  "data_version": "v1.0-202410_202609-226b928677"
+}
