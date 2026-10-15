@@ -61,10 +61,34 @@ create_environment:
 #################################################################################
 
 
-## Make dataset
+## Descarga, normaliza, guarda en Parquet y versiona los datos de MiBici
 .PHONY: data
-data: requirements
-	$(PYTHON_INTERPRETER) mibici/dataset.py
+data:
+	$(PYTHON_INTERPRETER) -m mibici.dataset ingest
+
+## Verifica que los datos locales coinciden con references/data_manifest.json
+.PHONY: verify-data
+verify-data:
+	$(PYTHON_INTERPRETER) -m mibici.dataset verify
+
+## Construye las tablas de variables de P1, P2 y P3 en data/processed
+.PHONY: features
+features:
+	$(PYTHON_INTERPRETER) -m mibici.features build
+
+## Ejecuta el experimento base (baselines + candidatos) y lo registra en MLflow
+.PHONY: train
+train:
+	$(PYTHON_INTERPRETER) -m mibici.modeling.train
+
+## Pipeline completo: ingesta -> variables -> experimento base
+.PHONY: pipeline
+pipeline: data features train
+
+## Abre la interfaz de MLflow en http://127.0.0.1:5000
+.PHONY: mlflow-ui
+mlflow-ui:
+	mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 
 
 #################################################################################
