@@ -1,0 +1,22 @@
+# Dependencias directas del proyecto (archivo editable por el equipo).
+# requirements.txt (versiones fijas para Windows, macOS y Linux) se regenera con:
+#   uv pip compile requirements.in --universal --python-version 3.12 -o requirements.txt
+# y despues se agrega al final la linea "-e ." para instalar el modulo mibici.
+mlflow
+pandas
+numpy
+pyarrow
+scikit-learn
+matplotlib
+requests
+typer
+loguru
+tqdm
+python-dotenv
+ipykernel
+ipython
+jupyterlab
+notebook
+pytest
+ruff
+pip
