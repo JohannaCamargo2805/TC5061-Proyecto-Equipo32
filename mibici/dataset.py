@@ -143,8 +143,10 @@ def _registrar_en_mlflow(manifiesto: dict, total_estaciones: int) -> None:
 
 
 @app.command()
-def main(raw_source: str = typer.Option("", help="Carpeta con copias locales de los CSV")):
-    fuente_local = Path(raw_source) if raw_source else None
+def main(raw_source: str = typer.Option("config", help="Carpeta con copias locales de los CSV")):
+    # "config" (o vacío) = descargar de las URLs de config.py
+    sin_valor = raw_source.strip().lower() in {"", "config", "auto", "no", '""', "''"}
+    fuente_local = None if sin_valor else Path(raw_source)
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
     PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
     manifiesto = {
@@ -186,11 +188,13 @@ def main(raw_source: str = typer.Option("", help="Carpeta con copias locales de 
     # Si los datos no cambiaron se conserva la fecha original: el manifiesto versionado en
     # Git no se modifica y el árbol queda limpio para que git_commit sea reproducible.
     if MANIFEST_PATH.exists():
-        anterior = json.loads(MANIFEST_PATH.read_text())
+        anterior = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
         sin_fecha = {k: v for k, v in manifiesto.items() if k != "generado"}
         if sin_fecha == {k: v for k, v in anterior.items() if k != "generado"}:
             manifiesto["generado"] = anterior["generado"]
-    MANIFEST_PATH.write_text(json.dumps(manifiesto, indent=2, ensure_ascii=False))
+    # newline="\n": en Windows evita reescribir el archivo con CRLF (Git lo vería modificado).
+    MANIFEST_PATH.write_text(json.dumps(manifiesto, indent=2, ensure_ascii=False),
+                             encoding="utf-8", newline="\n")
 
     logger.success(
         f"Ingesta completa: {len(viajes):,} viajes, {len(estaciones)} estaciones, "
