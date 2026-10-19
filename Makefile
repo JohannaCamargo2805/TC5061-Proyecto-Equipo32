@@ -5,6 +5,9 @@
 PROJECT_NAME = tc5061-proyecto-equipo32
 PYTHON_VERSION = 3.12
 PYTHON_INTERPRETER = python
+TRACKING_URI = http://127.0.0.1:5000
+EXPERIMENT = mibici-equipo32
+ENV_MANAGER = local
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -57,34 +60,45 @@ create_environment:
 #################################################################################
 
 
-## Ingesta reproducible y versionado de datos (data/manifest.json)
+## Servidor de tracking con SQLite en http://127.0.0.1:5000 (requerido por el Model Registry)
+.PHONY: server
+server:
+	mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-destination ./mlartifacts --host 127.0.0.1 --port 5000
+
+## Ingesta reproducible y versionado de datos (mlflow run . -e ingest)
 .PHONY: data
 data:
-	$(PYTHON_INTERPRETER) -m mibici.dataset
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) mlflow run . -e ingest --env-manager $(ENV_MANAGER) --experiment-name $(EXPERIMENT)
 
-## P1: regresión de viajes diarios por estación (MLflow)
+## P1: entrena el modelo por defecto de config.py (mlflow run . -e train -P question=p1)
 .PHONY: p1
 p1:
-	$(PYTHON_INTERPRETER) -m mibici.modeling.p1_regresion
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) mlflow run . -e train -P question=p1 --env-manager $(ENV_MANAGER) --experiment-name $(EXPERIMENT)
 
-## P2: clasificación de riesgo de vaciado/llenado (MLflow)
+## P2: entrena el modelo por defecto de config.py
 .PHONY: p2
 p2:
-	$(PYTHON_INTERPRETER) -m mibici.modeling.p2_clasificacion
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) mlflow run . -e train -P question=p2 --env-manager $(ENV_MANAGER) --experiment-name $(EXPERIMENT)
 
-## P3: clustering de estaciones por patrón de uso (MLflow)
+## P3: entrena el modelo por defecto de config.py
 .PHONY: p3
 p3:
-	$(PYTHON_INTERPRETER) -m mibici.modeling.p3_clustering
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) mlflow run . -e train -P question=p3 --env-manager $(ENV_MANAGER) --experiment-name $(EXPERIMENT)
 
-## Experimento base completo: P1, P2 y P3 en mibici-equipo32
-.PHONY: train
-train: p1 p2 p3
+## Protocolo completo de la entrega 2: baselines, candidatas, búsquedas, registry y verificación
+.PHONY: experimentos
+experimentos:
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) ENV_MANAGER=$(ENV_MANAGER) bash scripts/ejecutar_entrega2.sh
 
-## Interfaz de MLflow en http://localhost:5000
-.PHONY: mlflow-ui
-mlflow-ui:
-	mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
+## Carga los modelos en producción por nombre y alias (models:/<nombre>@champion)
+.PHONY: verify
+verify:
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) mlflow run . -e verify --env-manager $(ENV_MANAGER) --experiment-name $(EXPERIMENT)
+
+## Pruebas (no fuga de información, MLproject y regla de selección)
+.PHONY: test
+test:
+	$(PYTHON_INTERPRETER) -m pytest -q tests
 
 #################################################################################
 # Self Documenting Commands                                                     #
