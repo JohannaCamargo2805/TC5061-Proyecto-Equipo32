@@ -75,7 +75,7 @@ def leer_manifiesto() -> dict:
         raise FileNotFoundError(
             "No existe data/manifest.json: ejecuta primero `mlflow run . -e ingest`."
         )
-    return json.loads(MANIFEST_PATH.read_text())
+    return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 
 
 def etiquetas_base(question: str, model_family: str, stage_of_work: str, data_version: str) -> dict:
@@ -118,7 +118,7 @@ def registrar_config(run_config: dict) -> None:
             if origen.exists():
                 shutil.copy(origen, tmp / origen.name)
         (tmp / "run_config.json").write_text(
-            json.dumps(run_config, indent=2, ensure_ascii=False, default=str)
+            json.dumps(run_config, indent=2, ensure_ascii=False, default=str), encoding="utf-8"
         )
         mlflow.log_artifacts(str(tmp), artifact_path="config")
 
@@ -133,9 +133,10 @@ def registrar_version_datos(question: str, manifiesto: dict, conjuntos: dict, fu
     """
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
-        (tmp / "manifest.json").write_text(json.dumps(manifiesto, indent=2, ensure_ascii=False))
+        (tmp / "manifest.json").write_text(json.dumps(manifiesto, indent=2, ensure_ascii=False),
+                                           encoding="utf-8")
         (tmp / "resumen_conjuntos.json").write_text(
-            json.dumps(resumen, indent=2, ensure_ascii=False, default=str)
+            json.dumps(resumen, indent=2, ensure_ascii=False, default=str), encoding="utf-8"
         )
         mlflow.log_artifacts(str(tmp), artifact_path="data")
     for contexto, df in conjuntos.items():

@@ -681,7 +681,7 @@ class P3Tarea(Tarea):
             p3.generar_mapa(geo.dropna(subset=["latitude", "longitude"]), ruta_mapa)
             plots.append(ruta_mapa)
         (carpeta / "p3_perfiles.json").write_text(json.dumps(
-            {str(k): v for k, v in perfiles.items()}, ensure_ascii=False, indent=2))
+            {str(k): v for k, v in perfiles.items()}, ensure_ascii=False, indent=2), encoding="utf-8")
         evaluacion.append(carpeta / "p3_perfiles.json")
         return {"plots": plots, "evaluation": evaluacion}
 
