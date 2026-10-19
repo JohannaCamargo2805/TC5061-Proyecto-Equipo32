@@ -4,6 +4,7 @@ Todas las rutas, fechas, URLs y semillas viven aquí.
 Regla del equipo: ningún otro archivo define estas constantes.
 """
 
+import os
 from pathlib import Path
 
 # ---------- Rutas ----------
@@ -145,3 +146,170 @@ P1_MLFLOW_CANDIDATE_RUN_NAME = "p1_candidato_hgb_poisson"
 P1_QUESTION = "¿Cuántos viajes se iniciarán en cada estación el día siguiente?"
 
 P1_OUTPUT_DIR = REPORTS_DIR / "p1"
+
+
+# =============================================================================
+# Entrega 2: MLflow Project, experimentación y Model Registry
+# =============================================================================
+# Los puntos de entrada del archivo MLproject NO repiten rutas, fechas ni
+# semillas: sus parámetros vacíos ("") se resuelven con los valores de esta
+# sección. Cambiar un valor aquí cambia el valor por defecto de `mlflow run`.
+
+# ---------- Servidor de tracking (respaldado por SQLite) ----------
+# El servidor se levanta con:
+#   mlflow server --backend-store-uri sqlite:///mlflow.db \
+#       --artifacts-destination ./mlartifacts --host 127.0.0.1 --port 5000
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
+MLFLOW_EXPERIMENT = "mibici-equipo32"  # experimento único de las tres preguntas
+ENTREGA = "mlflow-project"  # etiqueta de las corridas de esta entrega
+ENTREGA_ANTERIOR = "propuesta"  # etiqueta de las corridas migradas de la entrega 1
+
+# ---------- Model Registry (esquema de aliases) ----------
+REGISTRY_NAMES = {
+    "p1": "mibici-equipo32-p1-demanda",
+    "p2": "mibici-equipo32-p2-riesgo",
+    "p3": "mibici-equipo32-p3-grupos",
+}
+ALIAS_PRODUCCION = "champion"
+ALIAS_RETADOR = "challenger"
+
+PREGUNTAS = {"p1": P1_QUESTION, "p2": P2_QUESTION, "p3": P3_QUESTION}
+TAREAS = {"p1": "regresion", "p2": "clasificacion", "p3": "clustering"}
+
+# Regla de selección por pregunta. Se calcula SOLO con TRAIN/VAL: TEST se reporta
+# una vez y no participa en la elección.
+# * P1 y P2 usan la regla de "un error estándar" (Hastie et al., 2009): entre los
+#   candidatos cuya métrica de validación está a menos de 1 EE del mejor, se elige
+#   el de menor complejidad (tamaño del modelo serializado), porque una diferencia
+#   menor que el ruido de la propia validación no justifica más costo.
+# * P3 no tiene etiqueta: maximiza la silueta en TRAIN entre los modelos que cumplen
+#   reglas de negocio (al menos 3 grupos accionables) y de estabilidad.
+SELECCION = {
+    "p1": {"metrica": "val_mae", "orden": "min", "error_estandar": "val_mae_se",
+           "complejidad": "tamano_modelo_mb"},
+    "p2": {"metrica": "val_pr_auc", "orden": "max", "error_estandar": "val_pr_auc_se",
+           "complejidad": "tamano_modelo_mb"},
+    "p3": {"metrica": "train_silhouette", "orden": "max",
+           "restricciones": {"n_grupos": (">=", 3), "ari_historico_reducido": (">=", 0.8),
+                             "estabilidad_semillas_ari": (">=", 0.9)}},
+}
+
+# Caché de conjuntos preparados (data/interim, fuera de Git), identificada
+# por data_version para no reconstruir el panel en cada corrida.
+CACHE_DIR = INTERIM_DATA_DIR
+
+# ---------- Catálogo de modelos por pregunta ----------
+# familia -> etiqueta `model_family`; etapa -> etiqueta `stage_of_work`.
+# `params` son los hiperparámetros por defecto de `mlflow run -e train`.
+P1_MODELOS = {
+    "naive": {
+        "familia": "naive_estacional",
+        "etapa": "baseline",
+        "params": {"lag_dias": P1_BASELINE_LAG_DIAS},
+    },
+    "poisson": {
+        "familia": "glm_poisson",
+        "etapa": "candidate",
+        "params": {"alpha": P1_LINEAL_ALPHA, "max_iter": 1000},
+    },
+    "hgb": {
+        "familia": "gradient_boosting",
+        "etapa": "candidate",
+        "params": {k: v for k, v in P1_HGB_PARAMS.items()},
+    },
+    "rf": {
+        "familia": "random_forest",
+        "etapa": "candidate",
+        "params": {
+            "n_estimators": 200,
+            "max_depth": 18,
+            "min_samples_leaf": 30,
+            "max_features": 0.5,
+            "max_samples": 0.5,
+        },
+    },
+}
+P1_MODELO_DEFECTO = "poisson"
+
+P2_MODELOS = {
+    "logreg": {
+        "familia": "lineal_logistica",
+        "etapa": "baseline",
+        "params": {"C": 1.0, "class_weight": "balanced", "max_iter": 1000},
+    },
+    "hgb": {
+        "familia": "gradient_boosting",
+        "etapa": "candidate",
+        "params": {
+            "learning_rate": 0.1,
+            "max_iter": 200,
+            "max_leaf_nodes": 31,
+            "min_samples_leaf": 20,
+            "l2_regularization": 0.0,
+            "class_weight": "balanced",
+            "early_stopping": False,
+        },
+    },
+    "rf": {
+        "familia": "random_forest",
+        "etapa": "candidate",
+        "params": {
+            "n_estimators": 100,
+            "max_depth": 16,
+            "min_samples_leaf": 200,
+            "max_features": "sqrt",
+            "max_samples": 0.2,
+            "class_weight": "balanced_subsample",
+        },
+    },
+}
+P2_MODELO_DEFECTO = "hgb"
+
+P3_MODELOS = {
+    "kmeans": {
+        "familia": "particional_centroides",
+        "etapa": "candidate",
+        "params": {"k": P3_N_CLUSTERS, "n_init": P3_N_INIT},
+    },
+    "agglomerative": {
+        "familia": "jerarquico_aglomerativo",
+        "etapa": "candidate",
+        "params": {"k": P3_N_CLUSTERS, "linkage": P3_AGGLO_LINKAGE},
+    },
+    "gmm": {
+        "familia": "mezcla_gaussiana",
+        "etapa": "candidate",
+        "params": {"k": P3_N_CLUSTERS, "covariance_type": "diag", "n_init": 5},
+    },
+}
+P3_MODELO_DEFECTO = "kmeans"
+P3_BASELINE = {"model": "kmeans", "params": {"k": P3_BASELINE_K}}
+P3_SEMILLAS_ESTABILIDAD = [1, 2, 3]  # estabilidad de la partición ante la semilla
+
+CATALOGO_MODELOS = {"p1": P1_MODELOS, "p2": P2_MODELOS, "p3": P3_MODELOS}
+MODELO_DEFECTO = {"p1": P1_MODELO_DEFECTO, "p2": P2_MODELO_DEFECTO, "p3": P3_MODELO_DEFECTO}
+
+# ---------- Búsquedas de hiperparámetros (nested runs) ----------
+# Una corrida padre por búsqueda y una corrida hija por combinación.
+BUSQUEDAS = {
+    "p1": {
+        "model": "hgb",
+        "grid": {
+            "learning_rate": [0.03, 0.06, 0.1],
+            "max_leaf_nodes": [15, 31, 63],
+            "min_samples_leaf": [50, 200],
+        },
+    },
+    "p2": {
+        "model": "hgb",
+        "grid": {
+            "learning_rate": [0.05, 0.1],
+            "max_leaf_nodes": [31, 63],
+            "min_samples_leaf": [20, 200],
+        },
+    },
+    "p3": {
+        "model": "kmeans",
+        "grid": {"k": [2, 3, 4, 5, 6, 7, 8]},
+    },
+}
