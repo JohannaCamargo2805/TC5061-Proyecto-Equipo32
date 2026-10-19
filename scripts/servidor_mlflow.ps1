@@ -1,5 +1,5 @@
 # Servidor local de MLflow Tracking respaldado por SQLite (requerido por el Model Registry).
-# Uso (desde la raíz del repositorio):  powershell -ExecutionPolicy Bypass -File scripts\servidor_mlflow.ps1
+# Uso (desde la raiz del repositorio):  powershell -ExecutionPolicy Bypass -File scripts\servidor_mlflow.ps1
 $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
 $mlflow = Join-Path $repo ".venv\Scripts\mlflow.exe"

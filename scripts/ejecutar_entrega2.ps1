@@ -1,6 +1,6 @@
 # Protocolo completo de la entrega 2 (MLflow Project) en Windows.
 # Todas las corridas se lanzan con `mlflow run` contra el servidor local de tracking.
-# Uso (desde la raíz del repositorio):
+# Uso (desde la raiz del repositorio):
 #   powershell -ExecutionPolicy Bypass -File scripts\ejecutar_entrega2.ps1
 # Requisitos: .venv con requirements.txt instalado y datos de MiBici descargables
 # (o una copia local en $env:MIBICI_RAW_SOURCE).
@@ -39,10 +39,10 @@ function MlflowRun([string]$ep, [string[]]$params) {
 Linea "Entrega 2 (MLflow Project) - Equipo 32 - TC5061 | inicio: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 Linea "Equipo: $env:COMPUTERNAME | Usuario: $env:USERNAME | Windows: $((Get-CimInstance Win32_OperatingSystem).Caption)"
 
-Paso "1/9 Repositorio, rama y commit (las corridas se lanzan desde un árbol limpio)"
+Paso "1/9 Repositorio, rama y commit (las corridas se lanzan desde un arbol limpio)"
 Ejecutar "git" { git branch --show-current; git log --oneline -1; git remote get-url origin; git status --short --untracked-files=no } | Out-Null
 
-Paso "2/9 Python y librerías"
+Paso "2/9 Python y librerias"
 Ejecutar "versiones" { python -c "import sys, platform, pandas, numpy, sklearn, mlflow; print('Python', sys.version.split()[0], '|', platform.platform()); print('pandas', pandas.__version__, '| numpy', numpy.__version__, '| scikit-learn', sklearn.__version__, '| mlflow', mlflow.__version__)" } | Out-Null
 
 Paso "3/9 Servidor de tracking http://127.0.0.1:5000"
@@ -65,7 +65,7 @@ MlflowRun "ingest" @($raw) | Out-Null
 Ejecutar "estado de git tras la ingesta" { git status --short --untracked-files=no } | Out-Null
 Ejecutar "etiquetar corridas de la propuesta" { python scripts\etiquetar_corridas_propuesta.py } | Out-Null
 
-Paso "6/9 P1 - regresión de viajes por estación"
+Paso "6/9 P1 - regresion de viajes por estacion"
 MlflowRun "train" @("question=p1", "model=naive", "stage_of_work=baseline") | Out-Null
 MlflowRun "train" @("question=p1", "model=poisson") | Out-Null
 MlflowRun "train" @("question=p1", "model=hgb") | Out-Null
@@ -73,7 +73,7 @@ MlflowRun "train" @("question=p1", "model=rf", "n_estimators=200") | Out-Null
 MlflowRun "search" @("question=p1") | Out-Null
 MlflowRun "train" @("question=p1", "from_search=latest") | Out-Null
 
-Paso "7/9 P2 - clasificación de riesgo de disponibilidad"
+Paso "7/9 P2 - clasificacion de riesgo de disponibilidad"
 MlflowRun "train" @("question=p2", "model=logreg", "stage_of_work=baseline") | Out-Null
 MlflowRun "train" @("question=p2", "model=hgb") | Out-Null
 MlflowRun "train" @("question=p2", "model=rf") | Out-Null
@@ -87,7 +87,7 @@ MlflowRun "train" @("question=p3", "model=agglomerative") | Out-Null
 MlflowRun "train" @("question=p3", "model=gmm") | Out-Null
 MlflowRun "search" @("question=p3") | Out-Null
 
-Paso "9/9 Model Registry (aliases champion/challenger) y verificación de carga por alias"
+Paso "9/9 Model Registry (aliases champion/challenger) y verificacion de carga por alias"
 MlflowRun "register" @("question=p1") | Out-Null
 MlflowRun "register" @("question=p2") | Out-Null
 MlflowRun "register" @("question=p3") | Out-Null
