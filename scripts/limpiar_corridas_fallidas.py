@@ -1,4 +1,4 @@
-"""Archiva (borrado lógico) las corridas fallidas o lanzadas con el árbol de Git sucio.
+"""Archiva (borrado lógico) las corridas fallidas, interrumpidas o con el árbol de Git sucio.
 
 Solo afecta corridas del MLflow Project (las que tienen ``mlflow.project.entryPoint``)
 en el experimento ``mibici-equipo32``. El borrado es lógico: las corridas quedan en
@@ -26,7 +26,9 @@ def main() -> None:
         t = run.data.tags
         if "mlflow.project.entryPoint" not in t:
             continue
-        fallida = run.info.status in ("FAILED", "KILLED")
+        # RUNNING aquí = corrida huérfana de una ejecución interrumpida (este script corre
+        # antes de lanzar las corridas nuevas).
+        fallida = run.info.status in ("FAILED", "KILLED", "RUNNING")
         sucia = t.get("entrega") == ENTREGA and t.get("git_sucio") == "True"
         if fallida or sucia:
             client.delete_run(run.info.run_id)
