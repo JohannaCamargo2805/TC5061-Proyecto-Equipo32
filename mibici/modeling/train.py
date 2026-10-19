@@ -66,6 +66,8 @@ def resolver(question: str, model: str, overrides: dict, stage_of_work: str = ""
     usa la configuración baseline de la entrega anterior (K-Means con k = 2).
     """
     question = question.lower()
+    model = "" if seg.es_defecto(model) else model
+    stage_of_work = "" if seg.es_defecto(stage_of_work) else stage_of_work
     if question not in CATALOGO_MODELOS:
         raise typer.BadParameter(f"question debe ser p1, p2 o p3 (recibido: {question!r})")
     catalogo = CATALOGO_MODELOS[question]
@@ -78,7 +80,7 @@ def resolver(question: str, model: str, overrides: dict, stage_of_work: str = ""
     params = dict(entrada["params"])
     if question == "p3" and stage_of_work == "baseline":
         params.update(P3_BASELINE["params"])
-    cambios = {k: convertir(v) for k, v in overrides.items() if str(v).strip() != ""}
+    cambios = {k: convertir(v) for k, v in overrides.items() if not seg.es_defecto(v)}
     desconocidos = set(cambios) - set(params)
     if desconocidos:
         raise typer.BadParameter(
@@ -181,30 +183,32 @@ def ejecutar(question: str, model: str, params: dict, familia: str, etapa: str, 
 @app.command()
 def main(
     question: str = typer.Option("p1", help="Pregunta: p1, p2 o p3"),
-    model: str = typer.Option("", help="Modelo del catálogo; vacío = el de config.py"),
-    stage_of_work: str = typer.Option("", help="baseline o candidate; vacío = el del catálogo"),
-    run_name: str = typer.Option("", help="Nombre de la corrida; vacío = <pregunta>-<etapa>-<modelo>"),
-    n_estimators: str = "", max_depth: str = "", min_samples_leaf: str = "", max_features: str = "",
-    max_samples: str = "", learning_rate: str = "", max_iter: str = "", max_leaf_nodes: str = "",
-    l2_regularization: str = "", alpha: str = "", C: str = typer.Option("", "--C"),
-    class_weight: str = "", k: str = "", linkage: str = "", covariance_type: str = "",
-    n_init: str = "", lag_dias: str = "",
+    model: str = typer.Option("config", help="Modelo del catálogo; config = el de config.py"),
+    stage: str = typer.Option("config", help="baseline o candidate; config = el del catálogo"),
+    run_name: str = typer.Option("auto", help="Nombre de la corrida; auto = <pregunta>-<etapa>-<modelo>"),
+    n_estimators: str = "config", max_depth: str = "config", min_samples_leaf: str = "config",
+    max_features: str = "config", max_samples: str = "config", learning_rate: str = "config",
+    max_iter: str = "config", max_leaf_nodes: str = "config", l2_regularization: str = "config",
+    alpha: str = "config", C: str = typer.Option("config", "--C"), class_weight: str = "config",
+    k: str = "config", linkage: str = "config", covariance_type: str = "config",
+    n_init: str = "config", lag_dias: str = "config",
     extra_params: str = typer.Option("{}", help="JSON con otros hiperparámetros"),
-    from_search: str = typer.Option("", help="run_id de una búsqueda o 'latest': usa su mejor combinación"),
+    from_search: str = typer.Option("no", help="run_id de una búsqueda o 'latest': usa su mejor combinación"),
 ):
     """Entrena y registra un modelo de la pregunta indicada."""
     valores = locals()
     overrides = {h: valores[h] for h in HIPERPARAMETROS}
-    extras = json.loads(extra_params or "{}")
+    extras = {} if seg.es_defecto(extra_params) else json.loads(extra_params)
+    run_name = "" if seg.es_defecto(run_name) else run_name
+    model = "" if seg.es_defecto(model) else model
     padre = ""
-    if from_search:
+    if not seg.es_defecto(from_search):
         modelo_busqueda = model or BUSQUEDAS[question.lower()]["model"]
         mejores, padre = mejores_de_busqueda(question.lower(), modelo_busqueda, from_search)
         overrides.update({k: str(v) for k, v in mejores.items()})
         model = modelo_busqueda
         run_name = run_name or f"{question.lower()}-candidate-{modelo_busqueda}-tuned"
-    modelo, params, familia, etapa, cambios = resolver(question, model, overrides, stage_of_work,
-                                                      extras)
+    modelo, params, familia, etapa, cambios = resolver(question, model, overrides, stage, extras)
     logger.info(f"train: question={question} model={modelo} etapa={etapa} params={params}")
     ejecutar(question.lower(), modelo, params, familia, etapa, run_name, cambios, padre)
 

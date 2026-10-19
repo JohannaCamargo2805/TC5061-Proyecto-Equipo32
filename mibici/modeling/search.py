@@ -68,15 +68,16 @@ def grafica_busqueda(tabla: pd.DataFrame, question: str, grid: dict, ruta: Path)
 @app.command()
 def main(
     question: str = typer.Option("p1", help="Pregunta: p1, p2 o p3"),
-    model: str = typer.Option("", help="Modelo; vacío = el definido en BUSQUEDAS de config.py"),
-    grid: str = typer.Option("", help="Rejilla JSON; vacío = la de config.py"),
-    run_name: str = typer.Option("", help="Nombre de la corrida padre"),
+    model: str = typer.Option("config", help="Modelo; config = el definido en BUSQUEDAS de config.py"),
+    grid: str = typer.Option("config", help="Rejilla JSON; config = la de config.py"),
+    run_name: str = typer.Option("auto", help="Nombre de la corrida padre"),
 ):
     """Ejecuta la búsqueda y registra una corrida padre con una hija por combinación."""
     question = question.lower()
     cfg = BUSQUEDAS[question]
-    model = model or cfg["model"]
-    rejilla = json.loads(grid) if grid else cfg["grid"]
+    model = cfg["model"] if seg.es_defecto(model) else model
+    rejilla = cfg["grid"] if seg.es_defecto(grid) else json.loads(grid)
+    run_name = "" if seg.es_defecto(run_name) else run_name
     entrada = CATALOGO_MODELOS[question][model]
     combinaciones = [dict(zip(rejilla, v)) for v in itertools.product(*rejilla.values())]
 

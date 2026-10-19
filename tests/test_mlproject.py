@@ -28,7 +28,7 @@ def test_entry_points_y_entorno(mlproject):
 
 
 def test_mlproject_no_repite_rutas_fechas_ni_semillas(mlproject):
-    """Los valores por defecto vienen de config.py: en el MLproject solo hay vacíos o etiquetas."""
+    """Los valores por defecto vienen de config.py: en el MLproject solo hay palabras clave."""
     patron = re.compile(r"(\d{4}-\d{2}-\d{2})|(/|\\)|(^\d+$)")
     for ep in mlproject["entry_points"].values():
         for nombre, p in ep.get("parameters", {}).items():
@@ -48,10 +48,10 @@ def test_python_env_igual_a_requirements():
 
 
 def test_valores_por_defecto_desde_config():
-    modelo, params, _, _, cambios = resolver("p1", "", {"alpha": ""})
+    modelo, params, _, _, cambios = resolver("p1", "config", {"alpha": "config", "max_iter": '""'})
     assert modelo == config.P1_MODELO_DEFECTO
     assert params["alpha"] == config.P1_LINEAL_ALPHA and cambios == {}
-    modelo, params, _, etapa, _ = resolver("p3", "", {}, stage_of_work="baseline")
+    modelo, params, _, etapa, _ = resolver("p3", "config", {}, stage_of_work="baseline")
     assert (modelo, params["k"], etapa) == ("kmeans", config.P3_BASELINE_K, "baseline")
 
 

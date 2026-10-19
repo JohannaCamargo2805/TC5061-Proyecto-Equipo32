@@ -38,6 +38,16 @@ from mibici.config import (
     TEAM_ID,
 )
 
+# Valores de los parámetros del MLproject que significan "usar el valor de config.py" o
+# "decidir automáticamente". Se aceptan también las comillas vacías que produce cmd en Windows.
+SIN_VALOR = {"", "config", "auto", "no", '""', "''"}
+
+
+def es_defecto(valor) -> bool:
+    """True si el parámetro de ``mlflow run`` no trae un valor explícito."""
+    return valor is None or str(valor).strip().lower() in SIN_VALOR
+
+
 RESPONSABLES = {"p1": "Johanna Camargo", "p2": "Manuel Cardona", "p3": "Gerardo Conde"}
 ARCHIVOS_CONFIG = ["mibici/config.py", "MLproject", "python_env.yaml", "requirements.txt"]
 

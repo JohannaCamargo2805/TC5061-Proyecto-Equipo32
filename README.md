@@ -40,14 +40,15 @@ artefactos y los modelos serializados no se versionan.
 | Punto de entrada | Qué hace | Parámetros principales |
 |---|---|---|
 | `ingest` | Ejecuta `dataset.py`: descarga/normaliza los CSV y genera `data/manifest.json` (`data_version`) | `raw_source` (carpeta con copia local de los CSV, opcional) |
-| `train` | Entrena **un** modelo de **una** pregunta y registra métricas, artefactos y modelo con firma | `question` (p1, p2, p3), `model`, `stage_of_work`, hiperparámetros (`n_estimators`, `learning_rate`, `max_leaf_nodes`, `min_samples_leaf`, `alpha`, `C`, `k`, `linkage`, …), `from_search` |
+| `train` | Entrena **un** modelo de **una** pregunta y registra métricas, artefactos y modelo con firma | `question` (p1, p2, p3), `model`, `stage` (baseline/candidate), hiperparámetros (`n_estimators`, `learning_rate`, `max_leaf_nodes`, `min_samples_leaf`, `alpha`, `C`, `k`, `linkage`, …), `from_search` |
 | `search` | Búsqueda de hiperparámetros: una corrida **padre** y una corrida **hija anidada** por combinación | `question`, `model`, `grid` |
 | `register` | Registra la corrida elegida en el Model Registry y le asigna los aliases `champion`/`challenger` | `question`, `run_id`, `challenger_run_id` |
 | `verify` | Carga `models:/<nombre>@champion` y comprueba que reproduce la métrica registrada | `question`, `alias` |
 
-Los parámetros vacíos (`""`) toman su valor de `mibici/config.py` (catálogos `P1_MODELOS`,
+Los parámetros con valor `config` (o `auto`) toman su valor de `mibici/config.py` (catálogos `P1_MODELOS`,
 `P2_MODELOS`, `P3_MODELOS`, rejillas `BUSQUEDAS`, partición temporal, rutas y semilla): el
-`MLproject` no repite rutas, fechas ni semillas.
+`MLproject` no repite rutas, fechas ni semillas. Se usan palabras clave y no cadenas vacías porque
+`mlflow run` en Windows ejecuta el comando con `cmd /c`, que no transmite bien los argumentos vacíos.
 
 ### 3. Comandos para reproducir desde un clon limpio
 
@@ -110,7 +111,7 @@ elimina el pseudónimo, el género y el año de nacimiento.
 | P3 | `mibici-equipo32-p3-grupos` | `@champion` | `@challenger` |
 
 ```bash
-mlflow run . -e register -P question=p1        # sin run_id: aplica la regla de selección de config.py
+mlflow run . -e register -P question=p1        # run_id=auto: aplica la regla de selección de config.py
 mlflow run . -e verify                         # carga models:/<nombre>@champion de las tres preguntas
 ```
 
@@ -247,12 +248,12 @@ Desde la entrega 2 la reproducción oficial se hace con el **MLflow Project** (v
 [Entrega 2](#entrega-2-mlflow-project-experimentación-y-model-registry)): `mlflow run . -e ingest`
 y `mlflow run . -e train ...` contra el servidor de tracking. Los scripts de la propuesta
 (`python -m mibici.modeling.p1_regresion`, `p2_clasificacion` y `p3_clustering`) se conservan
-como referencia; sus baselines se reproducen ahora con `stage_of_work=baseline`:
+como referencia; sus baselines se reproducen ahora con `stage=baseline`:
 
 ```bash
-mlflow run . -e train -P question=p1 -P model=naive  -P stage_of_work=baseline   # p1_baseline_naive_semanal
-mlflow run . -e train -P question=p2 -P model=logreg -P stage_of_work=baseline   # p2_baseline_logreg
-mlflow run . -e train -P question=p3 -P stage_of_work=baseline                   # p3_baseline_kmeans_k2
+mlflow run . -e train -P question=p1 -P model=naive  -P stage=baseline   # p1_baseline_naive_semanal
+mlflow run . -e train -P question=p2 -P model=logreg -P stage=baseline   # p2_baseline_logreg
+mlflow run . -e train -P question=p3 -P stage=baseline                   # p3_baseline_kmeans_k2
 python -m pytest tests                                                          # pruebas
 ```
 

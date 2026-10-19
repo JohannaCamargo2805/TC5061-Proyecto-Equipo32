@@ -131,13 +131,15 @@ def registrar(client: MlflowClient, question: str, run_id: str, alias: str) -> d
 @app.command()
 def main(
     question: str = typer.Option("p1", help="Pregunta: p1, p2 o p3"),
-    run_id: str = typer.Option("", help="Corrida que pasa a producción (champion)"),
-    challenger_run_id: str = typer.Option("", help="Corrida retadora (challenger), opcional"),
+    run_id: str = typer.Option("auto", help="Corrida que pasa a producción (champion)"),
+    challenger_run_id: str = typer.Option("auto", help="Corrida retadora (challenger), opcional"),
 ):
     """Registra el modelo de la pregunta y lo lleva a producción con el alias champion."""
     question = question.lower()
     seg.configurar_tracking()
     client = MlflowClient()
+    run_id = "" if seg.es_defecto(run_id) else run_id
+    challenger_run_id = "" if seg.es_defecto(challenger_run_id) else challenger_run_id
     ranking = candidatas(client, question)
     if not run_id:
         if ranking.empty:
