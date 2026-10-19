@@ -60,13 +60,14 @@ Paso "4/9 Pruebas (pytest)"
 Ejecutar "pytest" { python -m pytest -q tests } | Out-Null
 
 Paso "5/9 Ingesta reproducible: mlflow run . -e ingest"
-$raw = if ($env:MIBICI_RAW_SOURCE) { "raw_source=$env:MIBICI_RAW_SOURCE" } else { "raw_source=" }
+Ejecutar "archivar corridas fallidas o con arbol sucio (borrado logico)" { python scripts\limpiar_corridas_fallidas.py } | Out-Null
+$raw = if ($env:MIBICI_RAW_SOURCE) { "raw_source=$env:MIBICI_RAW_SOURCE" } else { "raw_source=config" }
 MlflowRun "ingest" @($raw) | Out-Null
 Ejecutar "estado de git tras la ingesta" { git status --short --untracked-files=no } | Out-Null
 Ejecutar "etiquetar corridas de la propuesta" { python scripts\etiquetar_corridas_propuesta.py } | Out-Null
 
 Paso "6/9 P1 - regresion de viajes por estacion"
-MlflowRun "train" @("question=p1", "model=naive", "stage_of_work=baseline") | Out-Null
+MlflowRun "train" @("question=p1", "model=naive", "stage=baseline") | Out-Null
 MlflowRun "train" @("question=p1", "model=poisson") | Out-Null
 MlflowRun "train" @("question=p1", "model=hgb") | Out-Null
 MlflowRun "train" @("question=p1", "model=rf", "n_estimators=200") | Out-Null
@@ -74,14 +75,14 @@ MlflowRun "search" @("question=p1") | Out-Null
 MlflowRun "train" @("question=p1", "from_search=latest") | Out-Null
 
 Paso "7/9 P2 - clasificacion de riesgo de disponibilidad"
-MlflowRun "train" @("question=p2", "model=logreg", "stage_of_work=baseline") | Out-Null
+MlflowRun "train" @("question=p2", "model=logreg", "stage=baseline") | Out-Null
 MlflowRun "train" @("question=p2", "model=hgb") | Out-Null
 MlflowRun "train" @("question=p2", "model=rf") | Out-Null
 MlflowRun "search" @("question=p2") | Out-Null
 MlflowRun "train" @("question=p2", "from_search=latest") | Out-Null
 
 Paso "8/9 P3 - clustering de estaciones"
-MlflowRun "train" @("question=p3", "stage_of_work=baseline") | Out-Null
+MlflowRun "train" @("question=p3", "stage=baseline") | Out-Null
 MlflowRun "train" @("question=p3", "model=kmeans") | Out-Null
 MlflowRun "train" @("question=p3", "model=agglomerative") | Out-Null
 MlflowRun "train" @("question=p3", "model=gmm") | Out-Null

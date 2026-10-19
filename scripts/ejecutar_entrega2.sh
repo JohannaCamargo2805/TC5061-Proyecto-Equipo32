@@ -11,23 +11,24 @@ run() { echo ">> mlflow run . -e $*"; local ep=$1; shift; local ps=(); for p in 
         mlflow run . -e "$ep" --env-manager "$ENV_MANAGER" "${ps[@]}"; }
 
 python -m pytest -q tests
-run ingest "raw_source=${MIBICI_RAW_SOURCE:-}"
+python scripts/limpiar_corridas_fallidas.py
+run ingest "raw_source=${MIBICI_RAW_SOURCE:-config}"
 python scripts/etiquetar_corridas_propuesta.py
 # P1
-run train question=p1 model=naive stage_of_work=baseline
+run train question=p1 model=naive stage=baseline
 run train question=p1 model=poisson
 run train question=p1 model=hgb
 run train question=p1 model=rf n_estimators=200
 run search question=p1
 run train question=p1 from_search=latest
 # P2
-run train question=p2 model=logreg stage_of_work=baseline
+run train question=p2 model=logreg stage=baseline
 run train question=p2 model=hgb
 run train question=p2 model=rf
 run search question=p2
 run train question=p2 from_search=latest
 # P3
-run train question=p3 stage_of_work=baseline
+run train question=p3 stage=baseline
 run train question=p3 model=kmeans
 run train question=p3 model=agglomerative
 run train question=p3 model=gmm
