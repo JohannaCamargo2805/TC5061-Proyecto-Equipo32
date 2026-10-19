@@ -61,7 +61,7 @@ Rama `feat/p1-regresion-y-cierre` (PR de cierre de la entrega):
 | `b089c6c` | `docs(notebooks)`: notebook de exploración `1.0-ljcm-exploracion-demanda-p1.ipynb` |
 | `6754760` | `docs(readme)`: reproducción desde un clon limpio, secciones P1 y P2, privacidad y tabla del equipo con matrícula y usuario |
 
-- Ejecutó los runs oficiales de P1, P2 y P3 desde el commit `6754760` (árbol limpio) en el experimento
+- Ejecutó los runs oficiales de P1, P2 y P3 desde el commit `b10a1fb` (árbol limpio) en el experimento
   `mibici-equipo32` con `data_version = 7aa5e436d887`, y tomó las capturas de MLflow del reporte.
 - **Integró:** PR #4.
 
@@ -75,3 +75,43 @@ Rama `feat/p1-regresion-y-cierre` (PR de cierre de la entrega):
 | #4 | Rolando | — | Johanna |
 | #5 | Manuel | Gerardo (aprobado) | Manuel |
 | Cierre (P1) | Johanna | pendiente: Manuel | — |
+
+## Entrega 2: MLflow Project, experimentación y Model Registry
+
+### Leydy Johanna Camargo Medina (`JohannaCamargo2805`)
+
+Rama `feat/mlflow-project-registry`, Pull Request #13:
+
+| Commit | Qué hizo |
+|---|---|
+| `38f4a42` | feat(config): parametros de la entrega 2 (tracking, registry, catalogo de modelos y busquedas) |
+| `108b388` | feat(dataset): ingesta como punto de entrada del MLflow Project |
+| `4af9ee0` | feat(modeling): entrenamiento por pregunta con artefactos, version de datos y modelo con firma |
+| `601c073` | feat(search): busqueda de hiperparametros con nested runs y regla de seleccion |
+| `1ee6482` | feat(registry): Model Registry con aliases champion/challenger y verificacion por alias |
+| `afdb307` | feat(mlproject): MLproject con puntos de entrada ingest, train, search, register y verify |
+| `046b791` | test: pruebas del MLproject, valores por defecto y regla de seleccion |
+| `d1b4d41` | build: protocolo de la entrega 2, servidor de tracking y objetivos del Makefile |
+| `2598d88` | docs(readme): servidor de tracking, comandos de mlflow run y esquema del registry |
+| `d04a312` | fix(scripts): solo ASCII en los .ps1 para Windows PowerShell 5.1 (lee los scripts como ANSI) |
+| `24c501e` | fix(modeling): escribir los JSON de artefactos en UTF-8 (Windows usa cp1252 por defecto) |
+| `3636d46` | fix(mlproject): valores por defecto con palabras clave en lugar de cadenas vacias |
+| `f974508` | fix(dataset): escribir el manifiesto con LF y UTF-8 |
+| `55e579d` | build(scripts): archivar corridas fallidas o con arbol sucio antes de la ejecucion oficial |
+| `e6c1a60` | build(scripts): archivar tambien corridas huerfanas en estado RUNNING |
+
+- Ejecutó en su computadora, con `mlflow run`, todas las corridas oficiales de la entrega (commit
+  `e6c1a60`, árbol limpio) y el registro de los tres modelos en el Model Registry.
+- Tomó las capturas de la interfaz de MLflow y elaboró el reporte `TC5061_Reporte_MLFlow_Equipo32.pdf`.
+
+### Revisiones y Pull Requests de la entrega 2
+
+| Integrante | Pull Request abierto | Revisión realizada |
+|---|---|---|
+| Leydy Johanna Camargo Medina | #13 | pendiente de registrar |
+| Rolando Calderón Carballo | pendiente | pendiente |
+| Manuel Alejandro Cardona Esquivel | pendiente | pendiente |
+| Gerardo Iván Conde Reynoso | pendiente | pendiente |
+
+> Cada integrante debe abrir al menos un Pull Request y revisar al menos uno en esta entrega; esta tabla se
+> actualiza conforme se registren en GitHub.
