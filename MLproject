@@ -1,0 +1,78 @@
+# MLflow Project del Equipo 32 (TC5061): MiBici, Guadalajara.
+# Los parámetros vacíos ("") toman su valor de mibici/config.py: aquí no se
+# repiten rutas, fechas ni semillas. Ejemplos en el README.
+name: mibici-equipo32
+
+python_env: python_env.yaml
+
+entry_points:
+  # Ingesta reproducible y versión de datos (data/manifest.json).
+  ingest:
+    parameters:
+      raw_source: {type: string, default: ""}   # carpeta con copias locales de los CSV (opcional)
+    command: "python -m mibici.dataset --raw-source {raw_source}"
+
+  # Entrena UN modelo de UNA pregunta y registra métricas, artefactos y modelo.
+  train:
+    parameters:
+      question: {type: string, default: p1}      # p1 | p2 | p3
+      model: {type: string, default: ""}         # vacío = modelo por defecto de config.py
+      stage_of_work: {type: string, default: ""} # baseline | candidate (vacío = catálogo)
+      run_name: {type: string, default: ""}
+      n_estimators: {type: string, default: ""}
+      max_depth: {type: string, default: ""}
+      min_samples_leaf: {type: string, default: ""}
+      max_features: {type: string, default: ""}
+      max_samples: {type: string, default: ""}
+      learning_rate: {type: string, default: ""}
+      max_iter: {type: string, default: ""}
+      max_leaf_nodes: {type: string, default: ""}
+      l2_regularization: {type: string, default: ""}
+      alpha: {type: string, default: ""}
+      C: {type: string, default: ""}
+      class_weight: {type: string, default: ""}
+      k: {type: string, default: ""}
+      linkage: {type: string, default: ""}
+      covariance_type: {type: string, default: ""}
+      n_init: {type: string, default: ""}
+      lag_dias: {type: string, default: ""}
+      extra_params: {type: string, default: "{}"} # JSON con otros hiperparámetros
+      from_search: {type: string, default: ""}   # run_id de una búsqueda o "latest": su mejor combinación
+    command: >-
+      python -m mibici.modeling.train --question {question} --model {model}
+      --stage-of-work {stage_of_work} --run-name {run_name}
+      --n-estimators {n_estimators} --max-depth {max_depth}
+      --min-samples-leaf {min_samples_leaf} --max-features {max_features}
+      --max-samples {max_samples} --learning-rate {learning_rate} --max-iter {max_iter}
+      --max-leaf-nodes {max_leaf_nodes} --l2-regularization {l2_regularization}
+      --alpha {alpha} --C {C} --class-weight {class_weight} --k {k} --linkage {linkage}
+      --covariance-type {covariance_type} --n-init {n_init} --lag-dias {lag_dias}
+      --extra-params {extra_params} --from-search {from_search}
+
+  # Búsqueda de hiperparámetros: corrida padre + una corrida hija (nested) por combinación.
+  search:
+    parameters:
+      question: {type: string, default: p1}
+      model: {type: string, default: ""}          # vacío = BUSQUEDAS de config.py
+      grid: {type: string, default: ""}           # JSON; vacío = rejilla de config.py
+      run_name: {type: string, default: ""}
+    command: >-
+      python -m mibici.modeling.search --question {question} --model {model}
+      --grid {grid} --run-name {run_name}
+
+  # Model Registry: registra la corrida elegida y le asigna el alias champion (y challenger).
+  register:
+    parameters:
+      question: {type: string, default: p1}
+      run_id: {type: string, default: ""}            # vacío = mejor candidata por métrica de VAL
+      challenger_run_id: {type: string, default: ""}
+    command: >-
+      python -m mibici.modeling.registry --question {question} --run-id {run_id}
+      --challenger-run-id {challenger_run_id}
+
+  # Verifica que cada modelo en producción carga por nombre y alias y reproduce su métrica.
+  verify:
+    parameters:
+      question: {type: string, default: all}
+      alias: {type: string, default: champion}
+    command: "python -m mibici.modeling.predict --question {question} --alias {alias}"
