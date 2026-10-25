@@ -68,7 +68,8 @@ Rama `feat/p1-regresion-y-cierre` (PR de cierre de la entrega):
 ## Revisiones cruzadas
 
 Los números de esta tabla son los Pull Requests de la entrega 1 en el repositorio del equipo
-([`a01840537/TC5061-Proyecto-Equipo32`](https://github.com/a01840537/TC5061-Proyecto-Equipo32)).
+([`a01840537/TC5061-Proyecto-Equipo32`](https://github.com/a01840537/TC5061-Proyecto-Equipo32)). La tabla
+cubre los PR #1–#5; los PR #6–#12 de esa entrega, con sus revisiones, se consultan en ese repositorio.
 
 | PR | Autor | Revisó / aprobó | Integró |
 |---|---|---|---|
