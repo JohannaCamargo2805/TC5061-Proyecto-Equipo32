@@ -60,6 +60,18 @@ Equipo 32 · TC5061 Operaciones de aprendizaje automático · Proyecto integrado
    Siguen visibles en la interfaz con el filtro *State: Deleted*. Así el experimento oficial solo contiene
    corridas reproducibles desde su commit.
 
+## Publicación
+
+- La rama se publicó el 25 de octubre de 2026 en el repositorio de entrega
+  [`JohannaCamargo2805/TC5061-Proyecto-Equipo32`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32) con la cuenta de Leydy Johanna Camargo Medina, y
+  se integró a `main` con el Pull Request [#5](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/5) (*Create a merge commit*).
+- Ese repositorio tenía en `main` solo la estructura base de cookiecutter. Para conservar el historial del
+  equipo y los hashes de los commits, la rama une ambos historiales con un merge que mantiene el árbol del
+  proyecto (`git merge --allow-unrelated-histories -s ours`).
+- Las corridas guardan en `mlflow.source.git.repoURL` la URL del repositorio del equipo porque se lanzaron
+  desde ese clon. El commit `e6c1a60` es el mismo en los dos repositorios, así que el linaje
+  (`git_commit`, `data_version`) sigue siendo verificable.
+
 ## Resultados
 
 | Pregunta | Corrida | Métrica de selección (VAL) | Métrica de prueba | Registry |

@@ -67,6 +67,9 @@ Rama `feat/p1-regresion-y-cierre` (PR de cierre de la entrega):
 
 ## Revisiones cruzadas
 
+Los números de esta tabla son los Pull Requests de la entrega 1 en el repositorio del equipo
+([`a01840537/TC5061-Proyecto-Equipo32`](https://github.com/a01840537/TC5061-Proyecto-Equipo32)).
+
 | PR | Autor | Revisó / aprobó | Integró |
 |---|---|---|---|
 | #1 | Rolando | Gerardo (aprobado) | Rolando |
@@ -80,7 +83,8 @@ Rama `feat/p1-regresion-y-cierre` (PR de cierre de la entrega):
 
 ### Leydy Johanna Camargo Medina (`JohannaCamargo2805`)
 
-Rama `feat/mlflow-project-registry`, Pull Request #13:
+Rama `feat/mlflow-project-registry`, integrada a `main` del repositorio de entrega
+([`JohannaCamargo2805/TC5061-Proyecto-Equipo32`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32)) con el Pull Request [#5](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/5):
 
 | Commit | Qué hizo |
 |---|---|
@@ -103,12 +107,14 @@ Rama `feat/mlflow-project-registry`, Pull Request #13:
 - Ejecutó en su computadora, con `mlflow run`, todas las corridas oficiales de la entrega (commit
   `e6c1a60`, árbol limpio) y el registro de los tres modelos en el Model Registry.
 - Tomó las capturas de la interfaz de MLflow y elaboró el reporte `TC5061_Reporte_MLFlow_Equipo32.pdf`.
+- Publicó la entrega en el repositorio de entrega con su cuenta, junto con los commits de documentación y
+  de integración del historial del equipo que acompañan al Pull Request.
 
 ### Revisiones y Pull Requests de la entrega 2
 
 | Integrante | Pull Request abierto | Revisión realizada |
 |---|---|---|
-| Leydy Johanna Camargo Medina | #13 | pendiente de registrar |
+| Leydy Johanna Camargo Medina | #5 (repositorio de entrega) | pendiente de registrar |
 | Rolando Calderón Carballo | pendiente | pendiente |
 | Manuel Alejandro Cardona Esquivel | pendiente | pendiente |
 | Gerardo Iván Conde Reynoso | pendiente | pendiente |

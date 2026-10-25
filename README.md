@@ -15,6 +15,12 @@ El ML Canvas y el diagrama de arquitectura se encuentran en `references/`.
 
 ## Entrega 2: MLflow Project, experimentación y Model Registry
 
+**Repositorio de entrega:** <https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32>. Conserva el historial completo del repositorio del equipo
+([`a01840537/TC5061-Proyecto-Equipo32`](https://github.com/a01840537/TC5061-Proyecto-Equipo32), donde se integró la Propuesta de proyecto con los
+Pull Requests #1–#12 de ese repositorio) y recibe la entrega 2 en `main` mediante el Pull Request
+[#5](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/5). Los commits son los mismos en ambos repositorios; por eso las etiquetas
+`git_commit` de las corridas (`e6c1a60`) se pueden consultar aquí.
+
 El repositorio es un **MLflow Project** (`MLproject` + `python_env.yaml`): cualquier integrante
 ejecuta la ingesta, el entrenamiento, las búsquedas y el registro con un solo comando
 `mlflow run`, contra un **servidor local de tracking respaldado por SQLite** (requerido por el
@@ -53,7 +59,7 @@ Los parámetros con valor `config` (o `auto`) toman su valor de `mibici/config.p
 ### 3. Comandos para reproducir desde un clon limpio
 
 ```bash
-git clone https://github.com/a01840537/TC5061-Proyecto-Equipo32.git
+git clone https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32.git
 cd TC5061-Proyecto-Equipo32
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
@@ -411,8 +417,9 @@ Los datos de MiBici, modelos serializados, base de datos de MLflow, artefactos d
 El código se desarrolla en ramas independientes y todo cambio hacia `main` debe incorporarse mediante Pull Request revisado por otro integrante del equipo.
 
 Convenciones: ramas `feat/`, `fix/`, `docs/` + descripción corta; mensajes de commit
-siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). La rama
-`main` está protegida; cada integrante abre al menos un PR y revisa al menos uno.
+siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). En el
+repositorio del equipo la rama `main` está protegida; cada integrante abre al menos un PR y revisa al
+menos uno.
 
 Para P3 se utiliza la rama `feature/p3-clustering`.
 
