@@ -60,6 +60,18 @@ Equipo 32 · TC5061 Operaciones de aprendizaje automático · Proyecto integrado
    Siguen visibles en la interfaz con el filtro *State: Deleted*. Así el experimento oficial solo contiene
    corridas reproducibles desde su commit.
 
+## Prueba de clon limpio con el entorno declarado
+
+- **Cuándo y dónde:** 19 de octubre de 2026, 14:11–14:12 (hora del centro de México), en un entorno Linux de
+  prueba, antes de la ejecución oficial.
+- **Qué se hizo:** clon limpio del repositorio y `mlflow run` **sin** `--env-manager local`, para que MLflow
+  creara el entorno de `python_env.yaml` con `uv` (CPython 3.14.6, dependencias fijadas).
+- **Comandos:** `mlflow run . -e ingest --env-manager uv -P raw_source=<copia local de los CSV>` y
+  `mlflow run . -e train --env-manager uv -P question=p1 -P model=poisson`, contra un servidor de tracking
+  local en un experimento de prueba (`clon-limpio-uv`).
+- **Resultado:** la ingesta produjo `data_version = 7aa5e436d887` (4,532,032 viajes, 484 estaciones) y el
+  modelo Poisson obtuvo `val_mae = 5.1037`, los mismos valores que la ejecución oficial.
+
 ## Publicación
 
 - La rama se publicó el 25 de octubre de 2026 en el repositorio de entrega
