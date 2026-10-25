@@ -5,17 +5,17 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "mibici"
 version = "0.0.1"
-description = "Propuesta de ML y base reproducible para MiBici (Guadalajara): demanda por estacion, riesgo de vaciado/llenado y clustering de estaciones."
+description = "Entrega de la semana 5 con datos de MiBici"
 authors = [
-  { name = "Equipo 32 - TC5061 Operaciones de aprendizaje automatico (Tec de Monterrey)" },
+  { name = "Equipo32" },
 ]
-
+license = { file = "LICENSE" }
 readme = "README.md"
 classifiers = [
     "Programming Language :: Python :: 3",
-    
+    "License :: OSI Approved :: MIT License"
 ]
-requires-python = "~=3.12.0"
+requires-python = ">=3.10.0"
 
 
 [tool.ruff]
