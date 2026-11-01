@@ -32,6 +32,7 @@ CABECERA_PEM = "-----BEGIN " + "RSA PRIVATE KEY-----"
         ("deploy.sh", f"export GITHUB_TOKEN={TOKEN_GITHUB}\n"),
         ("llave.txt", f"{CABECERA_PEM}\nMIIEowIBAAKCAQEA\n"),
     ],
+    ids=["llave-aws", "token-github", "llave-privada-pem"],  # sin imprimir los valores falsos
 )
 def test_detecta_secretos_reales(archivo, contenido):
     hallazgos = escanear_secretos._escanear(archivo, contenido.encode())
@@ -48,6 +49,7 @@ def test_detecta_secretos_reales(archivo, contenido):
         ("src/config.py", '"sha256": "' + "ab" * 32 + '"', None),  # fuera del manifiesto
         ("notebooks/x.ipynb", f'"token": "{TOKEN_GITHUB}"', None),
     ],
+    ids=["hash-en-manifiesto", "png-en-notebook", "hash-fuera-del-manifiesto", "token-en-notebook"],
 )
 def test_falsos_positivos_solo_con_reglas_explicitas(archivo, linea, esperado):
     motivo = escanear_secretos._clasificar(archivo, linea)
