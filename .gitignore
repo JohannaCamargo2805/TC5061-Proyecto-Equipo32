@@ -220,3 +220,6 @@ reports/p2/
 
 # Resultados generados por P1 (se registran en MLflow, no en Git)
 reports/p1/
+
+# Reportes HTML de DeepChecks (~10 MB cada uno; se regeneran con python -m mibici.validacion)
+reports/deepchecks/*.html
