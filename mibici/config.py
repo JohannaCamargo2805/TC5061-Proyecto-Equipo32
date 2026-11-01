@@ -7,6 +7,13 @@ Regla del equipo: ningún otro archivo define estas constantes.
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Variables de entorno: un archivo .env local (fuera de Git; plantilla en .env.example)
+# puede definir MLFLOW_TRACKING_URI u otras. Las variables ya definidas en el sistema
+# tienen prioridad sobre el .env. El código nunca guarda credenciales.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+
 # ---------- Rutas ----------
 PROJ_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJ_ROOT / "data"
