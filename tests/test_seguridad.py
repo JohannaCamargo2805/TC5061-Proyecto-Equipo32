@@ -8,6 +8,7 @@ debe leerse de variables de entorno y bandit no debe reportar hallazgos.
 import importlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -59,8 +60,18 @@ def test_falsos_positivos_solo_con_reglas_explicitas(archivo, linea, esperado):
         assert esperado in motivo
 
 
+@pytest.mark.skipif(not (PROJ_ROOT / ".git").exists() or shutil.which("git") is None,
+                    reason="requiere el repositorio de Git (no aplica a una copia descargada en ZIP)")
 def test_gitignore_cubre_archivos_sensibles():
     assert escanear_secretos.revisar_ignorados() == []
+
+
+def test_git_no_instalado_da_error_claro(monkeypatch):
+    from mibici import git_seguro
+
+    monkeypatch.setattr(git_seguro.shutil, "which", lambda nombre: None)
+    with pytest.raises(FileNotFoundError, match="git no está instalado"):
+        git_seguro.git("status")
 
 
 def test_env_example_sin_valores_secretos():
