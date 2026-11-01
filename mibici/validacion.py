@@ -160,14 +160,8 @@ def suite_integridad(nombre: str, reglas: list[ReglaNegocio], tarea: str | None 
 
 
 def suite_entrenamiento_prueba(nombre: str, tarea: str | None = None, con_fecha: bool = True,
-                               con_indice: bool = False, columnas_tiempo: list | None = None
-                               ) -> Suite:
-    """Suite de validación entre el conjunto de entrenamiento y el de prueba.
-
-    ``columnas_tiempo``: contadores que crecen con el calendario (p. ej. ``dias_activa``). Por
-    construcción separan entrenamiento de prueba, así que se agrega un segundo drift
-    multivariado sin ellos para medir el drift del resto de las variables.
-    """
+                               con_indice: bool = False) -> Suite:
+    """Suite de validación entre el conjunto de entrenamiento y el de prueba."""
     checks = [
         dc.DatasetsSizeComparison().add_condition_test_size_greater_or_equal(100),
         dc.FeatureDrift(n_samples=100_000, random_state=SEED).add_condition_drift_score_less_than(
@@ -178,11 +172,6 @@ def suite_entrenamiento_prueba(nombre: str, tarea: str | None = None, con_fecha:
         dc.NewCategoryTrainTest(),
         dc.TrainTestSamplesMix(),
     ]
-    if columnas_tiempo:
-        checks.append(
-            dc.MultivariateDrift(n_samples=10_000, random_state=SEED,
-                                 ignore_columns=list(columnas_tiempo))
-            .add_condition_overall_drift_value_less_than(UMBRAL_DRIFT_MULTIVARIADO))
     if con_fecha:
         checks += [
             dc.DateTrainTestLeakageOverlap().add_condition_leakage_ratio_less_or_equal(0),
@@ -468,6 +457,27 @@ def valor_de(resultado, encabezado: str):
     raise KeyError(encabezado)
 
 
+def suite_drift_sin_tiempo(nombre: str) -> Suite:
+    """Drift por variable y multivariado sin los contadores que crecen con el calendario."""
+    return Suite(
+        f"Drift sin contadores de tiempo · {nombre}",
+        dc.FeatureDrift(n_samples=100_000, random_state=SEED).add_condition_drift_score_less_than(
+            max_allowed_categorical_score=UMBRAL_DRIFT_VARIABLE,
+            max_allowed_numeric_score=UMBRAL_DRIFT_VARIABLE),
+        dc.MultivariateDrift(n_samples=10_000, random_state=SEED)
+        .add_condition_overall_drift_value_less_than(UMBRAL_DRIFT_MULTIVARIADO),
+    )
+
+
+def sin_columnas(ds: Dataset, columnas: list) -> Dataset:
+    """El mismo ``Dataset`` sin ``columnas`` (``MultivariateDrift`` no acepta ``ignore_columns``)."""
+    features = [f for f in ds.features if f not in columnas]
+    return Dataset(ds.data.drop(columns=list(columnas)), label=ds.label_name,
+                   label_type=ds.label_type.value if ds.label_type is not None else None,
+                   features=features, cat_features=[f for f in ds.cat_features if f in features],
+                   datetime_name=ds.datetime_name)
+
+
 def validar(conjunto: ConjuntoValidacion) -> dict:
     """Corre las dos suites sobre un conjunto y devuelve los resultados de DeepChecks."""
     def integridad(clave: str, dataset: Dataset):
@@ -476,12 +486,19 @@ def validar(conjunto: ConjuntoValidacion) -> dict:
         return suite.run(dataset)
 
     tt = suite_entrenamiento_prueba(conjunto.nombre, conjunto.tarea, conjunto.con_fecha,
-                                    conjunto.con_indice, conjunto.columnas_tiempo)
-    return {
+                                    conjunto.con_indice)
+    resultados = {
         "integridad_train": integridad("train", conjunto.train),
         "integridad_test": integridad("test", conjunto.test),
         "train_test": tt.run(train_dataset=conjunto.train, test_dataset=conjunto.test),
     }
+    if conjunto.columnas_tiempo:
+        # Contadores como dias_activa separan entrenamiento de prueba por construcción; sin
+        # ellos se mide si el resto de las variables cambió.
+        resultados["train_test_sin_tiempo"] = suite_drift_sin_tiempo(conjunto.nombre).run(
+            train_dataset=sin_columnas(conjunto.train, conjunto.columnas_tiempo),
+            test_dataset=sin_columnas(conjunto.test, conjunto.columnas_tiempo))
+    return resultados
 
 
 def _a_json(valor):
@@ -509,6 +526,9 @@ def guardar(nombre: str, descripcion: str, filas: dict, resultados: dict, salida
             resumen[clave] = _a_json(valor_de(tt, encabezado))
         except KeyError:
             pass
+    if "train_test_sin_tiempo" in resultados:
+        resumen["drift_multivariado_sin_tiempo"] = _a_json(
+            valor_de(resultados["train_test_sin_tiempo"], "Multivariate Drift"))
     resumen["reglas_negocio"] = {
         k: _a_json(valor_de(resultados[k], "Reglas de negocio MiBici"))
         for k in ("integridad_train", "integridad_test")

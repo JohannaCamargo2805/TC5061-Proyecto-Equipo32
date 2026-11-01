@@ -216,6 +216,10 @@ def test_tabla_p1_integridad_y_hallazgos():
     drift = v.valor_de(tt, "Feature Drift")
     con_drift = {k for k, d in drift.items() if d["Drift score"] >= v.UMBRAL_DRIFT_VARIABLE}
     assert con_drift == {"dias_activa"}
+    # Sin ese contador ya no hay drift: ni por variable ni multivariado.
+    sin_tiempo = _estados(resultados["train_test_sin_tiempo"])
+    assert sin_tiempo["Feature Drift"] == "aprobado"
+    assert sin_tiempo["Multivariate Drift"] == "aprobado"
 
 
 @pytest.mark.datos
