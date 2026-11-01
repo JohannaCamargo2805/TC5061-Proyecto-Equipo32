@@ -42,4 +42,7 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::FutureWarning",
     "ignore:Mean of empty slice:RuntimeWarning",
+    # Avisos informativos de MLflow al registrar conjuntos y firmas (no afectan las pruebas).
+    "ignore:The specified dataset source can be interpreted:UserWarning",
+    "ignore:Hint. Inferred schema contains integer column:UserWarning",
 ]
