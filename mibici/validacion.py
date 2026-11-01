@@ -498,6 +498,7 @@ def guardar(nombre: str, descripcion: str, filas: dict, resultados: dict, salida
     resumen = {"conjunto": nombre, "descripcion": descripcion, "filas": filas, "suites": {}}
     for clave, res in resultados.items():
         ruta = salida / f"{nombre}_{clave}.html"
+        ruta.unlink(missing_ok=True)  # DeepChecks no sobrescribe: crearía "nombre (1).html"
         res.save_as_html(str(ruta), as_widget=False)
         resumen["suites"][clave] = {"reporte": ruta.name, "chequeos": resumir(res)}
     tt = resultados["train_test"]
