@@ -20,8 +20,7 @@ joblib==1.6.0
 pytest==9.1.1
 ipykernel==7.4.0
 
-# Validación de datos (DeepChecks usa pkg_resources, que setuptools quitó en la versión 81)
+# Validación de datos (ver mibici/compat_deepchecks.py)
 deepchecks==0.19.1
-setuptools==80.10.2
 
 -e .
