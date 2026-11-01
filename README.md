@@ -166,8 +166,8 @@ de entorno, que todas las dependencias tienen versión exacta y que bandit no re
 ### 4. Evidencia de la ejecución
 
 Ejecución con `scripts\ejecutar_calidad.ps1 -Capturas` en la computadora de la autora (Windows 11,
-Python 3.14.8, `.venv` del proyecto) sobre el commit que precede al que agrega esta evidencia; su hash
-aparece en la captura del resumen y en `reports/calidad/00_resumen.txt`. El script toma las cuatro
+Python 3.14.8, `.venv` del proyecto) sobre el commit `fb304c7`, que es el anterior al que agrega esta
+evidencia; el hash aparece en la captura del resumen y en `reports/calidad/00_resumen.txt`. El script toma las cuatro
 capturas de la terminal al terminar cada paso, y la salida completa de cada paso está en
 [`reports/calidad/`](reports/calidad/). Las seis capturas de los reportes de DeepChecks se tomaron
 abriendo en un navegador (Chromium, con Playwright) los archivos HTML que generó esa misma ejecución.

@@ -1,0 +1,271 @@
+﻿2026-11-01 17:08:20.994 | INFO     | __main__:main:579 - DeepChecks · preparando viajes
+
+Integridad · viajes:
+|          | 0/10 [Time: 00:00]
+Integridad · viajes:
+|█         | 1/10 [Time: 00:00, Check=Percent Of Nulls]
+Integridad · viajes:
+|██        | 2/10 [Time: 00:07, Check=Mixed Nulls]     
+Integridad · viajes:
+|███       | 3/10 [Time: 00:09, Check=Mixed Data Types]
+Integridad · viajes:
+|████      | 4/10 [Time: 00:09, Check=Is Single Value] 
+Integridad · viajes:
+|█████     | 5/10 [Time: 00:17, Check=Data Duplicates]
+Integridad · viajes:
+|██████    | 6/10 [Time: 00:24, Check=Special Characters]
+Integridad · viajes:
+|███████   | 7/10 [Time: 00:24, Check=String Mismatch]   
+Integridad · viajes:
+|████████  | 8/10 [Time: 00:33, Check=Outlier Sample Detection]
+Integridad · viajes:
+|█████████ | 9/10 [Time: 00:35, Check=Feature Feature Correlation]
+Integridad · viajes:
+|██████████| 10/10 [Time: 03:05, Check=Reglas De Negocio]         
+                                                                              
+
+Integridad · viajes:
+|          | 0/10 [Time: 00:00]
+Integridad · viajes:
+|█         | 1/10 [Time: 00:00, Check=Percent Of Nulls]
+Integridad · viajes:
+|██        | 2/10 [Time: 00:07, Check=Mixed Nulls]     
+Integridad · viajes:
+|███       | 3/10 [Time: 00:09, Check=Mixed Data Types]
+Integridad · viajes:
+|████      | 4/10 [Time: 00:10, Check=Is Single Value] 
+Integridad · viajes:
+|█████     | 5/10 [Time: 00:18, Check=Data Duplicates]
+Integridad · viajes:
+|██████    | 6/10 [Time: 00:24, Check=Special Characters]
+Integridad · viajes:
+|███████   | 7/10 [Time: 00:25, Check=String Mismatch]   
+Integridad · viajes:
+|████████  | 8/10 [Time: 00:34, Check=Outlier Sample Detection]
+Integridad · viajes:
+|█████████ | 9/10 [Time: 00:35, Check=Feature Feature Correlation]
+Integridad · viajes:
+|██████████| 10/10 [Time: 01:02, Check=Reglas De Negocio]         
+                                                                              
+
+Entrenamiento contra prueba · viajes:
+|        | 0/8 [Time: 00:00]
+Entrenamiento contra prueba · viajes:
+|██      | 2/8 [Time: 00:06, Check=Feature Drift]
+Entrenamiento contra prueba · viajes:
+|███     | 3/8 [Time: 00:08, Check=Multivariate Drift]
+Entrenamiento contra prueba · viajes:
+|████    | 4/8 [Time: 00:09, Check=New Category Train Test]
+Entrenamiento contra prueba · viajes:
+|█████   | 5/8 [Time: 01:23, Check=Train Test Samples Mix] 
+Entrenamiento contra prueba · viajes:
+|██████  | 6/8 [Time: 01:30, Check=Date Train Test Leakage Overlap]
+Entrenamiento contra prueba · viajes:
+|███████ | 7/8 [Time: 01:36, Check=Date Train Test Leakage Duplicates]
+Entrenamiento contra prueba · viajes:
+|████████| 8/8 [Time: 01:38, Check=Index Train Test Leakage]          
+                                                                                                  
+2026-11-01 17:14:19.311 | SUCCESS  | __main__:main:585 - viajes: 28 chequeos en 358 s (no aprobados: 2, errores: 0)
+2026-11-01 17:14:19.312 | INFO     | __main__:main:579 - DeepChecks · preparando p1
+2026-11-01 17:14:43.179 | INFO     | mibici.modeling.tareas:preparar:187 - P1 train: 90,230 estación-días, 369 estaciones
+2026-11-01 17:14:43.182 | INFO     | mibici.modeling.tareas:preparar:187 - P1 val: 11,439 estación-días, 369 estaciones
+2026-11-01 17:14:43.186 | INFO     | mibici.modeling.tareas:preparar:187 - P1 test: 22,565 estación-días, 370 estaciones
+
+Integridad · p1:
+|           | 0/11 [Time: 00:00]
+Integridad · p1:
+|█          | 1/11 [Time: 00:00, Check=Percent Of Nulls]
+Integridad · p1:
+|██         | 2/11 [Time: 00:01, Check=Mixed Nulls]     
+Integridad · p1:
+|███        | 3/11 [Time: 00:01, Check=Mixed Data Types]
+Integridad · p1:
+|████       | 4/11 [Time: 00:01, Check=Is Single Value] 
+Integridad · p1:
+|█████      | 5/11 [Time: 00:03, Check=Data Duplicates]
+Integridad · p1:
+|██████     | 6/11 [Time: 00:03, Check=Special Characters]
+Integridad · p1:
+|███████    | 7/11 [Time: 00:04, Check=String Mismatch]   
+Integridad · p1:
+|████████   | 8/11 [Time: 00:25, Check=Outlier Sample Detection]
+Integridad · p1:
+|█████████  | 9/11 [Time: 00:27, Check=Feature Feature Correlation]
+Integridad · p1:
+|██████████ | 10/11 [Time: 00:27, Check=Reglas De Negocio]         
+Integridad · p1:
+|███████████| 11/11 [Time: 00:31, Check=Feature Label Correlation]
+                                                                                   
+
+Integridad · p1:
+|           | 0/11 [Time: 00:00]
+Integridad · p1:
+|█          | 1/11 [Time: 00:00, Check=Percent Of Nulls]
+Integridad · p1:
+|██         | 2/11 [Time: 00:00, Check=Mixed Nulls]     
+Integridad · p1:
+|███        | 3/11 [Time: 00:00, Check=Mixed Data Types]
+Integridad · p1:
+|████       | 4/11 [Time: 00:00, Check=Is Single Value] 
+Integridad · p1:
+|█████      | 5/11 [Time: 00:01, Check=Data Duplicates]
+Integridad · p1:
+|██████     | 6/11 [Time: 00:01, Check=Special Characters]
+Integridad · p1:
+|███████    | 7/11 [Time: 00:01, Check=String Mismatch]   
+Integridad · p1:
+|████████   | 8/11 [Time: 00:17, Check=Outlier Sample Detection]
+Integridad · p1:
+|█████████  | 9/11 [Time: 00:18, Check=Feature Feature Correlation]
+Integridad · p1:
+|███████████| 11/11 [Time: 00:20, Check=Feature Label Correlation] 
+                                                                                   
+
+Entrenamiento contra prueba · p1:
+|         | 0/9 [Time: 00:00]
+Entrenamiento contra prueba · p1:
+|██       | 2/9 [Time: 00:14, Check=Feature Drift]
+Entrenamiento contra prueba · p1:
+|███      | 3/9 [Time: 00:15, Check=Multivariate Drift]
+Entrenamiento contra prueba · p1:
+|████     | 4/9 [Time: 00:15, Check=New Category Train Test]
+Entrenamiento contra prueba · p1:
+|█████    | 5/9 [Time: 00:33, Check=Train Test Samples Mix] 
+Entrenamiento contra prueba · p1:
+|██████   | 6/9 [Time: 00:34, Check=Date Train Test Leakage Overlap]
+Entrenamiento contra prueba · p1:
+|███████  | 7/9 [Time: 00:35, Check=Date Train Test Leakage Duplicates]
+Entrenamiento contra prueba · p1:
+|████████ | 8/9 [Time: 00:37, Check=Label Drift]                       
+Entrenamiento contra prueba · p1:
+|█████████| 9/9 [Time: 00:41, Check=Feature Label Correlation Change]
+                                                                                                       
+
+Drift sin contadores de tiempo · p1:
+|     | 0/2 [Time: 00:00]
+Drift sin contadores de tiempo · p1:
+|██▌  | 1/2 [Time: 00:12, Check=Feature Drift]
+Drift sin contadores de tiempo · p1:
+|█████| 2/2 [Time: 00:13, Check=Multivariate Drift]
+                                                                                        
+2026-11-01 17:16:36.922 | SUCCESS  | __main__:main:585 - p1: 33 chequeos en 138 s (no aprobados: 4, errores: 0)
+2026-11-01 17:16:36.923 | INFO     | __main__:main:579 - DeepChecks · preparando p2
+2026-11-01 17:16:36.925 | INFO     | mibici.modeling.tareas:preparar:323 - P2: usando caché p2_conjuntos_7aa5e436d887_h2_f0.4_2025-01-01_2026-01-01.parquet
+2026-11-01 17:16:40.236 | INFO     | mibici.modeling.tareas:preparar:336 - P2 train: 2,348,476 estación-horas, prevalencia 3.84%
+2026-11-01 17:16:40.239 | INFO     | mibici.modeling.tareas:preparar:336 - P2 val: 273,798 estación-horas, prevalencia 3.94%
+2026-11-01 17:16:40.244 | INFO     | mibici.modeling.tareas:preparar:336 - P2 test: 539,478 estación-horas, prevalencia 2.85%
+
+Integridad · p2:
+|             | 0/13 [Time: 00:00]
+Integridad · p2:
+|█            | 1/13 [Time: 00:00, Check=Percent Of Nulls]
+Integridad · p2:
+|██           | 2/13 [Time: 00:01, Check=Mixed Nulls]     
+Integridad · p2:
+|███          | 3/13 [Time: 00:02, Check=Mixed Data Types]
+Integridad · p2:
+|████         | 4/13 [Time: 00:03, Check=Is Single Value] 
+Integridad · p2:
+|█████        | 5/13 [Time: 00:05, Check=Data Duplicates]
+Integridad · p2:
+|██████       | 6/13 [Time: 00:06, Check=Special Characters]
+Integridad · p2:
+|███████      | 7/13 [Time: 00:06, Check=String Mismatch]   
+Integridad · p2:
+|████████     | 8/13 [Time: 00:21, Check=Outlier Sample Detection]
+Integridad · p2:
+|█████████    | 9/13 [Time: 00:21, Check=Feature Feature Correlation]
+Integridad · p2:
+|██████████   | 10/13 [Time: 00:21, Check=Reglas De Negocio]         
+Integridad · p2:
+|███████████  | 11/13 [Time: 00:27, Check=Feature Label Correlation]
+Integridad · p2:
+|████████████ | 12/13 [Time: 00:27, Check=Class Imbalance]          
+Integridad · p2:
+|█████████████| 13/13 [Time: 03:18, Check=Conflicting Labels]
+                                                                              
+
+Integridad · p2:
+|             | 0/13 [Time: 00:00]
+Integridad · p2:
+|█            | 1/13 [Time: 00:00, Check=Percent Of Nulls]
+Integridad · p2:
+|██           | 2/13 [Time: 00:01, Check=Mixed Nulls]     
+Integridad · p2:
+|███          | 3/13 [Time: 00:01, Check=Mixed Data Types]
+Integridad · p2:
+|████         | 4/13 [Time: 00:02, Check=Is Single Value] 
+Integridad · p2:
+|█████        | 5/13 [Time: 00:04, Check=Data Duplicates]
+Integridad · p2:
+|██████       | 6/13 [Time: 00:05, Check=Special Characters]
+Integridad · p2:
+|███████      | 7/13 [Time: 00:06, Check=String Mismatch]   
+Integridad · p2:
+|████████     | 8/13 [Time: 00:22, Check=Outlier Sample Detection]
+Integridad · p2:
+|█████████    | 9/13 [Time: 00:22, Check=Feature Feature Correlation]
+Integridad · p2:
+|██████████   | 10/13 [Time: 00:23, Check=Reglas De Negocio]         
+Integridad · p2:
+|███████████  | 11/13 [Time: 00:29, Check=Feature Label Correlation]
+Integridad · p2:
+|████████████ | 12/13 [Time: 00:29, Check=Class Imbalance]          
+Integridad · p2:
+|█████████████| 13/13 [Time: 03:10, Check=Conflicting Labels]
+                                                                              
+
+Entrenamiento contra prueba · p2:
+|          | 0/10 [Time: 00:00]
+Entrenamiento contra prueba · p2:
+|██        | 2/10 [Time: 00:30, Check=Feature Drift]
+Entrenamiento contra prueba · p2:
+|███       | 3/10 [Time: 00:31, Check=Multivariate Drift]
+Entrenamiento contra prueba · p2:
+|████      | 4/10 [Time: 00:32, Check=New Category Train Test]
+Entrenamiento contra prueba · p2:
+|█████     | 5/10 [Time: 01:29, Check=Train Test Samples Mix] 
+Entrenamiento contra prueba · p2:
+|██████    | 6/10 [Time: 01:33, Check=Date Train Test Leakage Overlap]
+Entrenamiento contra prueba · p2:
+|███████   | 7/10 [Time: 01:37, Check=Date Train Test Leakage Duplicates]
+Entrenamiento contra prueba · p2:
+|████████  | 8/10 [Time: 01:39, Check=Label Drift]                       
+Entrenamiento contra prueba · p2:
+|█████████ | 9/10 [Time: 01:49, Check=Feature Label Correlation Change]
+Entrenamiento contra prueba · p2:
+|██████████| 10/10 [Time: 01:50, Check=New Label Train Test]           
+                                                                                              
+2026-11-01 17:25:09.497 | SUCCESS  | __main__:main:585 - p2: 36 chequeos en 513 s (no aprobados: 0, errores: 0)
+2026-11-01 17:25:09.498 | INFO     | __main__:main:579 - DeepChecks · preparando p3
+2026-11-01 17:25:59.170 | INFO     | mibici.modeling.tareas:preparar:530 - P3: estaciones TRAIN=367 TEST=367 reducido=367
+
+Integridad · p3:
+|          | 0/10 [Time: 00:00]
+Integridad · p3:
+|██        | 2/10 [Time: 00:00, Check=Mixed Nulls]
+Integridad · p3:
+|██████    | 6/10 [Time: 00:00, Check=Special Characters]
+Integridad · p3:
+|█████████ | 9/10 [Time: 00:00, Check=Feature Feature Correlation]
+                                                                                   
+
+Integridad · p3:
+|          | 0/10 [Time: 00:00]
+Integridad · p3:
+|██        | 2/10 [Time: 00:00, Check=Mixed Nulls]
+Integridad · p3:
+|███████   | 7/10 [Time: 00:00, Check=String Mismatch]
+                                                                       
+
+Entrenamiento contra prueba · p3:
+|     | 0/5 [Time: 00:00]
+Entrenamiento contra prueba · p3:
+|██   | 2/5 [Time: 00:02, Check=Feature Drift]
+Entrenamiento contra prueba · p3:
+|███  | 3/5 [Time: 00:02, Check=Multivariate Drift]
+Entrenamiento contra prueba · p3:
+|█████| 5/5 [Time: 00:03, Check=Train Test Samples Mix]
+                                                                                         
+2026-11-01 17:26:06.989 | SUCCESS  | __main__:main:585 - p3: 25 chequeos en 57 s (no aprobados: 0, errores: 0)
+2026-11-01 17:26:06.998 | SUCCESS  | __main__:main:591 - Reportes en C:\Users\jlmed\Downloads\mibici_datos\TC5061-Equipo32-equipo\reports\deepchecks
