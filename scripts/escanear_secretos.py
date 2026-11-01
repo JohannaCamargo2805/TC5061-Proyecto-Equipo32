@@ -55,6 +55,9 @@ FALSOS_POSITIVOS = [
     ("vector de prueba de SHA-256 (cadenas 'abc' y vacía)",
      lambda archivo, linea: archivo.startswith("tests/")
      and any(hashlib.sha256(v).hexdigest() in linea for v in (b"abc", b""))),
+    ("hash de commit o de blob de Git en el reporte del propio escáner",
+     lambda archivo, linea: archivo.startswith("reports/seguridad/")
+     and re.search(r'"(commit|blob)": "[0-9a-f]{7,40}"', linea) is not None),
     ("imagen PNG en base64 dentro de la salida de un notebook",
      lambda archivo, linea: archivo.endswith(".ipynb")
      and re.search(r'"image/png": "iVBORw0KGgo', linea) is not None),

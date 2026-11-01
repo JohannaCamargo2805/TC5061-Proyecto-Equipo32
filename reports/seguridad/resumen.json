@@ -1,0 +1,48 @@
+{
+  "bandit": {
+    "herramienta": "bandit",
+    "lineas_analizadas": 4800,
+    "hallazgos": 0,
+    "por_severidad": {
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "revisados_nosec": 5,
+    "detalle": [],
+    "ok": true
+  },
+  "pip_audit_requirements": {
+    "herramienta": "pip-audit (requirements)",
+    "paquetes_auditados": 25,
+    "omitidos": [
+      "-e -"
+    ],
+    "vulnerabilidades": [],
+    "ok": true
+  },
+  "pip_audit_entorno": {
+    "herramienta": "pip-audit (entorno)",
+    "paquetes_auditados": 206,
+    "omitidos": [
+      "mibici"
+    ],
+    "vulnerabilidades": [],
+    "ok": true
+  },
+  "secretos": {
+    "herramienta": "detect-secrets + .gitignore",
+    "secretos_reales": 0,
+    "versiones_revisadas": 167,
+    "falsos_positivos_revisados": {
+      "hash SHA-256 o data_version del manifiesto de datos": 14,
+      "imagen PNG en base64 dentro de la salida de un notebook": 6,
+      "vector de prueba de SHA-256 (cadenas 'abc' y vacía)": 2
+    },
+    "problemas_gitignore": [],
+    "ok": true
+  },
+  "fecha": "2026-11-01 23:29 UTC",
+  "python": "3.14.8",
+  "sistema": "Windows-11-10.0.26200-SP0"
+}

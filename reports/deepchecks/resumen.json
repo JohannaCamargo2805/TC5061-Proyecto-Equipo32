@@ -1,0 +1,1067 @@
+[
+  {
+    "conjunto": "viajes",
+    "descripcion": "Viajes procesados por la ingesta (data/processed/viajes.parquet); reglas de negocio sobre todos los viajes y chequeos estadísticos sobre una muestra de 300,000 viajes por conjunto",
+    "filas": {
+      "train": 3816284,
+      "test": 715748
+    },
+    "suites": {
+      "integridad_train": {
+        "reporte": "viajes_integridad_train.html",
+        "chequeos": [
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "no aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: Reglas violadas: {'viaje repetido (mismo origen, destino, inicio y fin)': 898}"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "advertencia",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0.0017% duplicate data"
+          },
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 5 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 9 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 9 columns passed: found 0 columns with negligible types mix, and 9 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 9 relevant columns"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 9 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: All correlations are less than 0.9 except pairs []"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          }
+        ]
+      },
+      "integridad_test": {
+        "reporte": "viajes_integridad_test.html",
+        "chequeos": [
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "no aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: Reglas violadas: {'viaje repetido (mismo origen, destino, inicio y fin)': 178}"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "advertencia",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0.01% duplicate data"
+          },
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 5 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 9 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 9 columns passed: found 0 columns with negligible types mix, and 9 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 9 relevant columns"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 9 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: All correlations are less than 0.9 except pairs []"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          }
+        ]
+      },
+      "train_test": {
+        "reporte": "viajes_train_test.html",
+        "chequeos": [
+          {
+            "chequeo": "Datasets Size Comparison",
+            "estado": "aprobado",
+            "detalle": "Test dataset size is greater or equal to 100: Test dataset contains 300000 samples"
+          },
+          {
+            "chequeo": "Feature Drift",
+            "estado": "aprobado",
+            "detalle": "categorical drift score < 0.2 and numerical drift score < 0.2: Passed for 5 columns out of 5 columns.\nFound column \"dia_semana\" has the highest categorical drift score: 0.04\nFound column \"hora_inicio\" has the highest numerical drift score: 0.01"
+          },
+          {
+            "chequeo": "Multivariate Drift",
+            "estado": "aprobado",
+            "detalle": "Drift value is less than 0.25: Found drift value of: 0.04, corresponding to a domain classifier AUC of: 0.52"
+          },
+          {
+            "chequeo": "Date Train-Test Leakage (overlap)",
+            "estado": "aprobado",
+            "detalle": "Date leakage ratio is less or equal to 0%: No leaked dates found"
+          },
+          {
+            "chequeo": "Date Train-Test Leakage (duplicates)",
+            "estado": "aprobado",
+            "detalle": "Date leakage ratio is less or equal to 0%: No leaked dates found"
+          },
+          {
+            "chequeo": "Index Train-Test Leakage",
+            "estado": "aprobado",
+            "detalle": "Ratio of leaking indices is less or equal to 0%: No index leakage found"
+          },
+          {
+            "chequeo": "New Category Train Test",
+            "estado": "informativo",
+            "detalle": "Columnas con categorías nuevas en prueba: ['origen_id', 'destino_id']"
+          },
+          {
+            "chequeo": "Train Test Samples Mix",
+            "estado": "informativo",
+            "detalle": "Muestras de prueba que aparecen en entrenamiento: 0.22%"
+          }
+        ]
+      }
+    },
+    "drift_multivariado": {
+      "domain_classifier_auc": 0.5223580555555556,
+      "domain_classifier_drift_score": 0.04471611111111118,
+      "domain_classifier_feature_importance": {}
+    },
+    "drift_por_variable": {
+      "origen_id": {
+        "Drift score": 0.01577731512489991,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "destino_id": {
+        "Drift score": 0.02005270627677962,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "duracion_seg": {
+        "Drift score": 0.006429999999999991,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "hora_inicio": {
+        "Drift score": 0.013399999999999995,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "dia_semana": {
+        "Drift score": 0.03672139186224414,
+        "Method": "Cramer's V",
+        "Importance": null
+      }
+    },
+    "reglas_negocio": {
+      "integridad_train": {
+        "viaje_id duplicado": 0,
+        "viaje repetido (mismo origen, destino, inicio y fin)": 898,
+        "fecha de inicio o fin nula": 0,
+        "fin anterior al inicio": 0,
+        "estación de origen fuera del catálogo": 0,
+        "estación de destino fuera del catálogo": 0,
+        "mes del archivo distinto al mes de inicio": 0,
+        "duración menor a 60 s (se descarta en el pipeline)": 98151,
+        "duración mayor a 24 h (se descarta en el pipeline)": 4,
+        "origen igual a destino (viaje circular)": 215085
+      },
+      "integridad_test": {
+        "viaje_id duplicado": 0,
+        "viaje repetido (mismo origen, destino, inicio y fin)": 178,
+        "fecha de inicio o fin nula": 0,
+        "fin anterior al inicio": 0,
+        "estación de origen fuera del catálogo": 0,
+        "estación de destino fuera del catálogo": 0,
+        "mes del archivo distinto al mes de inicio": 0,
+        "duración menor a 60 s (se descarta en el pipeline)": 19075,
+        "duración mayor a 24 h (se descarta en el pipeline)": 2,
+        "origen igual a destino (viaje circular)": 39716
+      }
+    }
+  },
+  {
+    "conjunto": "p1",
+    "descripcion": "P1 · tabla estación × día (TRAIN ene-sep contra TEST nov-dic)",
+    "filas": {
+      "train": 90230,
+      "test": 22565
+    },
+    "suites": {
+      "integridad_train": {
+        "reporte": "p1_integridad_train.html",
+        "chequeos": [
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "no aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: Correlation is greater than 0.9 for pairs [('lag_1', 'media_7d'), ('lag_1', 'media_28d'), ('lag_2', 'media_7d'), ('lag_2', 'media_28d'), ('lag_7', 'media_7d'), ('lag_7', 'media_28d'), ('lag_7', 'media_mismo_dia_4sem'), ('lag_14', 'lag_7'), ('lag_14', 'media_7d'), ('lag_14', 'media_28d'), ('lag_14', 'media_mismo_dia_4sem'), ('media_7d', 'media_mismo_dia_4sem'), ('media_28d', 'media_7d'), ('media_28d', 'media_mismo_dia_4sem'), ('capacidad', 'estacion'), ('estacion', 'lag_1'), ('estacion', 'lag_2'), ('estacion', 'lag_7'), ('estacion', 'lag_14'), ('estacion', 'media_7d'), ('estacion', 'media_28d'), ('estacion', 'media_mismo_dia_4sem')]"
+          },
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 13 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 15 columns passed: found 0 columns with negligible types mix, and 15 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "aprobado",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0% duplicate data"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: 6 reglas críticas sin violaciones"
+          },
+          {
+            "chequeo": "Feature Label Correlation",
+            "estado": "aprobado",
+            "detalle": "Features' Predictive Power Score is less than 0.9: Passed for 13 relevant columns"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          }
+        ]
+      },
+      "integridad_test": {
+        "reporte": "p1_integridad_test.html",
+        "chequeos": [
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "no aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: Correlation is greater than 0.9 for pairs [('lag_1', 'media_7d'), ('lag_1', 'media_28d'), ('lag_2', 'media_7d'), ('lag_2', 'media_28d'), ('lag_7', 'media_7d'), ('lag_7', 'media_28d'), ('lag_7', 'media_mismo_dia_4sem'), ('lag_14', 'lag_7'), ('lag_14', 'media_28d'), ('lag_14', 'media_mismo_dia_4sem'), ('media_7d', 'media_mismo_dia_4sem'), ('media_28d', 'media_7d'), ('media_28d', 'media_mismo_dia_4sem'), ('capacidad', 'estacion'), ('estacion', 'lag_1'), ('estacion', 'lag_2'), ('estacion', 'lag_7'), ('estacion', 'lag_14'), ('estacion', 'media_7d'), ('estacion', 'media_28d'), ('estacion', 'media_mismo_dia_4sem')]"
+          },
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 13 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 15 columns passed: found 0 columns with negligible types mix, and 15 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "aprobado",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0% duplicate data"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: 6 reglas críticas sin violaciones"
+          },
+          {
+            "chequeo": "Feature Label Correlation",
+            "estado": "aprobado",
+            "detalle": "Features' Predictive Power Score is less than 0.9: Passed for 13 relevant columns"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          }
+        ]
+      },
+      "train_test": {
+        "reporte": "p1_train_test.html",
+        "chequeos": [
+          {
+            "chequeo": "Feature Drift",
+            "estado": "no aprobado",
+            "detalle": "categorical drift score < 0.2 and numerical drift score < 0.2: Failed for 1 out of 13 columns.\nFound 1 numeric columns with Kolmogorov-Smirnov above threshold: {'dias_activa': '0.99'}"
+          },
+          {
+            "chequeo": "Multivariate Drift",
+            "estado": "no aprobado",
+            "detalle": "Drift value is less than 0.25: Found drift value of: 1, corresponding to a domain classifier AUC of: 1"
+          },
+          {
+            "chequeo": "Datasets Size Comparison",
+            "estado": "aprobado",
+            "detalle": "Test dataset size is greater or equal to 100: Test dataset contains 22565 samples"
+          },
+          {
+            "chequeo": "Date Train-Test Leakage (overlap)",
+            "estado": "aprobado",
+            "detalle": "Date leakage ratio is less or equal to 0%: No leaked dates found"
+          },
+          {
+            "chequeo": "Date Train-Test Leakage (duplicates)",
+            "estado": "aprobado",
+            "detalle": "Date leakage ratio is less or equal to 0%: No leaked dates found"
+          },
+          {
+            "chequeo": "Label Drift",
+            "estado": "aprobado",
+            "detalle": "Label drift score < 0.2: Label's drift score Kolmogorov-Smirnov is 0.04"
+          },
+          {
+            "chequeo": "New Category Train Test",
+            "estado": "informativo",
+            "detalle": "Columnas con categorías nuevas en prueba: ['estacion']"
+          },
+          {
+            "chequeo": "Train Test Samples Mix",
+            "estado": "informativo",
+            "detalle": "Muestras de prueba que aparecen en entrenamiento: 0.00%"
+          },
+          {
+            "chequeo": "Feature Label Correlation Change",
+            "estado": "informativo",
+            "detalle": "{\"train\": {\"media_mismo_dia_4sem\": 0.6919572864660195, \"lag_7\": 0.6528148812293175, \"lag_14\": 0.6487656899808292, \"estacion\": 0.5936447517158643, \"media_7d\": 0.5655082479608995, \"lag_1\": 0.5569665185277356, \"media_28d\": 0.506803306174321, \"lag_2\": 0.4320600082054459, \"dia_semana\": 0.0, \"fin_semana\":…"
+          }
+        ]
+      },
+      "train_test_sin_tiempo": {
+        "reporte": "p1_train_test_sin_tiempo.html",
+        "chequeos": [
+          {
+            "chequeo": "Feature Drift",
+            "estado": "aprobado",
+            "detalle": "categorical drift score < 0.2 and numerical drift score < 0.2: Passed for 12 columns out of 12 columns.\nFound column \"feriado\" has the highest categorical drift score: 0.02\nFound column \"lag_1\" has the highest numerical drift score: 0.04"
+          },
+          {
+            "chequeo": "Multivariate Drift",
+            "estado": "aprobado",
+            "detalle": "Drift value is less than 0.25: Found drift value of: 3.18E-4, corresponding to a domain classifier AUC of: 0.5"
+          }
+        ]
+      }
+    },
+    "drift_multivariado": {
+      "domain_classifier_auc": 0.9994993888888889,
+      "domain_classifier_drift_score": 0.9989987777777778,
+      "domain_classifier_feature_importance": {}
+    },
+    "drift_por_variable": {
+      "estacion": {
+        "Drift score": 0,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "dia_semana": {
+        "Drift score": 0.023576522377688352,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "fin_semana": {
+        "Drift score": 0.009050868096863384,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "feriado": {
+        "Drift score": 0.02439793516965296,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "lag_1": {
+        "Drift score": 0.03745222926495129,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "lag_2": {
+        "Drift score": 0.03499069848801345,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "lag_7": {
+        "Drift score": 0.016533079323910127,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "lag_14": {
+        "Drift score": 0.007111419891343562,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "media_7d": {
+        "Drift score": 0.03509119749835948,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "media_28d": {
+        "Drift score": 0.018024307430706377,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "media_mismo_dia_4sem": {
+        "Drift score": 0.012662693578286532,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "dias_activa": {
+        "Drift score": 0.9948149789497008,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "capacidad": {
+        "Drift score": 0.0005870980085631583,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      }
+    },
+    "drift_etiqueta": {
+      "Drift score": 0.041516177027862367,
+      "Method": "Kolmogorov-Smirnov"
+    },
+    "drift_multivariado_sin_tiempo": {
+      "domain_classifier_auc": 0.5001587777777778,
+      "domain_classifier_drift_score": 0.00031755555555568193,
+      "domain_classifier_feature_importance": {}
+    },
+    "reglas_negocio": {
+      "integridad_train": {
+        "llave estación-fecha duplicada": 0,
+        "viajes negativos": 0,
+        "variable de entrada nula": 0,
+        "rezago o media negativa": 0,
+        "día de la semana fuera de 0-6": 0,
+        "indicador (fin de semana/feriado) distinto de 0/1": 0,
+        "estación sin capacidad en el catálogo": 0
+      },
+      "integridad_test": {
+        "llave estación-fecha duplicada": 0,
+        "viajes negativos": 0,
+        "variable de entrada nula": 0,
+        "rezago o media negativa": 0,
+        "día de la semana fuera de 0-6": 0,
+        "indicador (fin de semana/feriado) distinto de 0/1": 0,
+        "estación sin capacidad en el catálogo": 0
+      }
+    }
+  },
+  {
+    "conjunto": "p2",
+    "descripcion": "P2 · tabla estación × hora (TRAIN ene-sep contra TEST nov-dic; muestra de 200,000 filas por conjunto)",
+    "filas": {
+      "train": 200000,
+      "test": 200000
+    },
+    "suites": {
+      "integridad_train": {
+        "reporte": "p2_integridad_train.html",
+        "chequeos": [
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 18 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 18 columns passed: found 0 columns with negligible types mix, and 18 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 18 relevant columns"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "aprobado",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0% duplicate data"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 18 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: All correlations are less than 0.9 except pairs [('neto_3h', 'neto_3h_rel')]"
+          },
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: 6 reglas críticas sin violaciones"
+          },
+          {
+            "chequeo": "Feature Label Correlation",
+            "estado": "aprobado",
+            "detalle": "Features' Predictive Power Score is less than 0.9: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          },
+          {
+            "chequeo": "Class Imbalance",
+            "estado": "informativo",
+            "detalle": "Proporción por clase: 0: 96.00%, 1: 4.00%"
+          },
+          {
+            "chequeo": "Conflicting Labels",
+            "estado": "informativo",
+            "detalle": "Muestras con etiquetas en conflicto: 0.00%"
+          }
+        ]
+      },
+      "integridad_test": {
+        "reporte": "p2_integridad_test.html",
+        "chequeos": [
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 18 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 18 columns passed: found 0 columns with negligible types mix, and 18 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 18 relevant columns"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "aprobado",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0% duplicate data"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 18 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: All correlations are less than 0.9 except pairs [('neto_3h', 'neto_3h_rel')]"
+          },
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: 6 reglas críticas sin violaciones"
+          },
+          {
+            "chequeo": "Feature Label Correlation",
+            "estado": "aprobado",
+            "detalle": "Features' Predictive Power Score is less than 0.9: Passed for 15 relevant columns"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          },
+          {
+            "chequeo": "Class Imbalance",
+            "estado": "informativo",
+            "detalle": "Proporción por clase: 0: 97.00%, 1: 3.00%"
+          },
+          {
+            "chequeo": "Conflicting Labels",
+            "estado": "informativo",
+            "detalle": "Muestras con etiquetas en conflicto: 0.01%"
+          }
+        ]
+      },
+      "train_test": {
+        "reporte": "p2_train_test.html",
+        "chequeos": [
+          {
+            "chequeo": "Datasets Size Comparison",
+            "estado": "aprobado",
+            "detalle": "Test dataset size is greater or equal to 100: Test dataset contains 200000 samples"
+          },
+          {
+            "chequeo": "Feature Drift",
+            "estado": "aprobado",
+            "detalle": "categorical drift score < 0.2 and numerical drift score < 0.2: Passed for 15 columns out of 15 columns.\nFound column \"dia_semana\" has the highest categorical drift score: 0.03\nFound column \"tasa_riesgo_hist\" has the highest numerical drift score: 0.07"
+          },
+          {
+            "chequeo": "Multivariate Drift",
+            "estado": "aprobado",
+            "detalle": "Drift value is less than 0.25: Found drift value of: 0.13, corresponding to a domain classifier AUC of: 0.57"
+          },
+          {
+            "chequeo": "Date Train-Test Leakage (overlap)",
+            "estado": "aprobado",
+            "detalle": "Date leakage ratio is less or equal to 0%: No leaked dates found"
+          },
+          {
+            "chequeo": "Date Train-Test Leakage (duplicates)",
+            "estado": "aprobado",
+            "detalle": "Date leakage ratio is less or equal to 0%: No leaked dates found"
+          },
+          {
+            "chequeo": "Label Drift",
+            "estado": "aprobado",
+            "detalle": "Label drift score < 0.2: Label's drift score Cramer's V is 0.02"
+          },
+          {
+            "chequeo": "New Label Train Test",
+            "estado": "aprobado",
+            "detalle": "Number of new label values is less or equal to 0: Found 0 new labels in test data: []"
+          },
+          {
+            "chequeo": "New Category Train Test",
+            "estado": "informativo",
+            "detalle": "Columnas con categorías nuevas en prueba: ninguna"
+          },
+          {
+            "chequeo": "Train Test Samples Mix",
+            "estado": "informativo",
+            "detalle": "Muestras de prueba que aparecen en entrenamiento: 9.62%"
+          },
+          {
+            "chequeo": "Feature Label Correlation Change",
+            "estado": "informativo",
+            "detalle": "{\"train\": {\"tasa_riesgo_hist\": 0.09291480986547047, \"neto_futuro_medio_hist\": 0.044622427195699185, \"neto_h1\": 0.01246598924338325, \"neto_3h\": 0.005643745888651105, \"hora_dia\": 5.425807220965487e-07, \"dia_semana\": 5.425807220965487e-07, \"fin_semana\": 5.425807220965487e-07, \"neto_h0\": 5.4258072209654…"
+          }
+        ]
+      }
+    },
+    "drift_multivariado": {
+      "domain_classifier_auc": 0.5667990555555554,
+      "domain_classifier_drift_score": 0.13359811111111086,
+      "domain_classifier_feature_importance": {}
+    },
+    "drift_por_variable": {
+      "hora_dia": {
+        "Drift score": 0.0017300000000000093,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "dia_semana": {
+        "Drift score": 0.028075120133534442,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "fin_semana": {
+        "Drift score": 0.009667135733287932,
+        "Method": "Cramer's V",
+        "Importance": null
+      },
+      "salidas_h0": {
+        "Drift score": 0.017020000000000035,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "llegadas_h0": {
+        "Drift score": 0.018909999999999982,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_h0": {
+        "Drift score": 0.012149999999999994,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_h1": {
+        "Drift score": 0.01192,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_h2": {
+        "Drift score": 0.013029999999999986,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_3h": {
+        "Drift score": 0.018940000000000068,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "capacidad": {
+        "Drift score": 0.0007899999999999574,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_3h_rel": {
+        "Drift score": 0.019510000000000027,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_futuro_ayer": {
+        "Drift score": 0.01656000000000002,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_futuro_semana": {
+        "Drift score": 0.010009999999999963,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "tasa_riesgo_hist": {
+        "Drift score": 0.06888000000000005,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "neto_futuro_medio_hist": {
+        "Drift score": 0.01654,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      }
+    },
+    "drift_etiqueta": {
+      "Drift score": 0.02408746111984184,
+      "Method": "Cramer's V"
+    },
+    "reglas_negocio": {
+      "integridad_train": {
+        "llave estación-hora duplicada": 0,
+        "etiqueta distinta de 0/1": 0,
+        "variable de entrada nula": 0,
+        "capacidad no positiva": 0,
+        "hora del día fuera de 0-23": 0,
+        "variable de entrada no finita": 0
+      },
+      "integridad_test": {
+        "llave estación-hora duplicada": 0,
+        "etiqueta distinta de 0/1": 0,
+        "variable de entrada nula": 0,
+        "capacidad no positiva": 0,
+        "hora del día fuera de 0-23": 0,
+        "variable de entrada no finita": 0
+      }
+    }
+  },
+  {
+    "conjunto": "p3",
+    "descripcion": "P3 · perfiles por estación (TRAIN 1 ene-19 oct contra TEST 20 oct-31 dic)",
+    "filas": {
+      "train": 367,
+      "test": 367
+    },
+    "suites": {
+      "integridad_train": {
+        "reporte": "p3_integridad_train.html",
+        "chequeos": [
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 12 columns passed: found 0 columns with negligible types mix, and 12 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "aprobado",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0% duplicate data"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: All correlations are less than 0.9 except pairs [('llegadas_dia', 'salidas_dia')]"
+          },
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: 7 reglas críticas sin violaciones"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          }
+        ]
+      },
+      "integridad_test": {
+        "reporte": "p3_integridad_test.html",
+        "chequeos": [
+          {
+            "chequeo": "PercentOfNulls",
+            "estado": "aprobado",
+            "detalle": "Percent of null values in each column is not greater than 0%: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Nulls",
+            "estado": "aprobado",
+            "detalle": "Number of different null types is less or equal to 1: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "Mixed Data Types",
+            "estado": "aprobado",
+            "detalle": "Rare data types in column are either more than 50% or less than 0% of the data: 12 columns passed: found 0 columns with negligible types mix, and 12 columns without any types mix"
+          },
+          {
+            "chequeo": "Single Value in Column",
+            "estado": "aprobado",
+            "detalle": "Does not contain only a single value: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "Data Duplicates",
+            "estado": "aprobado",
+            "detalle": "Duplicate data ratio is less or equal to 0%: Found 0% duplicate data"
+          },
+          {
+            "chequeo": "Special Characters",
+            "estado": "aprobado",
+            "detalle": "Ratio of samples containing solely special character is less or equal to 0.1%: Passed for 12 relevant columns"
+          },
+          {
+            "chequeo": "String Mismatch",
+            "estado": "aprobado",
+            "detalle": "No string variants: Passed for 1 relevant column"
+          },
+          {
+            "chequeo": "Feature-Feature Correlation",
+            "estado": "aprobado",
+            "detalle": "Not more than 5 pairs are correlated above 0.9: All correlations are less than 0.9 except pairs [('llegadas_dia', 'salidas_dia')]"
+          },
+          {
+            "chequeo": "Reglas de negocio MiBici",
+            "estado": "aprobado",
+            "detalle": "Las reglas críticas no tienen violaciones: 7 reglas críticas sin violaciones"
+          },
+          {
+            "chequeo": "Outlier Sample Detection",
+            "estado": "informativo",
+            "detalle": "Se listan las 5 muestras más atípicas (ver reporte HTML)"
+          }
+        ]
+      },
+      "train_test": {
+        "reporte": "p3_train_test.html",
+        "chequeos": [
+          {
+            "chequeo": "Datasets Size Comparison",
+            "estado": "aprobado",
+            "detalle": "Test dataset size is greater or equal to 100: Test dataset contains 367 samples"
+          },
+          {
+            "chequeo": "Feature Drift",
+            "estado": "aprobado",
+            "detalle": "categorical drift score < 0.2 and numerical drift score < 0.2: Passed for 12 columns out of 12 columns.\nFound column \"salida_mediodia_share\" has the highest numerical drift score: 0.11"
+          },
+          {
+            "chequeo": "Multivariate Drift",
+            "estado": "aprobado",
+            "detalle": "Drift value is less than 0.25: Found drift value of: 0.14, corresponding to a domain classifier AUC of: 0.57"
+          },
+          {
+            "chequeo": "New Category Train Test",
+            "estado": "informativo",
+            "detalle": "Columnas con categorías nuevas en prueba: ninguna"
+          },
+          {
+            "chequeo": "Train Test Samples Mix",
+            "estado": "informativo",
+            "detalle": "Muestras de prueba que aparecen en entrenamiento: 0.00%"
+          }
+        ]
+      }
+    },
+    "drift_multivariado": {
+      "domain_classifier_auc": 0.5691236691236691,
+      "domain_classifier_drift_score": 0.13824733824733815,
+      "domain_classifier_feature_importance": {}
+    },
+    "drift_por_variable": {
+      "salidas_dia": {
+        "Drift score": 0.043596730245231585,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "llegadas_dia": {
+        "Drift score": 0.04359673024523161,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "balance_relativo": {
+        "Drift score": 0.054495912806539426,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "share_fin_semana": {
+        "Drift score": 0.0817438692098092,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "salida_manana_share": {
+        "Drift score": 0.0926430517711172,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "llegada_manana_share": {
+        "Drift score": 0.07629427792915533,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "salida_mediodia_share": {
+        "Drift score": 0.11171662125340598,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "llegada_mediodia_share": {
+        "Drift score": 0.09536784741144416,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "salida_tarde_share": {
+        "Drift score": 0.07084468664850141,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "llegada_tarde_share": {
+        "Drift score": 0.04359673024523161,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "salida_noche_share": {
+        "Drift score": 0.06267029972752045,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      },
+      "llegada_noche_share": {
+        "Drift score": 0.05722070844686655,
+        "Method": "Kolmogorov-Smirnov",
+        "Importance": null
+      }
+    },
+    "reglas_negocio": {
+      "integridad_train": {
+        "estación duplicada": 0,
+        "variable nula": 0,
+        "intensidad negativa": 0,
+        "proporción fuera de [0, 1]": 0,
+        "balance relativo fuera de [-1, 1]": 0,
+        "bloques horarios de salida no suman 1": 0,
+        "bloques horarios de llegada no suman 1": 0
+      },
+      "integridad_test": {
+        "estación duplicada": 0,
+        "variable nula": 0,
+        "intensidad negativa": 0,
+        "proporción fuera de [0, 1]": 0,
+        "balance relativo fuera de [-1, 1]": 0,
+        "bloques horarios de salida no suman 1": 0,
+        "bloques horarios de llegada no suman 1": 0
+      }
+    }
+  }
+]

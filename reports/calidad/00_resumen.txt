@@ -1,0 +1,11 @@
+﻿TC5061 Equipo 32 | Resumen de la ejecucion | 2026-11-01 17:29 | JOHANNACAMARGO
+Commit: fb304c7 docs(readme): entrega 3 con instrucciones de ejecucion, hallazgos de DeepChecks y de seguridad
+
+Paso          Codigo Detalle                                                                        
+----          ------ -------                                                                        
+1. pytest          0 ======================= 105 passed in 663.59s (0:11:03) =======================
+2. DeepChecks      0 reports\deepchecks\RESUMEN.md                                                  
+3. Seguridad       0 RESULTADO GLOBAL: SIN HALLAZGOS                                                
+
+
+

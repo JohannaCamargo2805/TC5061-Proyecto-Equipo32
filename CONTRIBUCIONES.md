@@ -43,7 +43,7 @@ evaluación individual: commits propios, PR abiertos y revisiones hechas a otros
 
 - **PR abiertos:** #5 `Agregado pregunta 2`.
 - **Integró:** PR #3 y PR #5.
-- **Nota:** el commit `9289545` se hizo con el correo `mcardona@icwgroup.com`, que no está asociado a la
+- **Nota:** el commit `9289545` se hizo con un correo que no está asociado a la
   cuenta `alexcard33`; GitHub lo muestra sin usuario. Al agregar ese correo en *Settings → Emails* de
   GitHub, el commit queda atribuido a su cuenta.
 
@@ -121,3 +121,23 @@ Rama `feat/mlflow-project-registry`, integrada a `main` del repositorio de entre
 
 > Cada integrante debe abrir al menos un Pull Request y revisar al menos uno en esta entrega; esta tabla se
 > actualiza conforme se registren en GitHub.
+
+## Entrega 3: pruebas automatizadas, validación de datos y seguridad (versión individual)
+
+Por la mecánica que acordó la coordinación con el profesor, cada integrante puede entregar su propia
+versión de las actividades en equipo que faltan. Esta versión es de **Leydy Johanna Camargo Medina**
+(`JohannaCamargo2805`) y está en `main` de este repositorio. Ramas y commits (todos a su nombre):
+
+| Rama | Commits | Qué contiene |
+|---|---|---|
+| `test/pruebas-unitarias` | 8 | `tests/conftest.py`, pruebas de ingesta, variables de P1, P2 y P3, métricas y reproducibilidad del entrenamiento |
+| `test/validacion-deepchecks` | 4 | `mibici/compat_deepchecks.py`, `mibici/validacion.py` y `tests/test_validacion_deepchecks.py` |
+| `chore/seguridad` | 9 | `mibici/git_seguro.py`, `.env.example`, actualización de dependencias, `scripts/escanear_secretos.py`, `scripts/chequeos_seguridad.py` y `tests/test_seguridad.py` |
+| `fix/ajustes-primera-ejecucion` | 7 | `scripts/ejecutar_calidad.ps1`, objetivos de `make` y correcciones tras la primera ejecución en Windows |
+| `fix/revision-independiente` | 4 | Correcciones de una revisión independiente (duplicados sin `viaje_id`, archivos sensibles, prueba de `.gitignore`, resumen con commit) |
+| `docs/readme-evidencia` | 3 | README, este archivo, reportes de DeepChecks y de seguridad, capturas de la ejecución y una regla del escáner para los hashes de Git de su propio reporte |
+
+Ejecutó las pruebas, DeepChecks y los chequeos de seguridad en su computadora con
+`scripts\ejecutar_calidad.ps1 -Capturas`; las capturas y la salida completa están en `docs/evidencia/`
+y `reports/calidad/`. Los commits incluyen la línea `Co-Authored-By: Claude` porque se usó Claude
+(Anthropic) como asistente de programación.

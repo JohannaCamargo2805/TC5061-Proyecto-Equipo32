@@ -13,6 +13,217 @@ El proyecto responde tres preguntas de negocio:
 
 El ML Canvas y el diagrama de arquitectura se encuentran en `references/`.
 
+## Entrega 3: pruebas automatizadas, validación de datos y seguridad
+
+**Versión individual de Leydy Johanna Camargo Medina (A01840540).** De acuerdo con la mecánica que
+acordó la coordinación con el profesor para las actividades en equipo que faltan, cada integrante
+puede entregar su propia versión. Esta versión vive en este repositorio
+(<https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32>, rama `main`). Se trabajó en seis
+ramas, integradas a `main` con *merge commits* (ver [Historial de Git](#historial-de-git-de-la-entrega-3)).
+
+### Cómo ejecutar todo (un solo comando por paso)
+
+```bash
+python -m pip install -r requirements.txt     # incluye deepchecks, bandit, pip-audit y detect-secrets
+
+python -m pytest                              # 1. TODAS las pruebas (106): unitarias, reproducibilidad, DeepChecks y seguridad
+python -m pytest -m "not datos"               #    solo las que no necesitan data/processed (p. ej. en un clon sin datos)
+python -m mibici.validacion                   # 2. reportes de DeepChecks en reports/deepchecks (HTML + RESUMEN.md); necesita data/processed
+python scripts/chequeos_seguridad.py          # 3. bandit + pip-audit + secretos; reportes en reports/seguridad (pip-audit consulta PyPI/OSV: requiere Internet)
+
+make calidad                                  # los tres pasos (Linux/macOS)
+powershell -ExecutionPolicy Bypass -File scripts\ejecutar_calidad.ps1 -Capturas   # los tres pasos en Windows + capturas
+```
+
+Las pruebas marcadas `datos` usan los Parquet de `data/processed` (se generan con
+`python -m mibici.dataset`); si no existen, pytest las omite y lo indica. La configuración de pytest
+(carpeta, marcadores y filtros de avisos) está en `pyproject.toml`.
+
+### 1. Pruebas unitarias con PyTest
+
+Todas las pruebas están en `tests/` y se corren con `python -m pytest`. Cubren las funciones clave
+de cada etapa del pipeline, con casos normales y casos límite:
+
+| Archivo | Funciones probadas | Casos normales | Casos límite |
+|---|---|---|---|
+| `test_dataset.py` (19) | Ingesta: `_normalizar_nombre`, `normalizar_viajes`, `leer_csv`, `_sha256`, `descargar`, manifiesto | Esquema de columnas, UTF-8 y Latin-1, hash conocido, copia local | Encabezado vacío, variantes del año de nacimiento, fecha inválida (NaT), archivo vacío, error HTTP, descarga idempotente sin red |
+| `test_features_p1.py` (8) | `p1_construir_panel_diario`, `p1_agregar_features` | Panel contiguo, rezagos y medias | Rango sin actividad, feriado y fin de semana, capacidad desconocida, estación sin historia, **no fuga al alterar el futuro**, rezago < horizonte |
+| `test_features_p2.py` (13) | `p2_construir_panel`, `p2_agregar_etiqueta`, `p2_agregar_features`, `p2_historico_pasado`, `p2_aplicar_historico`, `cortar` | Neto = llegadas − salidas, horas sin viajes en 0 | Etiqueta **justo en el umbral** del 40 %, capacidad 0, horizonte 0/24/−1, histórico sin la fila actual, ventana que cruza el corte |
+| `test_features_p3.py` (12) | `p3_filtrar_viajes`, `p3_entropia_normalizada`, `p3_construir_features` | Proporciones que suman 1, balance en [−1, 1] | Duraciones de 59, 60, 86 400 y 86 401 s; serie vacía o constante; estación nueva no elegible; sin estaciones elegibles |
+| `test_metricas.py` (6) | `p1.evaluar`, `p2.elegir_umbral`, `p2.evaluar` | Valores conocidos de MAE, WAPE y RMSE | Predicción perfecta, predicciones negativas, modelo que nunca alerta |
+| `test_mlproject.py` (8) | `MLproject`, `resolver`, `convertir`, regla de selección, estimadores propios | (entrega 2) | Parámetros inválidos |
+| `test_reproducibilidad.py` (10) | `P1Tarea`, `P2Tarea`, `P3Tarea` (los mismos constructores de `mlflow run -e train`) y `train.ejecutar` | Ver abajo | Control negativo: otra semilla cambia el resultado |
+| `test_validacion_deepchecks.py` (16) | `mibici/validacion.py` | Ver [sección 2](#2-validación-de-datos-con-deepchecks) | |
+| `test_seguridad.py` (14) | Escáner de secretos, `.gitignore`, configuración, `git_seguro`, bandit | Ver [sección 3](#3-chequeos-de-seguridad) | |
+
+**Reproducibilidad del entrenamiento** (`tests/test_reproducibilidad.py`). Con la semilla del
+proyecto (`config.SEED = 42`), dos entrenamientos dan el mismo resultado:
+
+- **P1** (ingenuo, Poisson y HGB): mismas métricas y predicciones **bit a bit**.
+- **P1 random forest** (`n_jobs=-1`): los árboles son idénticos (variables, umbrales y hojas). Las
+  predicciones promedian los árboles en paralelo y el orden de la suma puede cambiar entre hilos,
+  así que las métricas se comparan con tolerancia relativa de 1e-9 y las predicciones con 1e-12
+  (las diferencias observadas son del orden de 1e-15).
+- **P2** (HGB): mismo umbral de decisión, mismas métricas y mismas predicciones.
+- **P3** (K-Means, GMM y aglomerativo): mismas etiquetas de grupo.
+- **Control negativo:** con `SEED + 1` el bosque aleatorio cambia sus predicciones, así que la
+  igualdad se debe a la semilla y no al azar. Varios modelos del catálogo son deterministas (ingenuo,
+  Poisson, aglomerativo y HGB sin `early_stopping`); la semilla es la que decide el resultado en el
+  bosque aleatorio, K-Means y GMM, y en todos queda fijada desde `config.py`.
+- **Con los datos reales y MLflow:** `train.ejecutar` entrena P1 dos veces y las dos corridas
+  registran en MLflow las mismas métricas, el mismo `random_state` y la misma `data_version`.
+
+### 2. Validación de datos con DeepChecks
+
+`mibici/validacion.py` arma los conjuntos con las **mismas funciones y la misma partición temporal**
+del pipeline (`config.py`) y corre dos suites de DeepChecks 0.19.1 sobre cada uno:
+
+| Conjunto | Entrenamiento contra prueba | Filas |
+|---|---|---|
+| `viajes` | Viajes procesados antes / desde el 1 de noviembre de 2025 | 3,816,284 / 715,748 (reglas sobre todas; chequeos estadísticos sobre 300,000 por conjunto) |
+| `p1` | Tabla estación × día: TRAIN ene-sep / TEST nov-dic | 90,230 / 22,565 |
+| `p2` | Tabla estación × hora: TRAIN ene-sep / TEST nov-dic | muestra de 200,000 por conjunto |
+| `p3` | Perfiles por estación: 1 ene-19 oct / 20 oct-31 dic | 367 / 367 |
+
+- **Integridad (cada conjunto):** porcentaje de nulos (umbral 0 %), nulos de distinto tipo, tipos
+  mezclados (cualquier mezcla reprueba), columnas con un solo valor, duplicados (umbral 0 %),
+  caracteres especiales, variantes de texto, muestras atípicas, correlación entre variables, PPS de
+  cada variable con la etiqueta (> 0.9 sugiere fuga), desbalance de clases y etiquetas en conflicto (P2).
+- **Chequeo propio `ReglasDeNegocio`** (una subclase de `SingleDatasetCheck`): cuenta las violaciones
+  de reglas del dominio en **todas** las filas. Las reglas críticas tienen la condición "0 violaciones"
+  y las informativas solo se reportan. Ejemplos: `viaje_id` único, fin posterior al inicio, estaciones
+  en el catálogo, mes del archivo igual al mes del viaje, llave estación-fecha única, proporciones en
+  [0, 1] y bloques horarios que suman 1.
+- **Entrenamiento contra prueba:** drift por variable (Kolmogorov-Smirnov o Cramér's V, umbral 0.2),
+  drift de la etiqueta, drift multivariado (clasificador de dominio, umbral 0.25), categorías y
+  etiquetas nuevas, fuga por fechas (traslape y duplicados), fuga por índice (`viaje_id`), muestras
+  repetidas entre conjuntos y tamaño de los conjuntos.
+
+Los reportes HTML (`reports/deepchecks/*.html`, de 10 a 40 MB cada uno, fuera de Git) se regeneran con
+`python -m mibici.validacion`; el estado de cada chequeo queda versionado en
+[`reports/deepchecks/RESUMEN.md`](reports/deepchecks/RESUMEN.md) y `resumen.json`.
+
+**Problemas detectados y cómo se documentan** (datos `data_version = 7aa5e436d887`):
+
+| # | Conjunto | Chequeo | Resultado | Interpretación y acción |
+|---|---|---|---|---|
+| 1 | viajes | Reglas de negocio (crítica) | **No aprobado:** 1,076 viajes repetidos (898 en entrenamiento y 178 en prueba, 0.024 %). `Data Duplicates`, sin la columna `viaje_id`, también los detecta en la muestra (advertencia). | Son pares de registros con `viaje_id` consecutivo o casi consecutivo (diferencia de 1 o 2) y el mismo origen, destino, inicio y fin al segundo, repartidos en los 12 meses: probable doble registro en la fuente. El efecto sobre los conteos de P1 y P2 es menor a 0.03 %. Queda documentado; se recomienda deduplicarlos en la ingesta en la siguiente versión de datos (cambia la `data_version` y obliga a reentrenar). La prueba fija el máximo tolerado en 0.05 %. |
+| 2 | viajes | Reglas de negocio (informativas) | 117,226 viajes de menos de 60 s (2.6 %), 6 de más de 24 h y 254,801 circulares (5.6 %) | Los dos primeros ya los descarta el filtro de duración de P1-P3 (`*_MIN/MAX_DURATION_SECONDS`). Los viajes circulares (mismo origen y destino) son uso válido y se conservan. |
+| 3 | viajes | Nulos, identificadores, tipos, catálogo y calendario | **Aprobado:** 0 nulos, 0 `viaje_id` duplicados, 0 estaciones fuera del catálogo de 484, 0 viajes que terminan antes de empezar y 0 viajes en un archivo mensual equivocado | Integridad de la ingesta confirmada sobre los 4,532,032 viajes. |
+| 4 | viajes | Drift y fuga | **Aprobado:** drift máximo por variable 0.04 (día de la semana), drift multivariado 0.04 (AUC 0.52), sin fechas ni `viaje_id` compartidos | La partición temporal no tiene fuga. En prueba aparece 1 estación nueva (la 402, origen de 122 de los 715,748 viajes). El 0.22 % de muestras idénticas entre conjuntos son combinaciones repetidas de origen, destino, hora y duración, no viajes repetidos (su `viaje_id` es distinto). |
+| 5 | P1 | Feature Drift y Multivariate Drift | **No aprobado:** `dias_activa` con KS = 0.99 y drift multivariado 1.0 (AUC 1.0) | `dias_activa` es la antigüedad de la estación en días y crece con el calendario: en entrenamiento llega a 272 y en prueba a 364, así que separa los conjuntos por construcción. **Sin esa variable** (suite aparte `p1_train_test_sin_tiempo`) ninguna variable supera 0.2 y el drift multivariado es 0.0003 (AUC 0.50). Acción recomendada: acotarla (p. ej. `min(dias_activa, 90)`) o sustituirla por un indicador de estación nueva, porque los árboles no extrapolan fuera del rango de entrenamiento. |
+| 6 | P1 | Feature-Feature Correlation | **No aprobado:** varios rezagos y medias móviles con correlación > 0.9 | Es esperado: todas salen de la misma serie diaria. El modelo Poisson lineal usa regularización (`alpha`) y los modelos de árboles no se ven afectados; queda como dato para una futura selección de variables. |
+| 7 | P1 | Nulos, duplicados, reglas, PPS, etiqueta y fechas | **Aprobado:** sin nulos ni llaves estación-fecha repetidas, PPS < 0.9 (sin variables que filtren la etiqueta), drift de la etiqueta 0.04 y sin traslape de fechas | Las variables `p1_*` cumplen la regla de no fuga también con los datos reales. |
+| 8 | P2 | Integridad, drift y fuga | **Aprobado:** drift máximo 0.07 (`tasa_riesgo_hist`), drift multivariado 0.13, drift de la etiqueta 0.02, PPS < 0.9 y sin traslape de fechas | Desbalance esperado: 3.8 % de horas en riesgo en entrenamiento y 2.9 % en prueba (tabla completa; ≈4 % y ≈3 % en la muestra), lo que justifica `class_weight` balanceado y elegir el umbral en validación. Etiquetas en conflicto 0.01 %. El 9.6 % de vectores idénticos entre conjuntos son horas sin movimiento (flujos en 0), no fuga. |
+| 9 | P3 | Integridad y estabilidad | **Aprobado:** sin nulos ni duplicados, proporciones en [0, 1] que suman 1, drift máximo 0.11 y drift multivariado 0.14 | Los perfiles de las 367 estaciones son estables entre periodos, lo que respalda los grupos de P3. |
+
+Las pruebas de `tests/test_validacion_deepchecks.py` comprueban dos cosas. Con datos sintéticos, que
+las suites **detectan** nulos, duplicados, tipos mezclados, nulos de distinto tipo, drift, fuga por
+fechas y violaciones de reglas, y que ningún chequeo termina en error. Con los datos reales, que las
+reglas críticas se cumplen (los viajes repetidos, el único hallazgo, quedan acotados a menos de
+0.05 %), que no hay fuga entre conjuntos y que el drift de P1 se debe solo a `dias_activa`.
+
+**Compatibilidad.** DeepChecks 0.19.1, la versión más reciente, todavía usa APIs que ya no existen en
+NumPy 2, pandas 3 y scikit-learn 1.9. `mibici/compat_deepchecks.py` aplica siete ajustes mínimos y
+documentados: tres sustituyen funciones solo dentro de módulos de DeepChecks y los demás agregan
+alias de nombres que ya no existen (`np.Inf`, `DataFrame.applymap`, el scorer `max_error`,
+`pkg_resources`), sin cambiar nada de lo que ya existía en esas librerías. Entre ellos está un `pkg_resources` mínimo en lugar de fijar
+`setuptools<81`, que pip-audit marcó como vulnerable. Una prueba verifica que la condición de
+correlación corregida reporta solo el par realmente correlacionado.
+
+### 3. Chequeos de seguridad
+
+**Prácticas en el repositorio**
+
+- **Sin datos ni credenciales en Git:** `.gitignore` excluye `data/` (salvo el manifiesto), `*.csv`,
+  `*.parquet`, `mlflow.db`, `mlruns/`, `mlartifacts/`, modelos serializados, `.env` y `.env.*`, llaves
+  (`*.pem`, `*.key`, `*.p12`, `*.pfx`, `id_rsa*`), `credentials*.json`, `secrets*.json`, `.netrc` y `.pypirc`.
+- **Variables de entorno:** `config.py` carga un `.env` local con `python-dotenv` (sin sobrescribir las
+  variables del sistema); la plantilla [`.env.example`](.env.example) se versiona sin valores secretos.
+  El código no contiene usuarios, contraseñas ni tokens.
+- **Minimización de datos:** la ingesta elimina el pseudónimo de usuario, el género y el año de
+  nacimiento antes de guardar los Parquet (entrega 1).
+- **Dependencias con versión exacta** (`==`) en `requirements.txt`, verificadas por una prueba.
+
+**Herramientas** (`python scripts/chequeos_seguridad.py`; reportes en
+[`reports/seguridad/`](reports/seguridad/RESUMEN.md)):
+
+| Herramienta | Qué revisa | Resultado inicial | Corrección | Resultado final |
+|---|---|---|---|---|
+| **bandit** 1.9.4 | Código de `mibici/` y `scripts/` (~4,800 líneas) | 16 hallazgos de severidad baja (B404, B603 y B607): `subprocess` llamando a `git` sin ruta absoluta en cuatro módulos | `mibici/git_seguro.py` centraliza las llamadas: `git` se resuelve con `shutil.which`, sin shell y con argumentos fijos. Las llamadas a `subprocess` del paquete y de los scripts se revisaron y se marcaron con `# nosec` | **0 hallazgos** (alta 0, media 0, baja 0) |
+| **pip-audit** 2.10.1 (`-r requirements.txt`) | Versiones fijadas del proyecto | `mlflow 3.17.1`: CVE-2026-53995 (path traversal en el servidor de tracking con FileStore) | `mlflow==3.17.2` en `requirements.txt` y `python_env.yaml` | **0 vulnerabilidades** |
+| pip-audit (`-r requirements.txt`) | `setuptools==80.10.2`, agregado en `2813b77` porque DeepChecks necesita `pkg_resources` | CVE-2026-59890 y GHSA-xmj3-9gf7-h52w | Se retiró en `09ebda8`; un sustituto mínimo de `pkg_resources` en `mibici/compat_deepchecks.py` evita fijar `setuptools` | **0 vulnerabilidades** |
+| **pip-audit** (entorno instalado) | Todos los paquetes del `.venv`, incluidas las dependencias transitivas | 7 CVE: `tornado 6.5.10` (CVE-2026-116577, -115927 y -116578; la usan Jupyter e ipykernel) y `pyasn1 0.6.4` (CVE-2026-119194 a -119197) | `tornado==6.6` y `pyasn1==0.6.5` fijadas en `requirements.txt` | **0 vulnerabilidades** |
+| **detect-secrets** 1.5.0 (`scripts/escanear_secretos.py`) | Cada versión de cada archivo de texto en **todo el historial** de Git (todas las ramas) | Coincidencias de los detectores de entropía: hashes SHA-256 de los manifiestos, imágenes PNG en base64 de los notebooks, vectores de prueba de SHA-256 y hashes de Git del propio reporte | Cada tipo se clasifica con una regla explícita y revisada; el reporte solo guarda los primeros 12 caracteres de la línea | **0 secretos reales** |
+| `git check-ignore` | 12 rutas sensibles (`.env`, datos, `mlflow.db`, `mlruns/`, modelos, llaves, credenciales) | — | `.gitignore` reforzado | **12 de 12 ignoradas**, ninguna versionada |
+
+`tests/test_seguridad.py` vuelve automática parte de esta revisión. Comprueba que el escáner detecta
+una llave de AWS, un token de GitHub y una llave privada, todos falsos y armados en tiempo de
+ejecución. También comprueba que las reglas de falsos positivos no ocultan un token, que `.gitignore`
+cubre las rutas sensibles, que `.env.example` no trae valores, que la configuración se lee de variables
+de entorno, que todas las dependencias tienen versión exacta y que bandit no reporta hallazgos.
+
+### 4. Evidencia de la ejecución
+
+Ejecución con `scripts\ejecutar_calidad.ps1 -Capturas` en la computadora de la autora (Windows 11,
+Python 3.14.8, `.venv` del proyecto) sobre el commit `fb304c7`, que es el anterior al que agrega esta
+evidencia; el hash aparece en la captura del resumen y en `reports/calidad/00_resumen.txt`. El script toma las cuatro
+capturas de la terminal al terminar cada paso, y la salida completa de cada paso está en
+[`reports/calidad/`](reports/calidad/). Las seis capturas de los reportes de DeepChecks se tomaron
+abriendo en un navegador (Chromium, con Playwright) los archivos HTML que generó esa misma ejecución.
+
+**Paso 1 — `python -m pytest -v`: 105 pruebas aprobadas** (salida completa en `reports/calidad/01_pytest.txt`;
+la prueba número 106, agregada después de esta ejecución, cubre la regla del escáner para los hashes de Git)
+
+![pytest: 105 pruebas aprobadas](docs/evidencia/01_pytest.png)
+
+**Paso 2 — `python -m mibici.validacion`: DeepChecks sobre viajes, P1, P2 y P3**
+
+![DeepChecks: resumen de la ejecución](docs/evidencia/02_deepchecks.png)
+
+Capturas de los reportes HTML de DeepChecks que generó esa ejecución:
+
+| Viajes: resumen de condiciones | Viajes: reglas de negocio sobre 3.8 millones de viajes |
+|---|---|
+| ![Integridad de viajes](docs/evidencia/deepchecks_viajes_integridad_resumen.png) | ![Reglas de negocio](docs/evidencia/deepchecks_viajes_integridad.png) |
+
+| P1: drift de `dias_activa` | P1 sin `dias_activa`: sin drift |
+|---|---|
+| ![Drift de P1](docs/evidencia/deepchecks_p1_drift.png) | ![P1 sin dias_activa](docs/evidencia/deepchecks_p1_sin_tiempo.png) |
+
+| P2: entrenamiento contra prueba | P3: entrenamiento contra prueba |
+|---|---|
+| ![P2](docs/evidencia/deepchecks_p2_entrenamiento_prueba.png) | ![P3](docs/evidencia/deepchecks_p3_entrenamiento_prueba.png) |
+
+**Paso 3 — `python scripts/chequeos_seguridad.py`: bandit, pip-audit y secretos**
+
+![Chequeos de seguridad](docs/evidencia/03_seguridad.png)
+
+**Resumen de los tres pasos**
+
+![Resumen de la ejecución](docs/evidencia/00_resumen.png)
+
+### Historial de Git de la entrega 3
+
+Cada tema se desarrolló en su propia rama y se integró a `main` con `git merge --no-ff`, así que el
+historial conserva la rama y su *merge commit* (`git log --graph --oneline main`). Los mensajes siguen
+[Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/).
+
+| Rama | Commits | Contenido |
+|---|---|---|
+| `test/pruebas-unitarias` | 8 | Configuración de pytest y fixtures; pruebas de ingesta, variables de P1, P2 y P3, métricas y reproducibilidad |
+| `test/validacion-deepchecks` | 4 | DeepChecks y capa de compatibilidad, suites y chequeo propio, pruebas de detección y `.gitignore` de los reportes |
+| `chore/seguridad` | 9 | Llamadas a git sin hallazgos de bandit, `.env`, `mlflow` 3.17.2, sin `setuptools` 80, herramientas fijadas, escáner de secretos, script de seguridad y pruebas |
+| `fix/ajustes-primera-ejecucion` | 7 | Script de Windows y objetivos de `make`; correcciones que salieron de la primera ejecución en Windows: drift de P1 sin `dias_activa`, reportes que se sobrescriben, `tornado` y `pyasn1` corregidas y escaneo de secretos más rápido |
+| `fix/revision-independiente` | 4 | Correcciones de una revisión independiente: duplicados sin `viaje_id`, más tipos de archivo sensible, prueba de `.gitignore` sin `.git` y commit en el resumen de la ejecución |
+| `docs/readme-evidencia` | 3 | Este README, `CONTRIBUCIONES.md`, reportes de DeepChecks y de seguridad, capturas de la ejecución final y, después de ella, una regla del escáner para los hashes de Git que guarda su propio reporte |
+
+**Uso de herramientas de IA.** El código, las pruebas y este documento se elaboraron con apoyo de
+Claude (Anthropic) como asistente de programación; los commits correspondientes lo declaran con la
+línea `Co-Authored-By: Claude`. Todas las ejecuciones (pruebas, DeepChecks y seguridad) se hicieron
+en la computadora de la autora, que revisó los resultados; las capturas de los reportes de DeepChecks
+se tomaron de los HTML de esa ejecución.
+
 ## Entrega 2: MLflow Project, experimentación y Model Registry
 
 **Repositorio de entrega:** <https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32>. Conserva el historial completo del repositorio del equipo
@@ -173,7 +384,10 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 ├── LICENSE            <- Open-source license if one is chosen
 ├── MLproject          <- MLflow Project: puntos de entrada ingest, train, search, register y verify
 ├── python_env.yaml    <- Entorno del MLflow Project (mismas versiones que requirements.txt)
-├── Makefile           <- Comandos: `make server`, `make data`, `make experimentos`, `make verify`
+├── Makefile           <- Comandos: `make server`, `make data`, `make experimentos`, `make verify`,
+│                         `make test`, `make deepchecks`, `make seguridad`, `make calidad`
+├── .env.example       <- Plantilla de variables de entorno (el .env local no se versiona)
+├── CONTRIBUCIONES.md  <- Qué hizo cada integrante en cada entrega
 ├── README.md          <- The top-level README for developers using this project.
 ├── data
 │   ├── external       <- Data from third party sources.
@@ -182,6 +396,7 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 │   └── raw            <- The original, immutable data dump.
 │
 ├── docs               <- A default mkdocs project; see www.mkdocs.org for details
+│   └── evidencia      <- Capturas de la ejecución de pruebas, DeepChecks y seguridad (entrega 3)
 │
 ├── models             <- Trained and serialized models, model predictions, or model summaries
 │
@@ -194,15 +409,19 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 │
 ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
 │
-├── scripts            <- Protocolo de la entrega 2 (Windows/Linux) y servidor de tracking
+├── scripts            <- Protocolo de la entrega 2 (Windows/Linux) y servidor de tracking;
+│                         entrega 3: ejecutar_calidad.ps1, chequeos_seguridad.py, escanear_secretos.py
+│
+├── tests              <- Pruebas de PyTest (un solo comando: python -m pytest)
 │
 ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── figures        <- Generated graphics and figures to be used in reporting
+│   ├── figures        <- Generated graphics and figures to be used in reporting
+│   ├── deepchecks     <- RESUMEN.md y resumen.json de DeepChecks (los HTML se regeneran)
+│   ├── seguridad      <- Reportes de bandit, pip-audit y del escáner de secretos
+│   └── calidad        <- Salida completa de pytest, DeepChecks y seguridad
 │
 ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
 │                         generated with `pip freeze > requirements.txt`
-│
-├── setup.cfg          <- Configuration file for flake8
 │
 └── mibici   <- Source code for use in this project.
     │
@@ -213,6 +432,10 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
     ├── dataset.py              <- Scripts to download or generate data
     │
     ├── features.py             <- Code to create features for modeling
+    │
+    ├── validacion.py           <- Entrega 3: suites de DeepChecks y reglas de negocio de MiBici
+    ├── compat_deepchecks.py    <- Entrega 3: compatibilidad de DeepChecks con NumPy 2 y pandas 3
+    ├── git_seguro.py           <- Entrega 3: llamadas a git sin shell (bandit sin hallazgos)
     │
     ├── modeling                
     │   ├── __init__.py 
@@ -414,7 +637,7 @@ y consultarse en `http://localhost:5000`.
 
 Los datos de MiBici, modelos serializados, base de datos de MLflow, artefactos de MLflow y resultados generados por P3 se excluyen mediante `.gitignore`.
 
-El código se desarrolla en ramas independientes y todo cambio hacia `main` debe incorporarse mediante Pull Request revisado por otro integrante del equipo.
+El código se desarrolla en ramas independientes y todo cambio hacia `main` debe incorporarse mediante Pull Request revisado por otro integrante del equipo. En la entrega 3, que es una versión individual, cada rama se integró a `main` con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3)).
 
 Convenciones: ramas `feat/`, `fix/`, `docs/` + descripción corta; mensajes de commit
 siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). En el
