@@ -23,13 +23,19 @@ Los ajustes son mínimos, explícitos y solo afectan a DeepChecks:
    ya no descarta los NaN: sin el ajuste reporta TODOS los pares como correlacionados. Se
    reemplaza por la misma lógica con ``dropna()``.
 
-``pkg_resources`` lo provee ``setuptools<81`` (fijado en ``requirements.txt``).
+7. ``pkg_resources`` desapareció en setuptools 81. Fijar ``setuptools<81`` reintroduce
+   vulnerabilidades conocidas (CVE-2026-59890 y GHSA-xmj3-9gf7-h52w, detectadas con
+   pip-audit), así que, si no existe, se registra un sustituto mínimo con lo único que
+   DeepChecks usa: ``parse_version`` y ``working_set``.
 """
 
 from __future__ import annotations
 
 import functools
 import importlib
+import importlib.metadata
+import sys
+import types
 import warnings
 
 import numpy as np
@@ -63,12 +69,36 @@ class _NumpyConInterpolation:
         return self._traducir(np.percentile)
 
 
+class _Distribucion:
+    """Lo que DeepChecks lee de cada elemento de ``pkg_resources.working_set``."""
+
+    def __init__(self, nombre: str):
+        self.key = nombre.lower()
+        self.project_name = nombre
+
+
+def _pkg_resources_minimo() -> types.ModuleType:
+    from packaging.version import parse
+
+    modulo = types.ModuleType("pkg_resources")
+    modulo.parse_version = parse
+    modulo.working_set = [_Distribucion(d.metadata["Name"])
+                          for d in importlib.metadata.distributions() if d.metadata["Name"]]
+    return modulo
+
+
 def aplicar() -> None:
     """Aplica los ajustes una sola vez (idempotente). Llamar antes de importar DeepChecks."""
     global _APLICADA
     if _APLICADA:
         return
     warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
+
+    # 7. pkg_resources (setuptools >= 81 ya no lo incluye).
+    try:
+        import pkg_resources  # noqa: F401
+    except ImportError:
+        sys.modules["pkg_resources"] = _pkg_resources_minimo()
 
     # 1. Constantes eliminadas en NumPy 2.0.
     for nombre, valor in {"Inf": np.inf, "NINF": -np.inf, "NaN": np.nan}.items():

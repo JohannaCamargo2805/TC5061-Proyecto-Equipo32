@@ -46,3 +46,7 @@ filterwarnings = [
     "ignore:The specified dataset source can be interpreted:UserWarning",
     "ignore:Hint. Inferred schema contains integer column:UserWarning",
 ]
+
+[tool.bandit]
+# Las pruebas usan assert a propósito (B101); el análisis cubre el código del paquete y scripts.
+exclude_dirs = ["tests", ".venv", "venv"]

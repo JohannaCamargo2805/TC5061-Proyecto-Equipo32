@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-import subprocess
 
 import folium
 from folium.plugins import Fullscreen
@@ -66,6 +65,7 @@ from mibici.features import (
     p3_construir_features,
     p3_filtrar_viajes,
 )
+from mibici.git_seguro import git
 
 app = typer.Typer()
 
@@ -789,11 +789,7 @@ def main(
     )
     data_version = manifest["data_version"]
 
-    git_commit = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"],
-        cwd=PROJ_ROOT,
-        text=True,
-    ).strip()
+    git_commit = git("rev-parse", "HEAD")
 
     mlflow.set_tracking_uri(
         f"sqlite:///{PROJ_ROOT / 'mlflow.db'}"
