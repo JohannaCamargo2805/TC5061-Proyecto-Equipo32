@@ -132,11 +132,16 @@ def revisar_ignorados() -> list[dict]:
             git("check-ignore", "-q", "--no-index", ruta)
         except GitError:  # check-ignore devuelve 1 si la ruta NO está ignorada
             problemas.append({"ruta": ruta, "problema": "no está ignorada por .gitignore"})
-    versionados = git("ls-files").splitlines()
-    patrones = (".env", ".pem", ".key", ".parquet", ".csv", ".db", ".joblib", ".pkl")
-    for nombre in versionados:
+    extensiones = (".pem", ".key", ".p12", ".pfx", ".parquet", ".csv", ".db", ".joblib", ".pkl")
+    nombres_exactos = {".netrc", ".pypirc", "mlflow.db"}
+    for nombre in git("ls-files").splitlines():
         base = PurePosixPath(nombre).name
-        if base != ".env.example" and (base.startswith(".env") or base.endswith(patrones[1:])):
+        sensible = (
+            (base.startswith(".env") and base != ".env.example")
+            or base.endswith(extensiones) or base in nombres_exactos or base.startswith("id_rsa")
+            or re.fullmatch(r"(credentials|secrets).*\.json", base) is not None
+        )
+        if sensible:
             problemas.append({"ruta": nombre, "problema": "archivo sensible versionado"})
     return problemas
 

@@ -47,8 +47,6 @@ import typer
 
 from mibici.config import (
     ESTACIONES_PARQUET,
-    P2_TEST_START,
-    P2_TRAIN_START,
     REPORTS_DIR,
     SEED,
     TEST_START,
@@ -131,11 +129,14 @@ class ReglasDeNegocio(SingleDatasetCheck):
 # Suites
 # =============================================================================
 def suite_integridad(nombre: str, reglas: list[ReglaNegocio], tarea: str | None = None,
-                     datos_completos: pd.DataFrame | None = None) -> Suite:
+                     datos_completos: pd.DataFrame | None = None,
+                     sin_identificador: list | None = None) -> Suite:
     """Suite de integridad y calidad de UN conjunto. ``tarea``: regression, binary o None.
 
     ``datos_completos``: conjunto completo para las reglas de negocio cuando el ``Dataset``
-    de DeepChecks es una muestra.
+    de DeepChecks es una muestra. ``sin_identificador``: columnas de identificador único
+    (p. ej. ``viaje_id``) que se excluyen al buscar filas duplicadas; si se incluyeran, dos
+    registros con el mismo contenido y distinto id nunca contarían como duplicados.
     """
     checks = [
         dc.PercentOfNulls().add_condition_percent_of_nulls_not_greater_than(UMBRAL_NULOS),
@@ -143,7 +144,8 @@ def suite_integridad(nombre: str, reglas: list[ReglaNegocio], tarea: str | None 
         # Cualquier mezcla de tipos reprueba (por defecto DeepChecks ignora mezclas < 1 %).
         dc.MixedDataTypes().add_condition_rare_type_ratio_not_in_range((0.0, 0.5)),
         dc.IsSingleValue().add_condition_not_single_value(),
-        dc.DataDuplicates(n_samples=1_000_000).add_condition_ratio_less_or_equal(UMBRAL_DUPLICADOS),
+        dc.DataDuplicates(n_samples=1_000_000, ignore_columns=sin_identificador or None)
+        .add_condition_ratio_less_or_equal(UMBRAL_DUPLICADOS),
         dc.SpecialCharacters().add_condition_ratio_of_special_characters_less_or_equal(),
         dc.StringMismatch().add_condition_no_variants(),
         dc.OutlierSampleDetection(n_samples=5_000, timeout=60, random_state=SEED),
@@ -206,6 +208,7 @@ class ConjuntoValidacion:
     filas: dict = field(default_factory=dict)
     completos: dict = field(default_factory=dict)  # train/test completos para las reglas
     columnas_tiempo: list = field(default_factory=list)  # contadores que crecen con el tiempo
+    identificadores: list = field(default_factory=list)  # ids únicos, fuera de los duplicados
 
 
 def reglas_viajes(ids_estaciones: set) -> list[ReglaNegocio]:
@@ -271,6 +274,7 @@ def conjunto_viajes(viajes: pd.DataFrame | None = None, estaciones: pd.DataFrame
                   f"{muestra:,} viajes por conjunto",
         dataset_viajes(muestras["train"]), dataset_viajes(muestras["test"]), reglas,
         con_indice=True, filas={k: len(d) for k, d in completos.items()}, completos=completos,
+        identificadores=["viaje_id"],
     )
 
 
@@ -349,8 +353,8 @@ def conjunto_p2(muestra: int = MUESTRA_P2) -> ConjuntoValidacion:
         partes[k] = d.sample(n=min(muestra, len(d)), random_state=SEED).sort_values("hora")
         partes[k] = partes[k].drop(columns=["tipo_riesgo", "neto_futuro"])  # miran al futuro
     return ConjuntoValidacion(
-        "p2", f"P2 · tabla estación × hora (TRAIN {P2_TRAIN_START[:7]}-sep contra TEST "
-              f"{P2_TEST_START[:7]}-dic; muestra de {muestra:,} filas por conjunto)",
+        "p2", f"P2 · tabla estación × hora (TRAIN ene-sep contra TEST nov-dic; muestra de "
+              f"{muestra:,} filas por conjunto)",
         dataset_p2(partes["train"]), dataset_p2(partes["test"]), reglas_p2(), tarea="binary",
         filas={k: len(v) for k, v in partes.items()},
     )
@@ -482,7 +486,7 @@ def validar(conjunto: ConjuntoValidacion) -> dict:
     """Corre las dos suites sobre un conjunto y devuelve los resultados de DeepChecks."""
     def integridad(clave: str, dataset: Dataset):
         suite = suite_integridad(conjunto.nombre, conjunto.reglas, conjunto.tarea,
-                                 conjunto.completos.get(clave))
+                                 conjunto.completos.get(clave), conjunto.identificadores)
         return suite.run(dataset)
 
     tt = suite_entrenamiento_prueba(conjunto.nombre, conjunto.tarea, conjunto.con_fecha,

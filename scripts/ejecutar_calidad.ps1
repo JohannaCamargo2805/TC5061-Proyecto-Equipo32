@@ -71,7 +71,10 @@ $resumen = @(
     [pscustomobject]@{ Paso = "3. Seguridad"; Codigo = $r3; Detalle = ((Get-Content (Join-Path $logs "03_seguridad.txt") | Select-Object -Last 1)) }
 )
 $resumen | Format-Table -AutoSize -Wrap | Out-String -Width 200 | Write-Host
-$resumen | Format-Table -AutoSize -Wrap | Out-String -Width 200 | Out-File (Join-Path $logs "00_resumen.txt") -Encoding utf8
+$archivoResumen = Join-Path $logs "00_resumen.txt"
+"TC5061 Equipo 32 | Resumen de la ejecucion | $(Get-Date -Format 'yyyy-MM-dd HH:mm') | $env:COMPUTERNAME" | Out-File $archivoResumen -Encoding utf8
+"Commit: $git" | Out-File $archivoResumen -Encoding utf8 -Append
+$resumen | Format-Table -AutoSize -Wrap | Out-String -Width 200 | Out-File $archivoResumen -Encoding utf8 -Append
 if ($Capturas) { Start-Sleep -Seconds 2; Captura "00_resumen.png" }
 if (($r1 -ne 0) -or ($r3 -ne 0)) { exit 1 }
 exit 0

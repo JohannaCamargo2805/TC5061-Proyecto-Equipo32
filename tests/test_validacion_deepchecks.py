@@ -67,6 +67,26 @@ def test_detecta_nulos_duplicados_y_tipos_mezclados():
     assert estados["Mixed Data Types"] in DETECTADO
 
 
+def test_duplicados_con_distinto_identificador():
+    """Dos registros iguales salvo el id solo se detectan si el id se excluye (caso de viajes)."""
+    df = _tabla(n=300).assign(registro_id=range(300))
+    df = pd.concat([df, df.iloc[:30].assign(registro_id=range(1000, 1030))], ignore_index=True)
+    ds = _dataset(df)
+    con_id = _estados(v.suite_integridad("con_id", SIN_REGLAS, "binary").run(ds))
+    sin_id = _estados(v.suite_integridad("sin_id", SIN_REGLAS, "binary",
+                                         sin_identificador=["registro_id"]).run(ds))
+    assert con_id["Data Duplicates"] == "aprobado"  # el id único oculta la repetición
+    assert sin_id["Data Duplicates"] in DETECTADO
+
+
+def test_sin_columnas_conserva_etiqueta_y_tipos():
+    ds = _dataset(_tabla())
+    reducido = v.sin_columnas(ds, ["x_conteo"])
+    assert "x_conteo" not in reducido.data.columns and "x_conteo" not in reducido.features
+    assert reducido.label_name == "y" and reducido.cat_features == ["x_cat"]
+    assert reducido.datetime_name == "fecha"
+
+
 def test_detecta_nulos_de_distinto_tipo():
     df = _tabla()
     df["x_cat"] = df["x_cat"].astype(object)
