@@ -30,3 +30,16 @@ extend-select = ["I"]  # Add import sorting
 known-first-party = ["mibici"]
 force-sort-within-sections = true
 
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "datos: usa los Parquet reales de data/processed (se omite si no existen)",
+    "lento: tarda más de unos segundos (entrena modelos o corre DeepChecks con datos reales)",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+    "ignore:Mean of empty slice:RuntimeWarning",
+]
