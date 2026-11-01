@@ -23,4 +23,9 @@ ipykernel==7.4.0
 # Validación de datos (ver mibici/compat_deepchecks.py)
 deepchecks==0.19.1
 
+# Chequeos de seguridad: código (bandit), dependencias (pip-audit) y secretos (detect-secrets)
+bandit==1.9.4
+pip-audit==2.10.1
+detect-secrets==1.5.0
+
 -e .
