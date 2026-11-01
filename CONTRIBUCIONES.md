@@ -135,7 +135,7 @@ versión de las actividades en equipo que faltan. Esta versión es de **Leydy Jo
 | `chore/seguridad` | 9 | `mibici/git_seguro.py`, `.env.example`, actualización de dependencias, `scripts/escanear_secretos.py`, `scripts/chequeos_seguridad.py` y `tests/test_seguridad.py` |
 | `fix/ajustes-primera-ejecucion` | 7 | `scripts/ejecutar_calidad.ps1`, objetivos de `make` y correcciones tras la primera ejecución en Windows |
 | `fix/revision-independiente` | 4 | Correcciones de una revisión independiente (duplicados sin `viaje_id`, archivos sensibles, prueba de `.gitignore`, resumen con commit) |
-| `docs/readme-evidencia` | 2 | README, este archivo, reportes de DeepChecks y de seguridad y capturas de la ejecución |
+| `docs/readme-evidencia` | 3 | README, este archivo, reportes de DeepChecks y de seguridad, capturas de la ejecución y una regla del escáner para los hashes de Git de su propio reporte |
 
 Ejecutó las pruebas, DeepChecks y los chequeos de seguridad en su computadora con
 `scripts\ejecutar_calidad.ps1 -Capturas`; las capturas y la salida completa están en `docs/evidencia/`

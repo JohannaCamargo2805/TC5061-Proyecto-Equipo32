@@ -26,7 +26,7 @@ ramas, integradas a `main` con *merge commits* (ver [Historial de Git](#historia
 ```bash
 python -m pip install -r requirements.txt     # incluye deepchecks, bandit, pip-audit y detect-secrets
 
-python -m pytest                              # 1. TODAS las pruebas (105): unitarias, reproducibilidad, DeepChecks y seguridad
+python -m pytest                              # 1. TODAS las pruebas (106): unitarias, reproducibilidad, DeepChecks y seguridad
 python -m pytest -m "not datos"               #    solo las que no necesitan data/processed (p. ej. en un clon sin datos)
 python -m mibici.validacion                   # 2. reportes de DeepChecks en reports/deepchecks (HTML + RESUMEN.md); necesita data/processed
 python scripts/chequeos_seguridad.py          # 3. bandit + pip-audit + secretos; reportes en reports/seguridad (pip-audit consulta PyPI/OSV: requiere Internet)
@@ -54,7 +54,7 @@ de cada etapa del pipeline, con casos normales y casos límite:
 | `test_mlproject.py` (8) | `MLproject`, `resolver`, `convertir`, regla de selección, estimadores propios | (entrega 2) | Parámetros inválidos |
 | `test_reproducibilidad.py` (10) | `P1Tarea`, `P2Tarea`, `P3Tarea` (los mismos constructores de `mlflow run -e train`) y `train.ejecutar` | Ver abajo | Control negativo: otra semilla cambia el resultado |
 | `test_validacion_deepchecks.py` (16) | `mibici/validacion.py` | Ver [sección 2](#2-validación-de-datos-con-deepchecks) | |
-| `test_seguridad.py` (13) | Escáner de secretos, `.gitignore`, configuración, `git_seguro`, bandit | Ver [sección 3](#3-chequeos-de-seguridad) | |
+| `test_seguridad.py` (14) | Escáner de secretos, `.gitignore`, configuración, `git_seguro`, bandit | Ver [sección 3](#3-chequeos-de-seguridad) | |
 
 **Reproducibilidad del entrenamiento** (`tests/test_reproducibilidad.py`). Con la semilla del
 proyecto (`config.SEED = 42`), dos entrenamientos dan el mismo resultado:
@@ -154,7 +154,7 @@ correlación corregida reporta solo el par realmente correlacionado.
 | **pip-audit** 2.10.1 (`-r requirements.txt`) | Versiones fijadas del proyecto | `mlflow 3.17.1`: CVE-2026-53995 (path traversal en el servidor de tracking con FileStore) | `mlflow==3.17.2` en `requirements.txt` y `python_env.yaml` | **0 vulnerabilidades** |
 | pip-audit (`-r requirements.txt`) | `setuptools==80.10.2`, agregado en `2813b77` porque DeepChecks necesita `pkg_resources` | CVE-2026-59890 y GHSA-xmj3-9gf7-h52w | Se retiró en `09ebda8`; un sustituto mínimo de `pkg_resources` en `mibici/compat_deepchecks.py` evita fijar `setuptools` | **0 vulnerabilidades** |
 | **pip-audit** (entorno instalado) | Todos los paquetes del `.venv`, incluidas las dependencias transitivas | 7 CVE: `tornado 6.5.10` (CVE-2026-116577, -115927 y -116578; la usan Jupyter e ipykernel) y `pyasn1 0.6.4` (CVE-2026-119194 a -119197) | `tornado==6.6` y `pyasn1==0.6.5` fijadas en `requirements.txt` | **0 vulnerabilidades** |
-| **detect-secrets** 1.5.0 (`scripts/escanear_secretos.py`) | Cada versión de cada archivo de texto en **todo el historial** de Git (todas las ramas) | Coincidencias de los detectores de entropía: hashes SHA-256 de los manifiestos, imágenes PNG en base64 de los notebooks y vectores de prueba de SHA-256 | Cada tipo se clasifica con una regla explícita y revisada; el reporte solo guarda los primeros 12 caracteres de la línea | **0 secretos reales** |
+| **detect-secrets** 1.5.0 (`scripts/escanear_secretos.py`) | Cada versión de cada archivo de texto en **todo el historial** de Git (todas las ramas) | Coincidencias de los detectores de entropía: hashes SHA-256 de los manifiestos, imágenes PNG en base64 de los notebooks, vectores de prueba de SHA-256 y hashes de Git del propio reporte | Cada tipo se clasifica con una regla explícita y revisada; el reporte solo guarda los primeros 12 caracteres de la línea | **0 secretos reales** |
 | `git check-ignore` | 12 rutas sensibles (`.env`, datos, `mlflow.db`, `mlruns/`, modelos, llaves, credenciales) | — | `.gitignore` reforzado | **12 de 12 ignoradas**, ninguna versionada |
 
 `tests/test_seguridad.py` vuelve automática parte de esta revisión. Comprueba que el escáner detecta
@@ -172,7 +172,8 @@ capturas de la terminal al terminar cada paso, y la salida completa de cada paso
 [`reports/calidad/`](reports/calidad/). Las seis capturas de los reportes de DeepChecks se tomaron
 abriendo en un navegador (Chromium, con Playwright) los archivos HTML que generó esa misma ejecución.
 
-**Paso 1 — `python -m pytest -v`: 105 pruebas aprobadas** (salida completa en `reports/calidad/01_pytest.txt`)
+**Paso 1 — `python -m pytest -v`: 105 pruebas aprobadas** (salida completa en `reports/calidad/01_pytest.txt`;
+la prueba número 106, agregada después de esta ejecución, cubre la regla del escáner para los hashes de Git)
 
 ![pytest: 105 pruebas aprobadas](docs/evidencia/01_pytest.png)
 
@@ -215,7 +216,7 @@ historial conserva la rama y su *merge commit* (`git log --graph --oneline main`
 | `chore/seguridad` | 9 | Llamadas a git sin hallazgos de bandit, `.env`, `mlflow` 3.17.2, sin `setuptools` 80, herramientas fijadas, escáner de secretos, script de seguridad y pruebas |
 | `fix/ajustes-primera-ejecucion` | 7 | Script de Windows y objetivos de `make`; correcciones que salieron de la primera ejecución en Windows: drift de P1 sin `dias_activa`, reportes que se sobrescriben, `tornado` y `pyasn1` corregidas y escaneo de secretos más rápido |
 | `fix/revision-independiente` | 4 | Correcciones de una revisión independiente: duplicados sin `viaje_id`, más tipos de archivo sensible, prueba de `.gitignore` sin `.git` y commit en el resumen de la ejecución |
-| `docs/readme-evidencia` | 2 | Este README, `CONTRIBUCIONES.md`, reportes de DeepChecks y de seguridad y capturas de la ejecución final |
+| `docs/readme-evidencia` | 3 | Este README, `CONTRIBUCIONES.md`, reportes de DeepChecks y de seguridad, capturas de la ejecución final y, después de ella, una regla del escáner para los hashes de Git que guarda su propio reporte |
 
 **Uso de herramientas de IA.** El código, las pruebas y este documento se elaboraron con apoyo de
 Claude (Anthropic) como asistente de programación; los commits correspondientes lo declaran con la

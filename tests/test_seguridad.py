@@ -47,10 +47,12 @@ def test_detecta_secretos_reales(archivo, contenido):
     [
         ("data/manifest.json", '  "sha256": "' + "ab" * 32 + '",', "manifiesto"),
         ("notebooks/x.ipynb", '"image/png": "iVBORw0KGgoAAAANSUhEUgAA",', "PNG"),
+        ("reports/seguridad/secretos.json", '  "commit": "' + "c0ffee12" * 5 + '",', "Git"),
         ("src/config.py", '"sha256": "' + "ab" * 32 + '"', None),  # fuera del manifiesto
         ("notebooks/x.ipynb", f'"token": "{TOKEN_GITHUB}"', None),
     ],
-    ids=["hash-en-manifiesto", "png-en-notebook", "hash-fuera-del-manifiesto", "token-en-notebook"],
+    ids=["hash-en-manifiesto", "png-en-notebook", "hash-git-en-reporte", "hash-fuera-del-manifiesto",
+         "token-en-notebook"],
 )
 def test_falsos_positivos_solo_con_reglas_explicitas(archivo, linea, esperado):
     motivo = escanear_secretos._clasificar(archivo, linea)
