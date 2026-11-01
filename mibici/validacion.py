@@ -26,26 +26,26 @@ Las pruebas de ``tests/test_validacion_deepchecks.py`` usan estas mismas suites.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
 import time
-from typing import Callable
 
 from mibici import compat_deepchecks
 
 compat_deepchecks.aplicar()  # antes de importar DeepChecks
 
-from deepchecks.core import CheckResult, ConditionCategory, ConditionResult  # noqa: E402
-from deepchecks.core.check_result import CheckFailure  # noqa: E402
-from deepchecks.tabular import Context, Dataset, SingleDatasetCheck, Suite  # noqa: E402
-import deepchecks.tabular.checks as dc  # noqa: E402
-from loguru import logger  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import typer  # noqa: E402
+from deepchecks.core import CheckResult, ConditionCategory, ConditionResult
+from deepchecks.core.check_result import CheckFailure
+from deepchecks.tabular import Context, Dataset, SingleDatasetCheck, Suite
+import deepchecks.tabular.checks as dc
+from loguru import logger
+import numpy as np
+import pandas as pd
+import typer
 
-from mibici.config import (  # noqa: E402
+from mibici.config import (
     ESTACIONES_PARQUET,
     P2_TEST_START,
     P2_TRAIN_START,
@@ -517,14 +517,15 @@ def guardar(nombre: str, descripcion: str, filas: dict, resultados: dict, salida
 
 def escribir_resumen_md(resumenes: list[dict], salida: Path) -> Path:
     """RESUMEN.md con el estado de cada chequeo por conjunto y suite."""
-    lineas = ["# Resumen de la validación de datos con DeepChecks", "",
-              "Generado por `python -m mibici.validacion`. Estados: **aprobado** (todas sus "
-              "condiciones se cumplen), **no aprobado** (alguna falla), **advertencia**, "
-              "**informativo** (chequeo sin condición, solo describe) o **error**.", ""]
+    leyenda = ("Generado por `python -m mibici.validacion`. Estados: **aprobado** (todas sus "
+               "condiciones se cumplen), **no aprobado** (alguna falla), **advertencia** "
+               "(DeepChecks marca el hallazgo como aviso), **informativo** (chequeo sin "
+               "condición, solo describe) o **error**.")
+    lineas = ["# Resumen de la validación de datos con DeepChecks", "", leyenda, ""]
     for r in resumenes:
-        lineas += [f"## {r['conjunto']} — {r['descripcion']}", "",
-                   f"Filas: entrenamiento {r['filas'].get('train', 0):,} · prueba "
-                   f"{r['filas'].get('test', 0):,}", ""]
+        filas = (f"Filas: entrenamiento {r['filas'].get('train', 0):,} · prueba "
+                 f"{r['filas'].get('test', 0):,}")
+        lineas += [f"## {r['conjunto']} — {r['descripcion']}", "", filas, ""]
         for suite, datos in r["suites"].items():
             lineas += [f"### {suite} (`{datos['reporte']}`)", "",
                        "| Chequeo | Estado | Detalle |", "|---|---|---|"]
@@ -543,9 +544,10 @@ app = typer.Typer(add_completion=False)
 @app.command()
 def main(
     conjuntos: str = typer.Option(",".join(CONJUNTOS), help="Lista separada por comas"),
-    salida: Path = typer.Option(SALIDA_DIR, help="Carpeta de los reportes"),
+    carpeta: str = typer.Option(str(SALIDA_DIR), "--salida", help="Carpeta de los reportes"),
 ):
     """Corre DeepChecks sobre los conjuntos indicados y guarda reportes y resumen."""
+    salida = Path(carpeta)
     resumenes = []
     for nombre in [c.strip() for c in conjuntos.split(",") if c.strip()]:
         t0 = time.perf_counter()
