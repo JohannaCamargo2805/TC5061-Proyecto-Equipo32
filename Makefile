@@ -95,10 +95,29 @@ experimentos:
 verify:
 	MLFLOW_TRACKING_URI=$(TRACKING_URI) mlflow run . -e verify --env-manager $(ENV_MANAGER) --experiment-name $(EXPERIMENT)
 
-## Pruebas (no fuga de información, MLproject y regla de selección)
+## Todas las pruebas: unitarias, reproducibilidad, DeepChecks y seguridad (un solo comando)
 .PHONY: test
 test:
-	$(PYTHON_INTERPRETER) -m pytest -q tests
+	$(PYTHON_INTERPRETER) -m pytest
+
+## Solo las pruebas que no necesitan los datos reales de data/processed
+.PHONY: test-rapido
+test-rapido:
+	$(PYTHON_INTERPRETER) -m pytest -m "not datos"
+
+## Validación de datos con DeepChecks: reportes HTML y RESUMEN.md en reports/deepchecks
+.PHONY: deepchecks
+deepchecks:
+	$(PYTHON_INTERPRETER) -m mibici.validacion
+
+## Chequeos de seguridad: bandit, pip-audit y secretos; reportes en reports/seguridad
+.PHONY: seguridad
+seguridad:
+	$(PYTHON_INTERPRETER) scripts/chequeos_seguridad.py
+
+## Pruebas + DeepChecks + seguridad (en Windows: scripts\ejecutar_calidad.ps1)
+.PHONY: calidad
+calidad: test deepchecks seguridad
 
 #################################################################################
 # Self Documenting Commands                                                     #

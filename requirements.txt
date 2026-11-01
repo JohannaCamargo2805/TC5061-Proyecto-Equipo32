@@ -28,4 +28,10 @@ bandit==1.9.4
 pip-audit==2.10.1
 detect-secrets==1.5.0
 
+# Dependencias transitivas fijadas por seguridad: pip-audit encontró en el entorno instalado
+# tornado 6.5.10 (CVE-2026-116577, CVE-2026-115927, CVE-2026-116578; la usan jupyter/ipykernel)
+# y pyasn1 0.6.4 (CVE-2026-119194 a CVE-2026-119197). Versiones corregidas:
+tornado==6.6
+pyasn1==0.6.5
+
 -e .

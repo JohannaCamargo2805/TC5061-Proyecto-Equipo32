@@ -30,3 +30,10 @@ def git(*args: str, cwd: Path = PROJ_ROOT) -> str:
     """Ejecuta ``git <args>`` en el repositorio y devuelve la salida sin espacios finales."""
     # Revisado (bandit B603): ejecutable con ruta absoluta, sin shell y con argumentos fijos.
     return subprocess.check_output([ruta_git(), *args], cwd=cwd, text=True).strip()  # nosec B603
+
+
+def git_lote(entrada: str, *args: str, cwd: Path = PROJ_ROOT) -> bytes:
+    """``git <args>`` leyendo ``entrada`` por stdin (p. ej. ``cat-file --batch``); salida en bytes."""
+    # Revisado (bandit B603): ejecutable con ruta absoluta, sin shell y con argumentos fijos.
+    return subprocess.run([ruta_git(), *args], cwd=cwd, input=entrada.encode(),  # nosec B603
+                          capture_output=True, check=True).stdout

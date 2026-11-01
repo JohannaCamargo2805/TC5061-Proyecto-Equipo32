@@ -1,8 +1,8 @@
 """Busca secretos (contraseñas, tokens, llaves privadas) en el repositorio y en TODO su historial.
 
-1. ``detect-secrets`` sobre cada archivo versionado (``git ls-files``).
-2. ``detect-secrets`` sobre cada versión de cada archivo de texto en el historial de Git
+1. ``detect-secrets`` sobre cada versión de cada archivo de texto en el historial de Git
    (todas las ramas): un secreto borrado en un commit posterior sigue expuesto en el historial.
+2. Los hallazgos de las versiones actuales (``git ls-files``) se reportan aparte.
 3. Comprueba que los archivos sensibles (``.env``, datos, base de MLflow, llaves) estén
    ignorados por ``.gitignore`` y que ninguno esté versionado.
 
@@ -32,7 +32,7 @@ from detect_secrets import SecretsCollection
 from detect_secrets.settings import default_settings
 
 from mibici.config import PROJ_ROOT
-from mibici.git_seguro import GitError, git
+from mibici.git_seguro import GitError, git, git_lote
 
 SALIDA = PROJ_ROOT / "reports" / "seguridad" / "secretos.json"
 BINARIOS = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".docx", ".xlsx", ".pptx", ".parquet",
@@ -88,35 +88,40 @@ def _escanear(nombre: str, contenido: bytes) -> list[dict]:
     return hallazgos
 
 
-def escanear_arbol() -> list[dict]:
-    """Archivos versionados en el commit actual."""
-    hallazgos = []
-    for nombre in git("ls-files").splitlines():
-        ruta = PROJ_ROOT / nombre
-        if ruta.suffix.lower() in BINARIOS or not ruta.is_file():
-            continue
-        for h in _escanear(nombre, ruta.read_bytes()):
-            hallazgos.append({"archivo": nombre, **h})
-    return hallazgos
+def escanear_historial() -> tuple[int, dict[str, list[dict]]]:
+    """Cada versión (blob) de cada archivo de texto en todas las ramas del historial.
 
-
-def escanear_historial() -> tuple[int, list[dict]]:
-    """Cada versión (blob) de cada archivo de texto en todas las ramas del historial."""
-    vistos, hallazgos = set(), []
+    Lee todos los blobs con un solo ``git cat-file --batch`` (rápido también en Windows) y
+    devuelve los hallazgos agrupados por blob.
+    """
+    nombres = {}
     for linea in git("rev-list", "--all", "--objects").splitlines():
         partes = linea.split(" ", 1)
-        if len(partes) != 2 or partes[0] in vistos:
-            continue
-        sha, nombre = partes
-        if PurePosixPath(nombre).suffix.lower() in BINARIOS:
-            continue
-        if git("cat-file", "-t", sha) != "blob" or int(git("cat-file", "-s", sha)) > MAX_BYTES:
-            continue
-        vistos.add(sha)
-        contenido = git("cat-file", "-p", sha).encode("utf-8", errors="replace")
-        for h in _escanear(nombre, contenido):
-            hallazgos.append({"archivo": nombre, "blob": sha[:12], **h})
-    return len(vistos), hallazgos
+        if len(partes) == 2 and PurePosixPath(partes[1]).suffix.lower() not in BINARIOS:
+            nombres.setdefault(partes[0], partes[1])
+    tipos = git_lote("\n".join(nombres) + "\n", "cat-file", "--batch-check").decode().splitlines()
+    blobs = [t.split()[0] for t in tipos
+             if len(t.split()) == 3 and t.split()[1] == "blob" and int(t.split()[2]) <= MAX_BYTES]
+    salida = git_lote("\n".join(blobs) + "\n", "cat-file", "--batch")
+    por_blob, pos = {}, 0
+    for sha in blobs:
+        fin_cabecera = salida.index(b"\n", pos)
+        tamano = int(salida[pos:fin_cabecera].split()[2])
+        contenido = salida[fin_cabecera + 1: fin_cabecera + 1 + tamano]
+        pos = fin_cabecera + 1 + tamano + 1  # contenido + salto de línea separador
+        por_blob[sha] = [{"archivo": nombres[sha], "blob": sha[:12], **h}
+                         for h in _escanear(nombres[sha], contenido)]
+    return len(blobs), por_blob
+
+
+def escanear_arbol(por_blob: dict[str, list[dict]]) -> list[dict]:
+    """Hallazgos en los archivos versionados del commit actual (sus blobs ya se escanearon)."""
+    hallazgos = []
+    for linea in git("ls-files", "-s").splitlines():
+        meta, nombre = linea.split("\t", 1)
+        for h in por_blob.get(meta.split()[1], []):
+            hallazgos.append({**h, "archivo": nombre})
+    return hallazgos
 
 
 def revisar_ignorados() -> list[dict]:
@@ -137,12 +142,14 @@ def revisar_ignorados() -> list[dict]:
 
 
 def main() -> int:
-    arbol = escanear_arbol()
-    n_blobs, historial = escanear_historial()
+    n_blobs, por_blob = escanear_historial()
+    historial = [h for lista in por_blob.values() for h in lista]
+    arbol = escanear_arbol(por_blob)
     ignorados = revisar_ignorados()
     commits = int(git("rev-list", "--all", "--count"))
-    reales = [h for h in arbol + historial if not h["falso_positivo"]]
-    revisados = [h for h in arbol + historial if h["falso_positivo"]]
+    # El historial incluye las versiones actuales: se cuenta cada versión una sola vez.
+    reales = [h for h in historial if not h["falso_positivo"]]
+    revisados = [h for h in historial if h["falso_positivo"]]
     motivos = {}
     for h in revisados:
         motivos[h["falso_positivo"]] = motivos.get(h["falso_positivo"], 0) + 1
@@ -165,8 +172,8 @@ def main() -> int:
     total = len(reales) + len(ignorados)
     print(f"Archivos versionados revisados: {resumen['archivos_versionados']}")
     print(f"Versiones de archivo en el historial ({commits} commits): {n_blobs}")
-    print(f"Coincidencias de detect-secrets: {len(arbol)} en el árbol actual, "
-          f"{len(historial)} en el historial")
+    print(f"Coincidencias de detect-secrets: {len(historial)} en todo el historial "
+          f"({len(arbol)} en los archivos actuales)")
     for motivo, n in motivos.items():
         print(f"  - falso positivo revisado ({n}): {motivo}")
     print(f"Secretos reales: {len(reales)}")
