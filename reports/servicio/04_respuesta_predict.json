@@ -1,0 +1,17 @@
+﻿{
+    "estacion_id": 2,
+    "fecha": "2025-11-04",
+    "viajes_esperados": 64.549,
+    "viajes_esperados_redondeado": 65,
+    "advertencias": [
+        "dias_activa=307 está fuera del rango de entrenamiento [28, 272]: el modelo extrapola"
+    ],
+    "modelo": {
+        "nombre": "mibici-equipo32-p1-demanda",
+        "version": 1,
+        "alias": [
+            "champion"
+        ],
+        "run_id": "38260a3c12e84155b76d9c126b7be2e1"
+    }
+}

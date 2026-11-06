@@ -1,0 +1,44 @@
+== 1/5 bandit (código) ==
+   hallazgos: 0  {'high': 0, 'medium': 0, 'low': 0}
+== 2/5 pip-audit (requirements.txt) ==
+   vulnerabilidades: 0
+== 3/5 pip-audit (requirements-api.txt, imagen del contenedor) ==
+   vulnerabilidades: 0
+== 4/5 pip-audit (entorno instalado) ==
+   vulnerabilidades: 0
+== 5/5 secretos y .gitignore ==
+Archivos versionados revisados: 136
+Versiones de archivo en el historial (117 commits): 222
+Coincidencias de detect-secrets: 52 en todo el historial (52 en los archivos actuales)
+  - falso positivo revisado (14): hash SHA-256 o data_version del manifiesto de datos
+  - falso positivo revisado (27): SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado
+  - falso positivo revisado (6): imagen PNG en base64 dentro de la salida de un notebook
+  - falso positivo revisado (3): hash de commit o de blob de Git en el reporte del propio escáner
+  - falso positivo revisado (2): vector de prueba de SHA-256 (cadenas 'abc' y vacía)
+Secretos reales: 0
+Rutas sensibles revisadas: 12; sin ignorar o versionadas: 0
+Resultado: SIN HALLAZGOS -> C:\Users\jlmed\Desktop\Tareas Maestria\mibici_datos\TC5061-Equipo32-equipo\reports\seguridad\secretos.json
+
+# Resumen de los chequeos de seguridad
+
+Generado por `python scripts/chequeos_seguridad.py` el 2026-11-06 22:45 UTC (Python 3.14.8, Windows-11-10.0.26200-SP0).
+
+| Chequeo | Herramienta | Resultado | Estado |
+|---|---|---|---|
+| Código (análisis estático) | bandit | 0 hallazgos en 5,600 líneas (alta 0, media 0, baja 0); 5 revisados con `# nosec` | sin hallazgos |
+| Dependencias fijadas | pip-audit -r requirements.txt | 30 paquetes, 0 vulnerabilidades | sin hallazgos |
+| Imagen de la API (entrega 4) | pip-audit -r requirements-api.txt | 53 paquetes, 0 vulnerabilidades | sin hallazgos |
+| Entorno instalado (incluye transitivas) | pip-audit | 209 paquetes, 0 vulnerabilidades | sin hallazgos |
+| Secretos en árbol e historial | detect-secrets | 222 versiones de archivo, 0 secretos reales | sin hallazgos |
+| Archivos sensibles fuera de Git | git check-ignore | 0 problemas | sin hallazgos |
+
+
+Coincidencias de detect-secrets revisadas (no son secretos):
+
+- 14 × hash SHA-256 o data_version del manifiesto de datos
+- 27 × SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado
+- 6 × imagen PNG en base64 dentro de la salida de un notebook
+- 3 × hash de commit o de blob de Git en el reporte del propio escáner
+- 2 × vector de prueba de SHA-256 (cadenas 'abc' y vacía)
+
+RESULTADO GLOBAL: SIN HALLAZGOS

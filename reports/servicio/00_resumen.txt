@@ -1,0 +1,16 @@
+﻿TC5061 Equipo 32 | Entrega 4 | Resumen | 2026-11-06 16:16 | JOHANNACAMARGO | motor: docker
+Commit: 41ac694 Merge branch 'build/contenedor': imagen OCI de la API con Podman o Docker
+Imagen: mibici-p1-api:modelo-v1
+
+Paso                                       Resultado
+----                                       ---------
+1. Modelo desde el registry                        0
+2. docker build                                    0
+3. docker run + /health                            0
+4. POST /predict                            HTTP 200
+5. POST /predict/lote                       HTTP 200
+6. GET /modelo                              HTTP 200
+7. Entrada invalida         HTTP 422 (se espera 422)
+
+
+

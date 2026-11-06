@@ -1,0 +1,41 @@
+﻿{
+    "n": 3,
+    "modelo": {
+        "nombre": "mibici-equipo32-p1-demanda",
+        "version": 1,
+        "alias": [
+            "champion"
+        ],
+        "run_id": "38260a3c12e84155b76d9c126b7be2e1"
+    },
+    "predicciones": [
+        {
+            "estacion_id": 2,
+            "fecha": "2025-11-04",
+            "viajes_esperados": 64.549,
+            "viajes_esperados_redondeado": 65,
+            "advertencias": [
+                "dias_activa=307 está fuera del rango de entrenamiento [28, 272]: el modelo extrapola"
+            ]
+        },
+        {
+            "estacion_id": 35,
+            "fecha": "2025-11-04",
+            "viajes_esperados": 312.201,
+            "viajes_esperados_redondeado": 312,
+            "advertencias": [
+                "media_7d=275.4286 está fuera del rango de entrenamiento [0, 273.857]: el modelo extrapola",
+                "dias_activa=307 está fuera del rango de entrenamiento [28, 272]: el modelo extrapola"
+            ]
+        },
+        {
+            "estacion_id": 50,
+            "fecha": "2025-11-04",
+            "viajes_esperados": 170.295,
+            "viajes_esperados_redondeado": 170,
+            "advertencias": [
+                "dias_activa=307 está fuera del rango de entrenamiento [28, 272]: el modelo extrapola"
+            ]
+        }
+    ]
+}

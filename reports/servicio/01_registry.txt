@@ -1,0 +1,12 @@
+﻿2026/11/06 16:04:04 WARNING mlflow.utils.requirements_utils: Detected one or more mismatches between the model's dependencies and the current Python environment:
+ - mlflow (current: 3.17.2, required: mlflow==3.17.1)
+To fix the mismatches, call `mlflow.pyfunc.get_model_dependencies(model_uri)` to fetch the model's environment and install dependencies using the resulting environment file.
+Model Registry      : http://127.0.0.1:5000
+Modelo registrado   : mibici-equipo32-p1-demanda  (@challenger -> v2, @champion -> v1)
+Versión recuperada  : v1 por alias @champion  ->  models:/mibici-equipo32-p1-demanda/1
+Corrida de origen   : p1-candidate-poisson (38260a3c12e84155b76d9c126b7be2e1), estado READY
+Linaje              : commit e6c1a60, data_version 7aa5e436d887, modelo poisson (glm_poisson)
+Métricas            : val_mae=5.104  test_mae=5.410  test_wape=0.175
+Firma de entrada    : 12 variables: dia_semana, fin_semana, feriado, lag_1, lag_2, lag_7, lag_14, media_7d, media_28d, media_mismo_dia_4sem, dias_activa, capacidad
+Descargado en       : models\servicio (25 archivos, SHA-256 en registro.json)
+Verificación        : mlflow.pyfunc carga la copia y predice el input_example -> [36.655, 26.091, 58.991, 64.549, 65.071]
