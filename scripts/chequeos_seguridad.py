@@ -1,8 +1,9 @@
 """Chequeos de seguridad del repositorio con un solo comando.
 
-1. **bandit**: análisis estático del código (``mibici/`` y ``scripts/``).
+1. **bandit**: análisis estático del código (``mibici/``, ``scripts/`` y ``api/``).
 2. **pip-audit**: vulnerabilidades conocidas (PyPI/OSV) en las versiones fijadas de
-   ``requirements.txt`` y en todos los paquetes instalados del entorno (incluye las
+   ``requirements.txt``, en las de ``requirements-api.txt`` (la imagen del contenedor de
+   la entrega 4) y en todos los paquetes instalados del entorno (incluye las
    dependencias transitivas).
 3. **Secretos**: ``scripts/escanear_secretos.py`` (detect-secrets en el árbol y en todo el
    historial de Git, más la revisión de ``.gitignore``).
@@ -44,7 +45,7 @@ def _herramienta(*args: str, salida_texto: Path | None = None) -> int:
 
 
 def bandit() -> dict:
-    base = ["bandit", "-c", "pyproject.toml", "-r", "mibici", "scripts"]
+    base = ["bandit", "-c", "pyproject.toml", "-r", "mibici", "scripts", "api"]
     _herramienta(*base, "-f", "txt", "-o", str(SALIDA / "bandit.txt"))
     _herramienta(*base, "-f", "json", "-o", str(SALIDA / "bandit.json"))
     datos = json.loads((SALIDA / "bandit.json").read_text(encoding="utf-8"))
@@ -94,6 +95,7 @@ def secretos() -> dict:
 def escribir_resumen(res: dict) -> Path:
     b, pr, pe, s = res["bandit"], res["pip_audit_requirements"], res["pip_audit_entorno"], \
         res["secretos"]
+    pa = res["pip_audit_api"]
     estado = {True: "sin hallazgos", False: "REVISAR"}
     lineas = [
         "# Resumen de los chequeos de seguridad", "",
@@ -106,6 +108,9 @@ def escribir_resumen(res: dict) -> Path:
         f"{b['revisados_nosec']} revisados con `# nosec` | {estado[b['ok']]} |"),
         (f"| Dependencias fijadas | pip-audit -r requirements.txt | {pr['paquetes_auditados']} "
         f"paquetes, {len(pr['vulnerabilidades'])} vulnerabilidades | {estado[pr['ok']]} |"),
+        (f"| Imagen de la API (entrega 4) | pip-audit -r requirements-api.txt | "
+        f"{pa['paquetes_auditados']} paquetes, {len(pa['vulnerabilidades'])} vulnerabilidades | "
+        f"{estado[pa['ok']]} |"),
         (f"| Entorno instalado (incluye transitivas) | pip-audit | {pe['paquetes_auditados']} "
         f"paquetes, {len(pe['vulnerabilidades'])} vulnerabilidades | {estado[pe['ok']]} |"),
         (f"| Secretos en árbol e historial | detect-secrets | {s['versiones_revisadas']} versiones "
@@ -114,7 +119,7 @@ def escribir_resumen(res: dict) -> Path:
         f"{len(s['problemas_gitignore'])} problemas | {estado[not s['problemas_gitignore']]} |"),
         "",
     ]
-    for clave in ("pip_audit_requirements", "pip_audit_entorno"):
+    for clave in ("pip_audit_requirements", "pip_audit_api", "pip_audit_entorno"):
         for v in res[clave]["vulnerabilidades"]:
             lineas.append(f"- {res[clave]['herramienta']}: {v['paquete']} {v['version']} — "
                           f"{v['id']} (corregida en {', '.join(v['corregida_en']) or 'sin versión'})")
@@ -128,17 +133,21 @@ def escribir_resumen(res: dict) -> Path:
 
 def main() -> int:
     SALIDA.mkdir(parents=True, exist_ok=True)
-    print("== 1/4 bandit (código) ==")
+    print("== 1/5 bandit (código) ==")
     res = {"bandit": bandit()}
     print(f"   hallazgos: {res['bandit']['hallazgos']}  {res['bandit']['por_severidad']}")
-    print("== 2/4 pip-audit (requirements.txt) ==")
+    print("== 2/5 pip-audit (requirements.txt) ==")
     res["pip_audit_requirements"] = pip_audit("requirements", "-r", "requirements.txt",
                                               "--no-deps", "--disable-pip")
     print(f"   vulnerabilidades: {len(res['pip_audit_requirements']['vulnerabilidades'])}")
-    print("== 3/4 pip-audit (entorno instalado) ==")
+    print("== 3/5 pip-audit (requirements-api.txt, imagen del contenedor) ==")
+    res["pip_audit_api"] = pip_audit("requirements_api", "-r", "requirements-api.txt",
+                                     "--no-deps", "--disable-pip")
+    print(f"   vulnerabilidades: {len(res['pip_audit_api']['vulnerabilidades'])}")
+    print("== 4/5 pip-audit (entorno instalado) ==")
     res["pip_audit_entorno"] = pip_audit("entorno")
     print(f"   vulnerabilidades: {len(res['pip_audit_entorno']['vulnerabilidades'])}")
-    print("== 4/4 secretos y .gitignore ==")
+    print("== 5/5 secretos y .gitignore ==")
     res["secretos"] = secretos()
     res.update(fecha=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
                python=platform.python_version(), sistema=platform.platform())
@@ -147,8 +156,8 @@ def main() -> int:
     ruta = escribir_resumen(res)
     print()
     print(ruta.read_text(encoding="utf-8"))
-    ok = all(res[k]["ok"] for k in ("bandit", "pip_audit_requirements", "pip_audit_entorno",
-                                    "secretos"))
+    ok = all(res[k]["ok"] for k in ("bandit", "pip_audit_requirements", "pip_audit_api",
+                                    "pip_audit_entorno", "secretos"))
     print("RESULTADO GLOBAL:", "SIN HALLAZGOS" if ok else "HAY HALLAZGOS POR REVISAR")
     return 0 if ok else 1
 
