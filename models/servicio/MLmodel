@@ -1,0 +1,48 @@
+artifact_path: file:C:/Users/jlmed/Downloads/mibici_datos/TC5061-Equipo32-equipo/mlruns/1/models/m-bdc2bb2472c6450d9e8dd66ec8930800/artifacts
+flavors:
+  python_function:
+    code: code
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.skops
+    predict_fn: predict
+    python_version: 3.14.8
+  sklearn:
+    code: code
+    pickled_model: model.skops
+    serialization_format: skops
+    sklearn_version: 1.9.1
+    skops_trusted_types: []
+is_signature_from_type_hint: false
+metadata:
+  data_version: 7aa5e436d887
+  git_commit: e6c1a602dd810676a27bad21f2e5dc6b61313282
+  model: poisson
+  question: p1
+mlflow_version: 3.17.1
+model_id: m-bdc2bb2472c6450d9e8dd66ec8930800
+model_size_bytes: 350602
+model_uuid: m-bdc2bb2472c6450d9e8dd66ec8930800
+prompts: null
+run_id: 38260a3c12e84155b76d9c126b7be2e1
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "double", "name": "dia_semana", "required": true}, {"type": "double",
+    "name": "fin_semana", "required": true}, {"type": "double", "name": "feriado",
+    "required": true}, {"type": "double", "name": "lag_1", "required": true}, {"type":
+    "double", "name": "lag_2", "required": true}, {"type": "double", "name": "lag_7",
+    "required": true}, {"type": "double", "name": "lag_14", "required": true}, {"type":
+    "double", "name": "media_7d", "required": true}, {"type": "double", "name": "media_28d",
+    "required": true}, {"type": "double", "name": "media_mismo_dia_4sem", "required":
+    true}, {"type": "double", "name": "dias_activa", "required": true}, {"type": "double",
+    "name": "capacidad", "required": true}]'
+  outputs: '[{"type": "double", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-10-19 20:39:48.735750'
