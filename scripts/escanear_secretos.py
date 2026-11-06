@@ -58,6 +58,9 @@ FALSOS_POSITIVOS = [
     ("hash de commit o de blob de Git en el reporte del propio escáner",
      lambda archivo, linea: archivo.startswith("reports/seguridad/")
      and re.search(r'"(commit|blob)": "[0-9a-f]{7,40}"', linea) is not None),
+    ("SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado",
+     lambda archivo, linea: archivo == "models/servicio/registro.json"
+     and re.search(r'^\s*"[\w./-]+": "[0-9a-f]{12,64}",?\s*$', linea) is not None),
     ("imagen PNG en base64 dentro de la salida de un notebook",
      lambda archivo, linea: archivo.endswith(".ipynb")
      and re.search(r'"image/png": "iVBORw0KGgo', linea) is not None),
