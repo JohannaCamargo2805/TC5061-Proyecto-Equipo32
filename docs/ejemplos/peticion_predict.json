@@ -1,0 +1,16 @@
+{
+  "estacion_id": 2,
+  "fecha": "2025-11-04",
+  "dia_semana": 1,
+  "fin_semana": 0,
+  "feriado": 0,
+  "lag_1": 61,
+  "lag_2": 27,
+  "lag_7": 65,
+  "lag_14": 64,
+  "media_7d": 56.5714,
+  "media_28d": 55.0357,
+  "media_mismo_dia_4sem": 64.0,
+  "dias_activa": 307,
+  "capacidad": 15
+}
