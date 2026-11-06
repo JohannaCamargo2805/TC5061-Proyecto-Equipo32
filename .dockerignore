@@ -1,0 +1,12 @@
+# Contexto de construcción de la imagen (Podman y Docker leen este archivo).
+# Lista blanca: solo entra lo que copia el Containerfile. Así no viajan al motor de
+# contenedores .venv, data/, mlruns/, mlflow.db, .env ni el historial de Git.
+*
+!Containerfile
+!requirements-api.txt
+!api/
+!api/**
+!models/servicio/
+!models/servicio/**
+**/__pycache__
+**/*.py[cod]
