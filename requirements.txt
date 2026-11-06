@@ -20,6 +20,14 @@ joblib==1.6.0
 pytest==9.1.1
 ipykernel==7.4.0
 
+# API REST (entrega 4): mismas versiones que requirements-api.txt (imagen del contenedor).
+# httpx2 lo usa el TestClient de FastAPI/Starlette en tests/test_api.py.
+fastapi==0.146.0
+starlette==1.9.0
+pydantic==2.14.1
+uvicorn==0.54.0
+httpx2==2.16.0
+
 # Validación de datos (ver mibici/compat_deepchecks.py)
 deepchecks==0.19.1
 
