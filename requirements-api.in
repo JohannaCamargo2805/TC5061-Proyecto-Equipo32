@@ -1,0 +1,15 @@
+# Dependencias directas de la imagen de la API. requirements-api.txt se genera a partir de
+# este archivo con todas las transitivas fijas:
+#   uv pip compile requirements-api.in -o requirements-api.txt --python-version 3.14 \
+#       --python-platform x86_64-manylinux_2_28 --no-header --annotation-style line
+fastapi==0.146.0
+starlette==1.9.0
+pydantic==2.14.1
+uvicorn==0.54.0
+mlflow-skinny==3.17.2
+# Mismas versiones con las que se entrenó el modelo (models/servicio/requirements.txt)
+scikit-learn==1.9.1
+scipy==1.18.1
+numpy==2.5.4
+pandas==3.0.6
+skops==0.16.0

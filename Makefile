@@ -8,6 +8,9 @@ PYTHON_INTERPRETER = python
 TRACKING_URI = http://127.0.0.1:5000
 EXPERIMENT = mibici-equipo32
 ENV_MANAGER = local
+MOTOR ?= podman
+IMAGEN = mibici-p1-api:modelo-v1
+CONTENEDOR = mibici-p1-api
 
 #################################################################################
 # COMMANDS                                                                      #
@@ -118,6 +121,34 @@ seguridad:
 ## Pruebas + DeepChecks + seguridad (en Windows: scripts\ejecutar_calidad.ps1)
 .PHONY: calidad
 calidad: test deepchecks seguridad
+
+## Entrega 4: recupera del Model Registry la versión @champion de P1 a models/servicio
+.PHONY: modelo-servicio
+modelo-servicio:
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) $(PYTHON_INTERPRETER) scripts/exportar_modelo_registry.py --alias champion
+
+## Entrega 4: API en local sin contenedor (http://127.0.0.1:8000/docs)
+.PHONY: api
+api:
+	$(PYTHON_INTERPRETER) -m uvicorn api.main:app --host 127.0.0.1 --port 8000
+
+## Entrega 4: construye la imagen de la API (MOTOR=podman por defecto; MOTOR=docker también sirve)
+.PHONY: imagen
+imagen:
+	$(MOTOR) build -f Containerfile -t $(IMAGEN) .
+
+## Entrega 4: levanta el contenedor en el puerto 8000
+.PHONY: contenedor
+contenedor:
+	-$(MOTOR) rm -f $(CONTENEDOR)
+	$(MOTOR) run -d --name $(CONTENEDOR) -p 8000:8000 $(IMAGEN)
+
+## Entrega 4: petición de prueba al contenedor (POST /predict con docs/ejemplos/peticion_predict.json)
+.PHONY: probar-api
+probar-api:
+	curl -s http://localhost:8000/health && echo
+	curl -s -X POST http://localhost:8000/predict -H "Content-Type: application/json" \
+		--data-binary @docs/ejemplos/peticion_predict.json && echo
 
 #################################################################################
 # Self Documenting Commands                                                     #

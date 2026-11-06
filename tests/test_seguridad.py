@@ -103,6 +103,7 @@ def test_dependencias_con_version_fija():
 def test_bandit_sin_hallazgos(tmp_path):
     reporte = tmp_path / "bandit.json"
     subprocess.run([sys.executable, "-m", "bandit", "-c", "pyproject.toml", "-r", "mibici",
-                    "scripts", "-f", "json", "-o", str(reporte), "-q"], cwd=PROJ_ROOT, check=False)
+                    "scripts", "api", "-f", "json", "-o", str(reporte), "-q"], cwd=PROJ_ROOT,
+                   check=False)
     resultados = json.loads(Path(reporte).read_text(encoding="utf-8"))["results"]
     assert resultados == [], [(r["test_id"], r["filename"], r["line_number"]) for r in resultados]

@@ -36,7 +36,7 @@ from mibici.git_seguro import GitError, git, git_lote
 
 SALIDA = PROJ_ROOT / "reports" / "seguridad" / "secretos.json"
 BINARIOS = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".docx", ".xlsx", ".pptx", ".parquet",
-            ".bundle", ".zip", ".gz", ".joblib", ".pkl", ".db"}
+            ".bundle", ".zip", ".gz", ".joblib", ".pkl", ".db", ".skops"}
 MAX_BYTES = 5_000_000
 
 # Rutas que NUNCA deben versionarse; cada una debe quedar ignorada por .gitignore.
