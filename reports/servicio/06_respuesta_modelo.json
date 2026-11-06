@@ -1,0 +1,97 @@
+﻿{
+    "nombre": "mibici-equipo32-p1-demanda",
+    "version": 1,
+    "alias": [
+        "champion"
+    ],
+    "run_id": "38260a3c12e84155b76d9c126b7be2e1",
+    "model_id": "m-bdc2bb2472c6450d9e8dd66ec8930800",
+    "origen": "empaquetado",
+    "uri_registry": "models:/mibici-equipo32-p1-demanda/1",
+    "git_commit": "e6c1a602dd810676a27bad21f2e5dc6b61313282",
+    "data_version": "7aa5e436d887",
+    "tipo_modelo": "poisson",
+    "metricas": {
+        "test_mae": 5.409736,
+        "test_mae_dic": 5.717718,
+        "test_mae_nov": 5.091345,
+        "test_mae_semanal_std": 1.024051,
+        "test_mape_total_dia": 0.090893,
+        "test_r2": 0.923407,
+        "test_rmse": 9.139281,
+        "test_sesgo": 1.357608,
+        "test_wape": 0.175256,
+        "val_mae": 5.103696,
+        "val_mae_se": 0.102781,
+        "val_mape_total_dia": 0.038106,
+        "val_r2": 0.949306,
+        "val_rmse": 8.294112,
+        "val_sesgo": -0.655544,
+        "val_wape": 0.142593
+    },
+    "variables": [
+        {
+            "nombre": "dia_semana",
+            "tipo": "double",
+            "descripcion": "Día de la semana del día que se predice: 0 = lunes … 6 = domingo."
+        },
+        {
+            "nombre": "fin_semana",
+            "tipo": "double",
+            "descripcion": "1 si el día que se predice es sábado o domingo; 0 en otro caso."
+        },
+        {
+            "nombre": "feriado",
+            "tipo": "double",
+            "descripcion": "1 si el día que se predice es de descanso obligatorio (art. 74 LFT) o Jueves/Viernes Santo."
+        },
+        {
+            "nombre": "lag_1",
+            "tipo": "double",
+            "descripcion": "Viajes iniciados en la estación el día anterior (D-1)."
+        },
+        {
+            "nombre": "lag_2",
+            "tipo": "double",
+            "descripcion": "Viajes iniciados hace 2 días (D-2)."
+        },
+        {
+            "nombre": "lag_7",
+            "tipo": "double",
+            "descripcion": "Viajes iniciados hace 7 días (D-7, mismo día de la semana anterior)."
+        },
+        {
+            "nombre": "lag_14",
+            "tipo": "double",
+            "descripcion": "Viajes iniciados hace 14 días (D-14)."
+        },
+        {
+            "nombre": "media_7d",
+            "tipo": "double",
+            "descripcion": "Promedio diario de viajes de D-7 a D-1."
+        },
+        {
+            "nombre": "media_28d",
+            "tipo": "double",
+            "descripcion": "Promedio diario de viajes de D-28 a D-1."
+        },
+        {
+            "nombre": "media_mismo_dia_4sem",
+            "tipo": "double",
+            "descripcion": "Promedio de D-7, D-14, D-21 y D-28 (mismo día de la semana, 4 semanas)."
+        },
+        {
+            "nombre": "dias_activa",
+            "tipo": "double",
+            "descripcion": "Días de historia de la estación hasta D-1 (mínimo 28, los que necesita media_28d)."
+        },
+        {
+            "nombre": "capacidad",
+            "tipo": "double",
+            "descripcion": "Anclajes instalados en la estación."
+        }
+    ],
+    "salida": "Viajes que se espera inicien en la estación el día D (conteo, regresión de Poisson).",
+    "recuperado": "2026-11-06T22:03:40+00:00",
+    "integridad_verificada": true
+}

@@ -1,0 +1,30 @@
+﻿{
+    "detail": [
+        {
+            "type": "value_error",
+            "loc": [
+                "body"
+            ],
+            "msg": "Value error, fin_semana=1 no corresponde a dia_semana=1 (fin_semana es 1 solo para 5 = sábado y 6 = domingo); media_7d=5.0 es imposible: 7 × media_7d debe ser al menos lag_1 + lag_2 + lag_7 = 153",
+            "input": {
+                "estacion_id": 2,
+                "fecha": "2025-11-04",
+                "dia_semana": 1,
+                "fin_semana": 1,
+                "feriado": 0,
+                "lag_1": 61,
+                "lag_2": 27,
+                "lag_7": 65,
+                "lag_14": 64,
+                "media_7d": 5.0,
+                "media_28d": 55.0357,
+                "media_mismo_dia_4sem": 64.0,
+                "dias_activa": 307,
+                "capacidad": 15
+            },
+            "ctx": {
+                "error": {}
+            }
+        }
+    ]
+}

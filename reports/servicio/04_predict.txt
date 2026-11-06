@@ -1,0 +1,2 @@
+﻿NAMES           IMAGE                     STATUS                        PORTS
+mibici-p1-api   mibici-p1-api:modelo-v1   Up About a minute (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp

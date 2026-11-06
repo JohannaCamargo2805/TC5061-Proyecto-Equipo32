@@ -1,0 +1,16 @@
+﻿bf74742c15ad7d13ffec58b7a3d46d83e1c3f0a8f54274225611a504de448b2e
+CONTAINER ID   IMAGE                     COMMAND                  CREATED          STATUS                    PORTS                                         NAMES
+bf74742c15ad   mibici-p1-api:modelo-v1   "uvicorn api.main:ap…"   58 seconds ago   Up 54 seconds (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp   mibici-p1-api
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Modelo mibici-equipo32-p1-demanda v1 listo (origen: empaquetado, aliases: champion, integridad verificada: True)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     172.17.0.1:39078 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.17.0.1:39078 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.17.0.1:39078 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.17.0.1:39078 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.17.0.1:39078 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.17.0.1:39078 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35122 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.17.0.1:39078 - "GET /health HTTP/1.1" 200 OK

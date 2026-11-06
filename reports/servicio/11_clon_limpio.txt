@@ -1,0 +1,19 @@
+== Clon limpio de la rama entrega4-servicio en C:\Users\jlmed\AppData\Local\Temp\mibici_clon_entrega4 ==
+core.autocrlf (global/sistema): input
+8dbbd66 Merge branch 'fix/escaner-registro-modelo': falsos positivos revisados del registro del modelo
+== Integridad del modelo en el clon (SHA-256 contra registro.json) ==
+Archivos verificados: 25   distintos: 0
+== docker build en el clon ==
+sha256:1b7e6f3ccf9ba2290ae88cde95d2706610f039d5059690bb2a561013454850e8
+codigo build: 0
+08d4692723736a6a669ed68c01bd1c30a58f7dc88e63ce7a955a55904198f675
+health: True
+POST /predict -> viajes_esperados=64.549 modelo=mibici-equipo32-p1-demanda v1
+Igual a la respuesta de la ejecucion principal (64.549): True
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Modelo mibici-equipo32-p1-demanda v1 listo (origen: empaquetado, aliases: champion, integridad verificada: True)
+INFO:     Application startup complete.
+mibici-p1-api-verificacion
+Untagged: mibici-p1-api:verificacion
+VERIFICACION_TERMINADA
