@@ -1,7 +1,7 @@
 {
   "bandit": {
     "herramienta": "bandit",
-    "lineas_analizadas": 4800,
+    "lineas_analizadas": 5600,
     "hallazgos": 0,
     "por_severidad": {
       "high": 0,
@@ -14,16 +14,23 @@
   },
   "pip_audit_requirements": {
     "herramienta": "pip-audit (requirements)",
-    "paquetes_auditados": 25,
+    "paquetes_auditados": 30,
     "omitidos": [
       "-e -"
     ],
     "vulnerabilidades": [],
     "ok": true
   },
+  "pip_audit_api": {
+    "herramienta": "pip-audit (requirements_api)",
+    "paquetes_auditados": 53,
+    "omitidos": [],
+    "vulnerabilidades": [],
+    "ok": true
+  },
   "pip_audit_entorno": {
     "herramienta": "pip-audit (entorno)",
-    "paquetes_auditados": 206,
+    "paquetes_auditados": 209,
     "omitidos": [
       "mibici"
     ],
@@ -33,16 +40,18 @@
   "secretos": {
     "herramienta": "detect-secrets + .gitignore",
     "secretos_reales": 0,
-    "versiones_revisadas": 167,
+    "versiones_revisadas": 222,
     "falsos_positivos_revisados": {
       "hash SHA-256 o data_version del manifiesto de datos": 14,
+      "SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado": 27,
       "imagen PNG en base64 dentro de la salida de un notebook": 6,
+      "hash de commit o de blob de Git en el reporte del propio escáner": 3,
       "vector de prueba de SHA-256 (cadenas 'abc' y vacía)": 2
     },
     "problemas_gitignore": [],
     "ok": true
   },
-  "fecha": "2026-11-01 23:29 UTC",
+  "fecha": "2026-11-06 22:45 UTC",
   "python": "3.14.8",
   "sistema": "Windows-11-10.0.26200-SP0"
 }
