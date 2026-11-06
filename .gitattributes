@@ -1,0 +1,3 @@
+# El modelo empaquetado se verifica byte a byte contra el SHA-256 de registro.json al
+# arrancar la API: Git no debe convertir finales de línea (CRLF/LF) en ningún sistema.
+models/servicio/** -text
