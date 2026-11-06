@@ -9,6 +9,8 @@ que no incluye datos, credenciales ni el entorno virtual.
 
 from pathlib import Path
 import re
+import shutil
+import subprocess
 
 import pytest
 import yaml
@@ -155,3 +157,15 @@ def test_mismas_versiones_con_las_que_se_registro_el_modelo():
     api, modelo = _pines(PROJ_ROOT / "requirements-api.txt"), _pines(SERVICIO_MODELO_DIR / "requirements.txt")
     for paquete in ("scikit-learn", "numpy", "pandas", "scipy", "skops"):
         assert api[paquete] == modelo[paquete], paquete
+
+
+@pytest.mark.skipif(shutil.which("git") is None or not (PROJ_ROOT / ".git").exists(),
+                    reason="requiere un clon de Git")
+def test_git_no_cambia_los_finales_de_linea_del_modelo():
+    """Sin esto, Git en Windows (core.autocrlf=true) convertiría LF -> CRLF al clonar y la API
+    no arrancaría: el SHA-256 de los archivos ya no coincidiría con registro.json."""
+    for archivo in ("models/servicio/MLmodel", "models/servicio/code/mibici/config.py",
+                    "models/servicio/registro.json"):
+        salida = subprocess.run(["git", "check-attr", "text", archivo], cwd=PROJ_ROOT,
+                                capture_output=True, text=True, check=True).stdout
+        assert salida.strip().endswith("text: unset"), salida
