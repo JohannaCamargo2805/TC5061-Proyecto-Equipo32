@@ -320,3 +320,13 @@ BUSQUEDAS = {
         "grid": {"k": [2, 3, 4, 5, 6, 7, 8]},
     },
 }
+
+
+# =============================================================================
+# Entrega 4: API REST en contenedor (FastAPI + Podman/Docker)
+# =============================================================================
+# La API (paquete ``api/``) sirve el modelo de P1. scripts/exportar_modelo_registry.py
+# lo recupera del Model Registry por nombre y versión (o alias) y lo deja en
+# models/servicio/, la carpeta que el Containerfile copia a la imagen.
+SERVICIO_PREGUNTA = "p1"
+SERVICIO_MODELO_DIR = MODELS_DIR / "servicio"
