@@ -258,6 +258,11 @@ def test_advertencia_fuera_del_rango_de_entrenamiento(cliente):
     assert len(fuera) == 1 and fuera[0].startswith("dias_activa=307")
     dentro = cliente.post("/predict", json={**EJEMPLO_ENTRADA, "dias_activa": 200}).json()
     assert dentro["advertencias"] == []
+    # lag_14 llega a 325 en TRAIN (los otros rezagos a 550): 400 ya es extrapolación.
+    lag14 = {**EJEMPLO_ENTRADA, "dias_activa": 200, "lag_14": 400, "media_mismo_dia_4sem": 120.0,
+             "media_28d": 70.0}
+    avisos = cliente.post("/predict", json=lag14).json()["advertencias"]
+    assert len(avisos) == 1 and avisos[0].startswith("lag_14=400")
 
 
 INVALIDAS = {
@@ -277,6 +282,10 @@ INVALIDAS = {
     "media-7d-imposible": ({**EJEMPLO_ENTRADA, "media_7d": 5.0}, "media_7d=5.0"),
     "media-4sem-imposible": ({**EJEMPLO_ENTRADA, "media_mismo_dia_4sem": 10.0}, "media_mismo_dia_4sem"),
     "media-28d-imposible": ({**EJEMPLO_ENTRADA, "media_28d": 10.0}, "media_28d=10.0"),
+    "estacion-texto": ({**EJEMPLO_ENTRADA, "estacion_id": "2"}, "estacion_id"),
+    "estacion-booleano": ({**EJEMPLO_ENTRADA, "estacion_id": True}, "estacion_id"),
+    "estacion-implausible": ({**EJEMPLO_ENTRADA, "estacion_id": 10**12}, "estacion_id"),
+    "fecha-numero": ({**EJEMPLO_ENTRADA, "fecha": 1762214400}, "fecha"),
 }
 
 
