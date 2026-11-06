@@ -141,3 +141,22 @@ Ejecutó las pruebas, DeepChecks y los chequeos de seguridad en su computadora c
 `scripts\ejecutar_calidad.ps1 -Capturas`; las capturas y la salida completa están en `docs/evidencia/`
 y `reports/calidad/`. Los commits incluyen la línea `Co-Authored-By: Claude` porque se usó Claude
 (Anthropic) como asistente de programación.
+
+## Entrega 4: el modelo P1 como API REST en un contenedor (versión individual)
+
+Misma mecánica que la entrega 3: versión de **Leydy Johanna Camargo Medina** (`JohannaCamargo2805`),
+en `main` de este repositorio. Ramas y commits (todos a su nombre):
+
+| Rama | Commits | Qué contiene |
+|---|---|---|
+| `feat/registry-exportar-modelo` | 2 | Constantes de la entrega en `mibici/config.py` y `scripts/exportar_modelo_registry.py` (modelo por nombre y versión o alias, `registro.json` con linaje y SHA-256) |
+| `feat/api-fastapi` | 7 | Paquete `api/` (esquemas Pydantic con validación de tipo, rango y consistencia; carga verificada del modelo; endpoints `/health`, `/modelo`, `/predict` y `/predict/lote`), dependencias, `tests/test_api.py` y `docs/ejemplos/` |
+| `build/contenedor` | 5 | `requirements-api.in/.txt`, `Containerfile`, `.dockerignore`, `tests/test_contenedor.py`, `scripts/ejecutar_servicio.ps1`, objetivos de `make` y auditoría de las dependencias de la imagen |
+| `build/modelo-servicio-v1` | 2 | `models/servicio/` (v1 de `mibici-equipo32-p1-demanda` descargada del registry) y `.gitattributes` |
+| `fix/escaner-registro-modelo` | 1 | Regla revisada del escáner de secretos para las huellas de `registro.json` |
+| `docs/readme-servicio` | 3 | README, este archivo, capturas (`docs/evidencia/entrega4/`) y salida de la ejecución (`reports/servicio/`, `reports/seguridad/`) |
+
+Recuperó el modelo del registry, construyó la imagen con Docker Desktop, levantó el contenedor y probó
+la API en su computadora con `scripts\ejecutar_servicio.ps1 -Motor docker -Exportar -Capturas`; corrió
+además todas las pruebas, los chequeos de seguridad y la construcción desde un clon limpio. Los commits
+incluyen la línea `Co-Authored-By: Claude` porque se usó Claude (Anthropic) como asistente de programación.
