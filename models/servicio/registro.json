@@ -31,6 +31,8 @@
     "source_run_name": "p1-candidate-poisson"
   },
   "metricas": {
+    "costo_inferencia_ms_1k": 3.390366,
+    "tamano_modelo_mb": 0.178563,
     "test_mae": 5.409736,
     "test_mae_dic": 5.717718,
     "test_mae_nov": 5.091345,
@@ -63,7 +65,7 @@
     "capacidad"
   ],
   "mlflow_version": "3.17.2",
-  "recuperado": "2026-11-06T22:03:40+00:00",
+  "recuperado": "2026-11-07T00:08:12+00:00",
   "sha256": {
     "code/mibici/__init__.py": "7126c11e94de4ccc1085917b0b902bbb8cdf4e3acf75cd58798919b6d0726c62",
     "code/mibici/config.py": "2964982e2b6eeb761c7fbb2c479287ef99a03daacd855f5940bffe611b3b06d7",
