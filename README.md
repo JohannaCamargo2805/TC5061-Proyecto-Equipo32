@@ -25,7 +25,7 @@ que apunta el alias `@champion` (Poisson lineal, `test_mae` = 5.41 viajes, `test
 |---|---|
 | Recuperación del modelo del Model Registry (nombre + versión o alias) | `scripts/exportar_modelo_registry.py` → `models/servicio/` + `registro.json` |
 | API REST con FastAPI | `api/main.py` (endpoints), `api/esquemas.py` (Pydantic), `api/modelo.py` (carga y predicción), `api/config.py` |
-| Contenedor (estándar OCI) | `Containerfile`, `.dockerignore` |
+| Contenedor (estándar OCI) | `Containerfile` (y `Dockerfile`, copia idéntica para Docker), `.dockerignore` |
 | Dependencias | `requirements-api.in` → `requirements-api.txt` (imagen); `requirements.txt` (desarrollo y pruebas) |
 | Pruebas | `tests/test_api.py` (43), `tests/test_contenedor.py` (24) |
 | Un solo comando | `scripts/ejecutar_servicio.ps1` (Windows) y `make modelo-servicio imagen contenedor probar-api` |
@@ -172,13 +172,15 @@ Requisitos: Podman (≥ 4) o Docker. Desde la raíz del repositorio (el modelo y
 
 | Paso | Podman | Docker |
 |---|---|---|
-| Construir la imagen | `podman build -f Containerfile -t mibici-p1-api:modelo-v1 .` | `docker build -f Containerfile -t mibici-p1-api:modelo-v1 .` |
+| Construir la imagen | `podman build -t mibici-p1-api:modelo-v1 .` | `docker build -t mibici-p1-api:modelo-v1 .` |
 | Levantar el contenedor | `podman run -d --name mibici-p1-api -p 8000:8000 mibici-p1-api:modelo-v1` | `docker run -d --name mibici-p1-api -p 8000:8000 mibici-p1-api:modelo-v1` |
 | Ver estado y logs | `podman ps` · `podman logs mibici-p1-api` | `docker ps` · `docker logs mibici-p1-api` |
 | Detener y borrar | `podman rm -f mibici-p1-api` | `docker rm -f mibici-p1-api` |
 
-- `-f Containerfile` hace que Docker use este archivo (Podman lo encuentra solo). Para que Podman
-  conserve el `HEALTHCHECK`, construye con `--format docker` (el formato OCI no lo guarda).
+- Podman busca `Containerfile` y Docker busca `Dockerfile`; el repositorio trae los dos con el mismo
+  contenido (`tests/test_contenedor.py` verifica que sean idénticos), así que ninguno necesita `-f`
+  (`-f Containerfile` también funciona). Para que Podman conserve el `HEALTHCHECK`, construye con
+  `--format docker` (el formato OCI no lo guarda).
 - Con `make`: `make imagen contenedor probar-api` (Podman por defecto; `MOTOR=docker` para Docker;
   `probar-api` espera a que `/health` responda antes de enviar la petición).
 - En Windows, **todo con un comando** (construir, levantar, esperar a `/health` y probar `/predict`,
@@ -371,6 +373,7 @@ Cada tema en su rama, integrada a `main` con `git merge --no-ff` (`git log --gra
 | `docs/readme-servicio` | 3 | Este README, `CONTRIBUCIONES.md`, capturas y salida de la primera ejecución |
 | `fix/revision-independiente-e4` | 5 | Correcciones de una revisión independiente contra la rúbrica: `estacion_id` y `fecha` más estrictos y rango real de `lag_14`, costo de inferencia en `registro.json` y `/modelo`, imagen base fijada por *digest* y versión del modelo como argumento, `make probar-api` que espera a `/health`, script que no pisa la evidencia sin `-Capturas` y `registro.json` regenerado |
 | `docs/revision-e4` | 4 | Regla del escáner para las respuestas guardadas de la API, capturas y salida de la ejecución sobre `58cd599`, reportes de seguridad y este README |
+| `build/dockerfile-por-defecto` | 2 | `Dockerfile` idéntico al `Containerfile` para que `docker build .` funcione sin `-f` (Docker 29 no busca `Containerfile`), con su prueba, y este README |
 
 **Uso de herramientas de IA.** El código, las pruebas y este documento se elaboraron con apoyo de
 Claude (Anthropic) como asistente de programación; los commits lo declaran con `Co-Authored-By: Claude`.
