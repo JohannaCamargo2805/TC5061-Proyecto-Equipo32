@@ -61,6 +61,10 @@ FALSOS_POSITIVOS = [
     ("SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado",
      lambda archivo, linea: archivo == "models/servicio/registro.json"
      and re.search(r'^\s*"[\w./-]+": "[0-9a-f]{12,64}",?\s*$', linea) is not None),
+    ("commit, data_version o id de MLflow en las respuestas guardadas de la API (evidencia)",
+     lambda archivo, linea: archivo.startswith("reports/servicio/")
+     and re.search(r'"(git_commit|data_version|run_id|model_id)": "(m-)?[0-9a-f]{12,40}"', linea)
+     is not None),
     ("imagen PNG en base64 dentro de la salida de un notebook",
      lambda archivo, linea: archivo.endswith(".ipynb")
      and re.search(r'"image/png": "iVBORw0KGgo', linea) is not None),

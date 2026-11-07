@@ -1,7 +1,7 @@
 {
   "bandit": {
     "herramienta": "bandit",
-    "lineas_analizadas": 5600,
+    "lineas_analizadas": 5615,
     "hallazgos": 0,
     "por_severidad": {
       "high": 0,
@@ -40,18 +40,19 @@
   "secretos": {
     "herramienta": "detect-secrets + .gitignore",
     "secretos_reales": 0,
-    "versiones_revisadas": 222,
+    "versiones_revisadas": 282,
     "falsos_positivos_revisados": {
       "hash SHA-256 o data_version del manifiesto de datos": 14,
-      "SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado": 27,
+      "SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado": 54,
       "imagen PNG en base64 dentro de la salida de un notebook": 6,
-      "hash de commit o de blob de Git en el reporte del propio escáner": 3,
+      "hash de commit o de blob de Git en el reporte del propio escáner": 7,
+      "commit, data_version o id de MLflow en las respuestas guardadas de la API (evidencia)": 4,
       "vector de prueba de SHA-256 (cadenas 'abc' y vacía)": 2
     },
     "problemas_gitignore": [],
     "ok": true
   },
-  "fecha": "2026-11-06 22:45 UTC",
+  "fecha": "2026-11-07 00:31 UTC",
   "python": "3.14.8",
   "sistema": "Windows-11-10.0.26200-SP0"
 }

@@ -1,7 +1,7 @@
 HTTP/1.1 200 OK
-date: Fri, 06 Nov 2026 22:16:17 GMT
+date: Sat, 07 Nov 2026 00:11:48 GMT
 content-length: 328
 content-type: application/json
-x-tiempo-respuesta-ms: 302.5
+x-tiempo-respuesta-ms: 239.5
 x-modelo: mibici-equipo32-p1-demanda/1
 

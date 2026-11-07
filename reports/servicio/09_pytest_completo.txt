@@ -4,24 +4,18 @@ rootdir: C:\Users\jlmed\Desktop\Tareas Maestria\mibici_datos\TC5061-Equipo32-equ
 configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.15.1, platformdirs-4.13.5
-collected 171 items
+collected 175 items
 
-tests\test_api.py .......................................                [ 22%]
-tests\test_contenedor.py ........................                        [ 36%]
-tests\test_dataset.py ...................                                [ 47%]
-tests\test_features_p1.py ........                                       [ 52%]
-tests\test_features_p2.py .............                                  [ 60%]
-tests\test_features_p3.py ............                                   [ 67%]
-tests\test_metricas.py ......                                            [ 70%]
-tests\test_mlproject.py ........                                         [ 75%]
+tests\test_api.py ...........................................            [ 24%]
+tests\test_contenedor.py ........................                        [ 38%]
+tests\test_dataset.py ...................                                [ 49%]
+tests\test_features_p1.py ........                                       [ 53%]
+tests\test_features_p2.py .............                                  [ 61%]
+tests\test_features_p3.py ............                                   [ 68%]
+tests\test_metricas.py ......                                            [ 71%]
+tests\test_mlproject.py ........                                         [ 76%]
 tests\test_reproducibilidad.py ..........                                [ 81%]
 tests\test_seguridad.py ................                                 [ 90%]
 tests\test_validacion_deepchecks.py ................                     [100%]
 
-============================== warnings summary ===============================
-tests/test_reproducibilidad.py: 61 warnings
-  C:\Users\jlmed\Desktop\Tareas Maestria\mibici_datos\TC5061-Equipo32-equipo\.venv\Lib\site-packages\sklearn\utils\parallel.py:144: UserWarning: `sklearn.utils.parallel.delayed` should be used with `sklearn.utils.parallel.Parallel` to make it possible to propagate the scikit-learn configuration of the current thread to the joblib workers.
-    warnings.warn(
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================ 171 passed, 61 warnings in 855.38s (0:14:15) =================
+======================= 175 passed in 436.06s (0:07:16) =======================

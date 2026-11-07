@@ -15,8 +15,9 @@ El ML Canvas y el diagrama de arquitectura se encuentran en `references/`.
 
 ## Entrega 4: el modelo P1 como API REST en un contenedor (FastAPI + Podman/Docker)
 
-**Versión individual de Leydy Johanna Camargo Medina (A01840540)**, con la misma mecánica de la
-entrega 3. El modelo que se despliega es el de **P1** (regresión de viajes por estación para el día
+**Versión individual de Leydy Johanna Camargo Medina (A01840540).** Por el acuerdo de la coordinación
+con el profesor para las actividades en equipo que faltan, cada integrante puede entregar su propia
+versión; esta vive en este repositorio (rama `main`), como la de la entrega 3. El modelo que se despliega es el de **P1** (regresión de viajes por estación para el día
 siguiente): la versión **1** de `mibici-equipo32-p1-demanda` en el Model Registry de MLflow, que es la
 que apunta el alias `@champion` (Poisson lineal, `test_mae` = 5.41 viajes, `test_wape` = 0.175).
 
@@ -26,7 +27,7 @@ que apunta el alias `@champion` (Poisson lineal, `test_mae` = 5.41 viajes, `test
 | API REST con FastAPI | `api/main.py` (endpoints), `api/esquemas.py` (Pydantic), `api/modelo.py` (carga y predicción), `api/config.py` |
 | Contenedor (estándar OCI) | `Containerfile`, `.dockerignore` |
 | Dependencias | `requirements-api.in` → `requirements-api.txt` (imagen); `requirements.txt` (desarrollo y pruebas) |
-| Pruebas | `tests/test_api.py` (39), `tests/test_contenedor.py` (24) |
+| Pruebas | `tests/test_api.py` (43), `tests/test_contenedor.py` (24) |
 | Un solo comando | `scripts/ejecutar_servicio.ps1` (Windows) y `make modelo-servicio imagen contenedor probar-api` |
 | Peticiones de ejemplo | `docs/ejemplos/peticion_predict.json`, `peticion_lote.json`, `peticion_invalida.json` |
 | Evidencia | `docs/evidencia/entrega4/` (capturas) y `reports/servicio/` (salida completa) |
@@ -61,7 +62,12 @@ Verificación        : mlflow.pyfunc carga la copia y predice el input_example -
 
 El script descarga `models:/mibici-equipo32-p1-demanda/1` a `models/servicio/` y escribe
 [`registro.json`](models/servicio/registro.json): versión, aliases, corrida de origen, linaje (commit,
-`data_version`), métricas de validación y prueba, firma de entrada y el **SHA-256 de cada archivo**.
+`data_version`), métricas de validación y prueba, costo de inferencia y tamaño del modelo, firma de
+entrada y el **SHA-256 de cada archivo**. El modelo se registró con MLflow 3.17.1 y el proyecto usa
+3.17.2 (por CVE-2026-53995, entrega 3); el formato del modelo es el mismo y las librerías que
+determinan las predicciones (scikit-learn, numpy, pandas, scipy y skops) tienen exactamente las
+versiones del registro (`tests/test_contenedor.py` lo comprueba), por eso la carga omite el aviso de
+MLflow sobre esa diferencia.
 
 **Opción elegida: empaquetar en la imagen el modelo descargado del registry.** El `Containerfile`
 copia `models/servicio/` a la imagen y la API, al arrancar, (1) verifica el SHA-256 de cada archivo
@@ -73,7 +79,9 @@ contrato; si algo no coincide, el contenedor no arranca. Razones:
 - **El registry del proyecto guarda los artefactos en rutas locales:** el experimento `mibici-equipo32`
   tiene su ubicación de artefactos en `file:C:/Users/.../mlruns/1`, que un contenedor Linux no puede leer.
 - **Cambio de versión y *rollback* explícitos:** al mover `@champion` se vuelve a correr el script y
-  se construye `modelo-v2`; regresar es volver a levantar la imagen anterior.
+  se construye `modelo-v2` (`make imagen` y `scripts\ejecutar_servicio.ps1` toman la versión de
+  `registro.json` para la etiqueta y para `--build-arg MODELO_VERSION`); regresar es volver a levantar
+  la imagen anterior.
 - `models/servicio/` se versiona en Git (360 KB, sin datos ni credenciales) para que la imagen se
   construya desde un clon limpio. `.gitattributes` lo marca `-text`: sin eso, Git para Windows
   convertiría LF a CRLF al clonar y el SHA-256 dejaría de coincidir.
@@ -84,7 +92,7 @@ contrato; si algo no coincide, el contenedor no arranca. Razones:
 ```bash
 podman run -d -p 8000:8000 -e MODELO_URI=models:/mibici-equipo32-p1-demanda/1 \
     -e MLFLOW_TRACKING_URI=http://host.containers.internal:5000 mibici-p1-api:modelo-v1
-# Docker: -e MLFLOW_TRACKING_URI=http://host.docker.internal:5000
+# Docker: -e MLFLOW_TRACKING_URI=http://host.docker.internal:5000 (en Linux agrega --add-host=host.docker.internal:host-gateway)
 ```
 
 Requiere que el contenedor alcance al servidor (con Podman, normalmente `--host 0.0.0.0` en `mlflow
@@ -95,6 +103,7 @@ arrancar. Esta ruta se prueba contra un registry temporal en `tests/test_api.py:
 
 | Método y ruta | Qué hace |
 |---|---|
+| `GET /` | Nombre del servicio, modelo y lista de endpoints |
 | `GET /health` | Estado del servicio y versión del modelo (lo usa el `HEALTHCHECK` del contenedor) |
 | `GET /modelo` | Versión del registry que se sirve, aliases, corrida de origen, commit, `data_version`, métricas y descripción de las 12 variables |
 | `POST /predict` | Viajes esperados de **una** estación para el día D |
@@ -118,8 +127,9 @@ predicción.
 **Validación en tres capas** (un error responde **422** con el campo y el motivo):
 
 1. *Tipo y rango de cada campo*: conteos enteros no negativos, banderas 0/1, números finitos (sin
-   `NaN`), textos y booleanos rechazados aunque parezcan números (`"62"`, `true`) y campos desconocidos
-   rechazados (`extra="forbid"`), así que un nombre mal escrito no pasa en silencio.
+   `NaN`), textos y booleanos rechazados aunque parezcan números (`"62"`, `true`), también en
+   `estacion_id` (1 a 99,999); `fecha` solo como `AAAA-MM-DD`; y campos desconocidos rechazados
+   (`extra="forbid"`), así que un nombre mal escrito no pasa en silencio.
 2. *Consistencia entre campos*, que se cumple por construcción en los datos reales (se comprobó en las
    124,234 filas): `fin_semana` debe corresponder a `dia_semana` y a `fecha`; y las medias deben
    contener los rezagos de su ventana: `7·media_7d ≥ lag_1 + lag_2 + lag_7`,
@@ -137,9 +147,10 @@ Para correrla sin contenedor: `python -m uvicorn api.main:app --port 8000` (o `m
 
 ### 3. El Containerfile
 
-- **Imagen base fija** `docker.io/library/python:3.14.8-slim-trixie`: la misma versión de Python con la
-  que se registró el modelo (`MLmodel` → `python_version`), con el nombre completo del registro para
-  que Podman no tenga que preguntar de dónde descargarla.
+- **Imagen base fija** `docker.io/library/python:3.14.8-slim-trixie@sha256:fbecd461…`: la misma versión
+  de Python con la que se registró el modelo (`MLmodel` → `python_version`), con el nombre completo del
+  registro (para que Podman no tenga que preguntar de dónde descargarla) y el *digest* del índice
+  multiplataforma que resolvió la construcción de la evidencia (una etiqueta re-publicada no cambia la base).
 - **Dos etapas:** la primera instala `requirements-api.txt` en un entorno virtual solo con ruedas
   precompiladas (`--only-binary=:all:`); la final copia el entorno, `api/` y `models/servicio/`, sin
   caché de pip ni herramientas de construcción.
@@ -148,10 +159,12 @@ Para correrla sin contenedor: `python -m uvicorn api.main:app --port 8000` (o `m
   `requirements.txt` que MLflow guardó con el modelo; `mlflow-skinny` basta para `mlflow.pyfunc` y deja
   fuera Flask, SQLAlchemy y el servidor. `pip-audit -r requirements-api.txt`: sin vulnerabilidades conocidas.
 - **Usuario sin privilegios** (UID 10001), puerto `8000`, `HEALTHCHECK` contra `/health` y
-  `CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]`.
+  `CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-server-header"]`.
 - **`.dockerignore` de lista blanca:** al motor solo viajan `Containerfile`, `requirements-api.txt`,
   `api/` y `models/servicio/`; nunca `.venv`, `data/`, `mlruns/`, `mlflow.db` ni `.env`.
-- `tests/test_contenedor.py` comprueba todo lo anterior sin construir la imagen.
+- `tests/test_contenedor.py` comprueba estas decisiones sin construir la imagen (base y versión de
+  Python, usuario, puerto, `HEALTHCHECK`, qué se copia, `.dockerignore` y versiones de las
+  dependencias); la auditoría de vulnerabilidades la hace `scripts/chequeos_seguridad.py`.
 
 ### 4. Construir, levantar y consumir la API
 
@@ -166,9 +179,14 @@ Requisitos: Podman (≥ 4) o Docker. Desde la raíz del repositorio (el modelo y
 
 - `-f Containerfile` hace que Docker use este archivo (Podman lo encuentra solo). Para que Podman
   conserve el `HEALTHCHECK`, construye con `--format docker` (el formato OCI no lo guarda).
-- Con `make`: `make imagen contenedor probar-api` (Podman por defecto; `MOTOR=docker` para Docker).
-- En Windows, **todo con un comando**, incluida la descarga del registry, las peticiones de prueba y
-  las capturas: `powershell -ExecutionPolicy Bypass -File scripts\ejecutar_servicio.ps1 -Motor docker -Exportar -Capturas`.
+- Con `make`: `make imagen contenedor probar-api` (Podman por defecto; `MOTOR=docker` para Docker;
+  `probar-api` espera a que `/health` responda antes de enviar la petición).
+- En Windows, **todo con un comando** (construir, levantar, esperar a `/health` y probar `/predict`,
+  `/predict/lote`, `/modelo` y una entrada inválida):
+  `powershell -ExecutionPolicy Bypass -File scripts\ejecutar_servicio.ps1 -Motor docker` (o `-Motor podman`).
+  Sin opciones usa el modelo ya versionado y deja la salida en `%TEMP%\mibici_servicio`.
+  `-Exportar` vuelve a descargar el modelo del registry (solo donde está el servidor del proyecto) y
+  `-Capturas` es el modo con el que se generó la evidencia: reemplaza `reports/servicio/` y las capturas.
 
 **Consumir la API.** Petición de ejemplo: estación 2, martes 4 de noviembre de 2025 (conjunto de
 prueba; ese día se iniciaron **63** viajes):
@@ -240,7 +258,7 @@ Variables de entorno del contenedor:
 | Variable | Valor en la imagen | Uso |
 |---|---|---|
 | `MODELO_URI` | `/app/models/servicio` | Modelo empaquetado, o `models:/<nombre>/<versión>` / `models:/<nombre>@<alias>` para leerlo del registry |
-| `MLFLOW_TRACKING_URI` | (sin definir) | Servidor de MLflow, solo con `MODELO_URI=models:/...` |
+| `MLFLOW_TRACKING_URI` | (sin definir: `http://127.0.0.1:5000`, que dentro del contenedor es el propio contenedor) | Servidor de MLflow; solo se usa con `MODELO_URI=models:/...` |
 | `VERIFICAR_INTEGRIDAD` | `1` | Verifica el SHA-256 de cada archivo del modelo contra `registro.json` |
 
 ### 5. Estrategia de despliegue: inferencia en línea (tiempo real) con variables calculadas por lotes
@@ -260,9 +278,11 @@ bajo demanda.
   una sola llamada, así que un proceso programado al cierre del día puede pedir las ~370 estaciones
   activas en una petición. Es la estrategia por lotes de Treveil et al. (2020, cap. 6) sin una segunda
   ruta de código.
-- **El costo lo permite:** el modelo pesa 0.18 MB y MLflow midió 3.4 ms por cada 1000 predicciones
-  (`costo_inferencia_ms_1k`). En el contenedor, `/predict` respondió en 29 ms desde Swagger, el lote de
-  tres en 68 ms y un 422 en 13 ms; la primera petición tras arrancar tardó 302 ms (calentamiento).
+- **El costo lo permite:** el modelo pesa 0.18 MB y la corrida de origen registró 3.39 ms por cada 1000
+  predicciones (`tamano_modelo_mb` y `costo_inferencia_ms_1k`, en `registro.json` y en `GET /modelo`).
+  En el contenedor, en una laptop, la primera predicción tras arrancar tardó 240 ms (calentamiento) y
+  las demás respuestas de la evidencia entre 6 y 191 ms (cabecera `X-Tiempo-Respuesta-ms`, en
+  `reports/servicio/*.headers.txt`): el tiempo lo ponen HTTP, JSON y la validación, no el modelo.
 - **Contenedor e imagen inmutable** (Treveil et al., 2020, cap. 6): misma imagen en la laptop, en un
   servidor o en un orquestador; la versión del modelo va en la etiqueta de la imagen y en `/modelo`, y
   la API se niega a arrancar si el modelo no es el registrado. Para más carga se levantan más réplicas
@@ -273,11 +293,15 @@ bajo demanda.
 
 ### 6. Evidencia de la ejecución
 
-Ejecución en la computadora de la autora (Windows 11, Docker Desktop 29.9.2, `.venv` con Python
-3.14.8) con `scripts\ejecutar_servicio.ps1 -Motor docker -Exportar -Capturas` sobre el commit `41ac694`
-(el que aparece en el resumen). Podman no estaba instalado en esa máquina; el `Containerfile` es OCI y
-los comandos de Podman de la sección 4 son equivalentes. Salida completa de cada paso y las respuestas
-JSON en [`reports/servicio/`](reports/servicio/).
+Ejecución en la computadora de la autora (Windows 11, Docker Desktop 4.96.3 con Docker Engine 29.9.2,
+ver [`02_motor_version.txt`](reports/servicio/02_motor_version.txt); `.venv` con Python 3.14.8) con
+`scripts\ejecutar_servicio.ps1 -Motor docker -Exportar -Capturas` sobre el commit `58cd599`, el que
+aparece en el resumen. El `registro.json` que generó esa descarga se versionó en el commit siguiente
+(`8c2a9c7`); los 25 archivos del modelo no cambiaron. Una primera ejecución completa sobre `41ac694`,
+antes de la revisión independiente, está en el historial de Git (`1c7f7ae`), con la construcción sin
+caché (unos 9 minutos, casi todo descarga de dependencias). Podman no estaba instalado en esa máquina;
+el `Containerfile` es OCI y los comandos de Podman de la sección 4 son equivalentes. Salida completa de
+cada paso y las respuestas JSON en [`reports/servicio/`](reports/servicio/).
 
 **La API respondiendo a una petición de prueba desde el contenedor** (`docker ps` muestra el contenedor
 `healthy`; `POST /predict` responde 200 con la versión 1 del registry):
@@ -290,7 +314,7 @@ JSON en [`reports/servicio/`](reports/servicio/).
 
 ![Versión 1 en el Model Registry](docs/evidencia/entrega4/01b_registry_ui_version1.jpg)
 
-**Paso 2: `docker build`** (salida completa en `reports/servicio/02_build.txt`; la imagen ocupa 823 MB en disco, 183 MB de contenido):
+**Paso 2: `docker build`** (salida en `reports/servicio/02_build.txt`, con las dependencias en caché de la construcción anterior; la imagen ocupa 823 MB en disco, 183 MB de contenido):
 
 ![docker build](docs/evidencia/entrega4/02_build.png)
 
@@ -302,7 +326,9 @@ JSON en [`reports/servicio/`](reports/servicio/).
 |---|---|---|
 | ![lote](docs/evidencia/entrega4/05_lote.png) | ![modelo](docs/evidencia/entrega4/06_modelo.png) | ![422](docs/evidencia/entrega4/07_validacion.png) |
 
-**Swagger UI del contenedor** (`http://localhost:8000/docs`) y `POST /predict` ejecutado desde ahí:
+**Swagger UI del contenedor** (`http://localhost:8000/docs`) y `POST /predict` ejecutado desde ahí
+(capturas del navegador integrado de la aplicación de Claude en la misma computadora; la petición se hizo
+mientras corrían las pruebas completas):
 
 | Endpoints y descripción | Respuesta 200 con cabeceras de trazabilidad |
 |---|---|
@@ -314,19 +340,22 @@ JSON en [`reports/servicio/`](reports/servicio/).
 
 Verificaciones adicionales en la misma computadora (salida en `reports/servicio/`):
 
-- **Todas las pruebas del proyecto: 171 aprobadas** (`python -m pytest`, 14 min; incluye las 39 de la
-  API y las 24 del contenedor; [`09_pytest_completo.txt`](reports/servicio/09_pytest_completo.txt)).
-  Entre ellas, con el modelo real y los datos reales: ninguna de las 124,234 filas se rechaza en la
-  validación y la API, al predecir por `/predict/lote` las 22,565 filas de prueba, reproduce el
-  `test_mae` registrado en MLflow (5.4097).
-- **Seguridad sin hallazgos** (`python scripts/chequeos_seguridad.py`;
+- **Todas las pruebas del proyecto: 175 aprobadas** (`python -m pytest`, 7 min; incluye las 43 de la
+  API y las 24 del contenedor; [`09_pytest_completo.txt`](reports/servicio/09_pytest_completo.txt) y
+  [`08_pytest_api.txt`](reports/servicio/08_pytest_api.txt)). Entre ellas, con el modelo real y los
+  datos reales: ninguna de las 124,234 filas se rechaza en la validación y la API, al predecir por
+  `/predict/lote` las 22,565 filas de prueba, reproduce el `test_mae` registrado en MLflow (5.4097).
+- **Seguridad sin hallazgos** sobre el commit que precede al que agrega esos reportes (`python scripts/chequeos_seguridad.py`;
   [`10_seguridad.txt`](reports/servicio/10_seguridad.txt) y [`reports/seguridad/RESUMEN.md`](reports/seguridad/RESUMEN.md)):
   bandit sin hallazgos en `mibici/`, `scripts/` y `api/`; pip-audit sin vulnerabilidades en
   `requirements.txt`, en las 53 dependencias de la imagen y en el entorno; sin secretos en el árbol ni
-  en el historial.
+  en el historial (las coincidencias de detect-secrets son hashes y identificadores revisados uno por
+  uno con reglas explícitas y probadas).
 - **Reproducible desde un clon limpio** ([`11_clon_limpio.txt`](reports/servicio/11_clon_limpio.txt)):
-  `git clone` de la rama, los 25 archivos del modelo coinciden con su SHA-256, `docker build`,
-  `docker run` y `POST /predict` devuelve 64.549, igual que en la ejecución principal.
+  `git clone` del commit `58cd599` (rama local `entrega4-servicio`), los 25 archivos del modelo coinciden
+  con su SHA-256, `docker build`, `docker run` y `POST /predict` devuelve 64.549, igual que en la
+  ejecución principal. En esa computadora Git usa `core.autocrlf=input`, así que ahí no se ejercita la
+  conversión a CRLF que evita `.gitattributes`; eso lo cubre `test_git_no_cambia_los_finales_de_linea_del_modelo`.
 
 ### Historial de Git de la entrega 4
 
@@ -339,7 +368,9 @@ Cada tema en su rama, integrada a `main` con `git merge --no-ff` (`git log --gra
 | `build/contenedor` | 5 | Dependencias de la imagen, `Containerfile` y `.dockerignore`, pruebas del contenedor, script de Windows y `make`, y auditoría de la imagen |
 | `build/modelo-servicio-v1` | 2 | La v1 descargada del registry en la computadora de la autora y `.gitattributes` para que Git no cambie sus bytes |
 | `fix/escaner-registro-modelo` | 1 | Regla revisada del escáner de secretos para las huellas SHA-256 de `registro.json` |
-| `docs/readme-servicio` | 3 | Este README, `CONTRIBUCIONES.md`, capturas y salida de la ejecución |
+| `docs/readme-servicio` | 3 | Este README, `CONTRIBUCIONES.md`, capturas y salida de la primera ejecución |
+| `fix/revision-independiente-e4` | 5 | Correcciones de una revisión independiente contra la rúbrica: `estacion_id` y `fecha` más estrictos y rango real de `lag_14`, costo de inferencia en `registro.json` y `/modelo`, imagen base fijada por *digest* y versión del modelo como argumento, `make probar-api` que espera a `/health`, script que no pisa la evidencia sin `-Capturas` y `registro.json` regenerado |
+| `docs/revision-e4` | 4 | Regla del escáner para las respuestas guardadas de la API, capturas y salida de la ejecución sobre `58cd599`, reportes de seguridad y este README |
 
 **Uso de herramientas de IA.** El código, las pruebas y este documento se elaboraron con apoyo de
 Claude (Anthropic) como asistente de programación; los commits lo declaran con `Co-Authored-By: Claude`.
@@ -982,11 +1013,11 @@ y consultarse en `http://localhost:5000`.
 
 ## Git y control de versiones
 
-Los datos de MiBici, modelos serializados, base de datos de MLflow, artefactos de MLflow y resultados generados por P3 se excluyen mediante `.gitignore`.
+Los datos de MiBici, modelos serializados, base de datos de MLflow, artefactos de MLflow y resultados generados por P3 se excluyen mediante `.gitignore`. La excepción es `models/servicio/` (entrega 4): la versión del Model Registry que se empaqueta en la imagen de la API, versionada con su `registro.json` y sin conversión de finales de línea (`.gitattributes`).
 
-El código se desarrolla en ramas independientes y todo cambio hacia `main` debe incorporarse mediante Pull Request revisado por otro integrante del equipo. En la entrega 3, que es una versión individual, cada rama se integró a `main` con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3)).
+El código se desarrolla en ramas independientes y todo cambio hacia `main` debe incorporarse mediante Pull Request revisado por otro integrante del equipo. En las entregas 3 y 4, que son versiones individuales, cada rama se integró a `main` con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3) y [de la entrega 4](#historial-de-git-de-la-entrega-4)).
 
-Convenciones: ramas `feat/`, `fix/`, `docs/` + descripción corta; mensajes de commit
+Convenciones: ramas `feat/`, `fix/`, `docs/`, `test/`, `build/` y `chore/` + descripción corta; mensajes de commit
 siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). En el
 repositorio del equipo la rama `main` está protegida; cada integrante abre al menos un PR y revisa al
 menos uno.
