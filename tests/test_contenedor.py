@@ -48,6 +48,12 @@ def _imagen_base() -> str:
     return re.search(r"^ARG IMAGEN_PYTHON=(\S+)", CONTAINERFILE, re.MULTILINE).group(1)
 
 
+def test_dockerfile_es_identico_al_containerfile():
+    """Docker solo busca "Dockerfile" por defecto y Podman "Containerfile": con los dos idénticos
+    funcionan "docker build ." y "podman build ." sin -f, y ninguno queda desactualizado."""
+    assert (PROJ_ROOT / "Dockerfile").read_bytes() == (PROJ_ROOT / "Containerfile").read_bytes()
+
+
 def test_imagen_base_con_version_exacta_y_nombre_completo():
     imagen = _imagen_base()
     assert re.fullmatch(r"docker\.io/library/python:3\.14\.\d+-slim-trixie@sha256:[0-9a-f]{64}", imagen), imagen

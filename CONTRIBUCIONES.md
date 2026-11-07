@@ -157,6 +157,7 @@ en `main` de este repositorio. Ramas y commits (todos a su nombre):
 | `docs/readme-servicio` | 3 | README, este archivo, capturas (`docs/evidencia/entrega4/`) y salida de la primera ejecución (`reports/servicio/`, `reports/seguridad/`) |
 | `fix/revision-independiente-e4` | 5 | Correcciones de una revisión independiente (validación de `estacion_id`, `fecha` y `lag_14`, costo de inferencia en `registro.json`, base por *digest*, versión como argumento, `make probar-api`, script de Windows) |
 | `docs/revision-e4` | 4 | Regla del escáner para las respuestas de la API, evidencia de la ejecución final, reportes de seguridad y README |
+| `build/dockerfile-por-defecto` | 2 | `Dockerfile` idéntico al `Containerfile` (Docker solo busca `Dockerfile`) y README |
 
 Recuperó el modelo del registry, construyó la imagen con Docker Desktop, levantó el contenedor y probó
 la API en su computadora con `scripts\ejecutar_servicio.ps1 -Motor docker -Exportar -Capturas`; corrió
