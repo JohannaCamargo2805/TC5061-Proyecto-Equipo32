@@ -8,7 +8,8 @@
 # * Todas las transitivas también van fijas (uv pip compile, Python 3.14, Linux x86_64): la
 #   imagen se construye igual hoy que dentro de un año.
 #
-# Generado desde requirements-api.in (ver ese archivo para regenerarlo).
+# Generado desde requirements-api.in con uv pip compile (ver ese archivo); este encabezado y las
+# marcas "directa" se agregaron a mano.
 annotated-doc==0.0.5      # via fastapi
 annotated-types==0.8.0    # via pydantic
 anyio==4.16.0             # via mlflow-skinny, starlette

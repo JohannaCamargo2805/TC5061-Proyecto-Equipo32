@@ -154,7 +154,9 @@ en `main` de este repositorio. Ramas y commits (todos a su nombre):
 | `build/contenedor` | 5 | `requirements-api.in/.txt`, `Containerfile`, `.dockerignore`, `tests/test_contenedor.py`, `scripts/ejecutar_servicio.ps1`, objetivos de `make` y auditoría de las dependencias de la imagen |
 | `build/modelo-servicio-v1` | 2 | `models/servicio/` (v1 de `mibici-equipo32-p1-demanda` descargada del registry) y `.gitattributes` |
 | `fix/escaner-registro-modelo` | 1 | Regla revisada del escáner de secretos para las huellas de `registro.json` |
-| `docs/readme-servicio` | 3 | README, este archivo, capturas (`docs/evidencia/entrega4/`) y salida de la ejecución (`reports/servicio/`, `reports/seguridad/`) |
+| `docs/readme-servicio` | 3 | README, este archivo, capturas (`docs/evidencia/entrega4/`) y salida de la primera ejecución (`reports/servicio/`, `reports/seguridad/`) |
+| `fix/revision-independiente-e4` | 5 | Correcciones de una revisión independiente (validación de `estacion_id`, `fecha` y `lag_14`, costo de inferencia en `registro.json`, base por *digest*, versión como argumento, `make probar-api`, script de Windows) |
+| `docs/revision-e4` | 4 | Regla del escáner para las respuestas de la API, evidencia de la ejecución final, reportes de seguridad y README |
 
 Recuperó el modelo del registry, construyó la imagen con Docker Desktop, levantó el contenedor y probó
 la API en su computadora con `scripts\ejecutar_servicio.ps1 -Motor docker -Exportar -Capturas`; corrió
