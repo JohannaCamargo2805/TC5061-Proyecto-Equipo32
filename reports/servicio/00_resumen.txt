@@ -1,5 +1,5 @@
-﻿TC5061 Equipo 32 | Entrega 4 | Resumen | 2026-11-06 16:16 | JOHANNACAMARGO | motor: docker
-Commit: 41ac694 Merge branch 'build/contenedor': imagen OCI de la API con Podman o Docker
+﻿TC5061 Equipo 32 | Entrega 4 | Resumen | 2026-11-06 18:12 | JOHANNACAMARGO | motor: docker
+Commit: 58cd599 build(scripts): make probar-api espera a /health y el script no pisa la evidencia sin -Capturas
 Imagen: mibici-p1-api:modelo-v1
 
 Paso                                       Resultado

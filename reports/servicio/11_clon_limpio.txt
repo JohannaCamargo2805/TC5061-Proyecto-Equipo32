@@ -1,12 +1,12 @@
 == Clon limpio de la rama entrega4-servicio en C:\Users\jlmed\AppData\Local\Temp\mibici_clon_entrega4 ==
-core.autocrlf (global/sistema): input
-8dbbd66 Merge branch 'fix/escaner-registro-modelo': falsos positivos revisados del registro del modelo
+core.autocrlf (global/sistema): input   commit: 58cd599
+58cd599 build(scripts): make probar-api espera a /health y el script no pisa la evidencia sin -Capturas
 == Integridad del modelo en el clon (SHA-256 contra registro.json) ==
 Archivos verificados: 25   distintos: 0
 == docker build en el clon ==
-sha256:1b7e6f3ccf9ba2290ae88cde95d2706610f039d5059690bb2a561013454850e8
+sha256:903b79a878c549959ebf3adb55dfb5df247bc49eb7a8495ca5bab4ebacb704d5
 codigo build: 0
-08d4692723736a6a669ed68c01bd1c30a58f7dc88e63ce7a955a55904198f675
+1cc0db0fae9c4daed280a73e0d68a4039047fc614a10762a74bd78ef31980180
 health: True
 POST /predict -> viajes_esperados=64.549 modelo=mibici-equipo32-p1-demanda v1
 Igual a la respuesta de la ejecucion principal (64.549): True

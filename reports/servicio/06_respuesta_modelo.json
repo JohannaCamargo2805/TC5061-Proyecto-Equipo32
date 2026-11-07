@@ -12,6 +12,8 @@
     "data_version": "7aa5e436d887",
     "tipo_modelo": "poisson",
     "metricas": {
+        "costo_inferencia_ms_1k": 3.390366,
+        "tamano_modelo_mb": 0.178563,
         "test_mae": 5.409736,
         "test_mae_dic": 5.717718,
         "test_mae_nov": 5.091345,
@@ -92,6 +94,6 @@
         }
     ],
     "salida": "Viajes que se espera inicien en la estación el día D (conteo, regresión de Poisson).",
-    "recuperado": "2026-11-06T22:03:40+00:00",
+    "recuperado": "2026-11-07T00:08:12+00:00",
     "integridad_verificada": true
 }
