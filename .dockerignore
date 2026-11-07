@@ -3,6 +3,7 @@
 # contenedores .venv, data/, mlruns/, mlflow.db, .env ni el historial de Git.
 *
 !Containerfile
+!Dockerfile
 !requirements-api.txt
 !api/
 !api/**

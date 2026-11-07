@@ -1,4 +1,6 @@
 # Containerfile (estándar OCI) de la API REST de MiBici P1 (FastAPI + modelo del Model Registry).
+# Dockerfile es una copia idéntica (el nombre que Docker busca por defecto), así que también basta
+# "docker build ." o "podman build ."; tests/test_contenedor.py verifica que no se separen.
 # Sirve igual con Podman o con Docker:
 #
 #   podman build -f Containerfile -t mibici-p1-api:modelo-v1 .
