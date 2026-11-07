@@ -9,8 +9,10 @@
 # -Exportar : antes de construir descarga del Model Registry la version @champion a
 #             models\servicio (scripts\exportar_modelo_registry.py). Necesita el servidor de
 #             MLflow levantado (scripts\servidor_mlflow.ps1) en MLFLOW_TRACKING_URI.
-# -Capturas : guarda una captura de pantalla al final de cada paso en docs\evidencia\entrega4\.
-# Salida completa de cada paso en reports\servicio\*.txt; respuestas de la API en *.json.
+# -Exportar solo funciona donde esta el registry del proyecto (sus artefactos son rutas locales);
+#             sin -Exportar se usa el modelo que ya esta versionado en models\servicio.
+# -Capturas : modo evidencia: capturas en docs\evidencia\entrega4\ y salida en reports\servicio\
+#             (reemplaza la evidencia versionada). Sin -Capturas la salida va a %TEMP%\mibici_servicio.
 # El contenedor queda corriendo al final (docs en http://localhost:8000/docs).
 # Solo ASCII: Windows PowerShell 5.1 lee los .ps1 como ANSI.
 param([string]$Motor = "", [switch]$Exportar, [switch]$Capturas, [int]$Puerto = 8000)
@@ -29,7 +31,8 @@ if (-not $Motor) {
 }
 $contenedor = "mibici-p1-api"
 $url = "http://localhost:$Puerto"
-$logs = Join-Path $repo "reports\servicio"
+$logs = Join-Path $env:TEMP "mibici_servicio"; $logsTexto = $logs
+if ($Capturas) { $logs = Join-Path $repo "reports\servicio"; $logsTexto = "reports\servicio" }
 New-Item -ItemType Directory -Force -Path $logs | Out-Null
 $evidencia = Join-Path $repo "docs\evidencia\entrega4"
 if ($Capturas) {
@@ -75,7 +78,7 @@ function Ejecutar([string]$comando, [string]$log, [switch]$Agregar) {
 function Final([int]$codigo, [string]$log) {
     Write-Host ""
     $color = "Green"; if ($codigo -ne 0) { $color = "Red" }
-    Write-Host "Codigo de salida: $codigo   (salida completa en reports\servicio\$log)" -ForegroundColor $color
+    Write-Host "Codigo de salida: $codigo   (salida completa en $logsTexto\$log)" -ForegroundColor $color
 }
 
 # POST/GET con curl.exe: muestra la peticion, el estado HTTP, las cabeceras de trazabilidad y el JSON.
@@ -123,7 +126,9 @@ $imagen = "mibici-p1-api:modelo-v$($registro.version)"
 
 # ---------- 2. Construir la imagen ----------
 Encabezado "2. Construir la imagen ($imagen)"
-$r = Ejecutar "$Motor build -f Containerfile -t $imagen ." (Join-Path $logs "02_build.txt")
+$null = Ejecutar "$Motor version" (Join-Path $logs "02_motor_version.txt")
+Write-Host ""
+$r = Ejecutar "$Motor build -f Containerfile --build-arg MODELO_VERSION=$($registro.version) -t $imagen ." (Join-Path $logs "02_build.txt")
 if ($r -eq 0) { Write-Host ""; $null = Ejecutar "$Motor images $($imagen.Split(':')[0])" (Join-Path $logs "02_build.txt") -Agregar }
 Final $r "02_build.txt"
 Captura "02_build.png"

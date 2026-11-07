@@ -59,7 +59,8 @@ def _datos_sinteticos(n: int = 400, semilla: int = 42) -> tuple[pd.DataFrame, np
 def _registrar(cliente: MlflowClient, experimento: str, x: pd.DataFrame, y: np.ndarray):
     modelo = Pipeline([("esc", StandardScaler()), ("modelo", PoissonRegressor(alpha=1e-3))]).fit(x, y)
     with mlflow.start_run(experiment_id=experimento) as corrida:
-        mlflow.log_metrics({"val_mae": 4.2, "test_mae": 4.5, "test_wape": 0.15, "train_mae": 4.0})
+        mlflow.log_metrics({"val_mae": 4.2, "test_mae": 4.5, "test_wape": 0.15, "train_mae": 4.0,
+                            "costo_inferencia_ms_1k": 3.4, "costo_entrenamiento_seg": 1.5})
         info = mlflow.sklearn.log_model(modelo, name="model", input_example=x.head(3),
                                         signature=infer_signature(x, modelo.predict(x)))
     return modelo, corrida.info.run_id, info.model_uri
@@ -124,7 +125,8 @@ def test_exportar_por_alias_resuelve_la_version(registry, exportado):
     assert registro["uri_registry"] == f"models:/{NOMBRE}/1"
     assert registro["run_id"] == registry["corridas"][1]
     assert registro["firma_entrada"] == list(VARIABLES_P1)
-    assert registro["metricas"]["test_mae"] == 4.5 and "train_mae" not in registro["metricas"]
+    assert registro["metricas"]["test_mae"] == 4.5 and registro["metricas"]["costo_inferencia_ms_1k"] == 3.4
+    assert "train_mae" not in registro["metricas"] and "costo_entrenamiento_seg" not in registro["metricas"]
     assert registro["etiquetas_version"]["data_version"] == "datos-de-prueba"
     assert {"MLmodel", "input_example.json"} <= set(registro["sha256"])
     for relativa, huella in registro["sha256"].items():
@@ -258,6 +260,11 @@ def test_advertencia_fuera_del_rango_de_entrenamiento(cliente):
     assert len(fuera) == 1 and fuera[0].startswith("dias_activa=307")
     dentro = cliente.post("/predict", json={**EJEMPLO_ENTRADA, "dias_activa": 200}).json()
     assert dentro["advertencias"] == []
+    # lag_14 llega a 325 en TRAIN (los otros rezagos a 550): 400 ya es extrapolación.
+    lag14 = {**EJEMPLO_ENTRADA, "dias_activa": 200, "lag_14": 400, "media_mismo_dia_4sem": 120.0,
+             "media_28d": 70.0}
+    avisos = cliente.post("/predict", json=lag14).json()["advertencias"]
+    assert len(avisos) == 1 and avisos[0].startswith("lag_14=400")
 
 
 INVALIDAS = {
@@ -277,6 +284,10 @@ INVALIDAS = {
     "media-7d-imposible": ({**EJEMPLO_ENTRADA, "media_7d": 5.0}, "media_7d=5.0"),
     "media-4sem-imposible": ({**EJEMPLO_ENTRADA, "media_mismo_dia_4sem": 10.0}, "media_mismo_dia_4sem"),
     "media-28d-imposible": ({**EJEMPLO_ENTRADA, "media_28d": 10.0}, "media_28d=10.0"),
+    "estacion-texto": ({**EJEMPLO_ENTRADA, "estacion_id": "2"}, "estacion_id"),
+    "estacion-booleano": ({**EJEMPLO_ENTRADA, "estacion_id": True}, "estacion_id"),
+    "estacion-implausible": ({**EJEMPLO_ENTRADA, "estacion_id": 10**12}, "estacion_id"),
+    "fecha-numero": ({**EJEMPLO_ENTRADA, "fecha": 1762214400}, "fecha"),
 }
 
 

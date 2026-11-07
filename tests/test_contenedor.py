@@ -50,7 +50,7 @@ def _imagen_base() -> str:
 
 def test_imagen_base_con_version_exacta_y_nombre_completo():
     imagen = _imagen_base()
-    assert re.fullmatch(r"docker\.io/library/python:3\.14\.\d+-slim-trixie", imagen), imagen
+    assert re.fullmatch(r"docker\.io/library/python:3\.14\.\d+-slim-trixie@sha256:[0-9a-f]{64}", imagen), imagen
     assert [args for op, args in _instrucciones(CONTAINERFILE) if op == "FROM"] == [
         "${IMAGEN_PYTHON} AS dependencias", "${IMAGEN_PYTHON}"]
 
@@ -59,7 +59,8 @@ def test_imagen_base_con_version_exacta_y_nombre_completo():
 def test_python_de_la_imagen_igual_al_del_entrenamiento():
     mlmodel = yaml.safe_load((SERVICIO_MODELO_DIR / "MLmodel").read_text(encoding="utf-8"))
     entrenamiento = mlmodel["flavors"]["python_function"]["python_version"]
-    assert _imagen_base().split(":")[1].removesuffix("-slim-trixie") == entrenamiento
+    etiqueta = _imagen_base().split("@")[0].split(":")[1]
+    assert etiqueta.removesuffix("-slim-trixie") == entrenamiento
 
 
 def test_usuario_sin_privilegios():

@@ -9,11 +9,14 @@
 #
 # Antes de construir, models/servicio/ debe contener la versión del registry que se va a servir
 # (python scripts/exportar_modelo_registry.py). En el repositorio ya está la v1 (@champion).
+# La etiqueta de la imagen y MODELO_VERSION deben coincidir con models/servicio/registro.json
+# (scripts/ejecutar_servicio.ps1 y "make imagen" los leen de ahí).
 
 # Imagen base con versión exacta: Python 3.14.8, el mismo con el que se entrenó y registró el
 # modelo (MLmodel -> python_version). Nombre completo (docker.io/...) para que Podman no
-# tenga que preguntar de qué registro descargarla.
-ARG IMAGEN_PYTHON=docker.io/library/python:3.14.8-slim-trixie
+# tenga que preguntar de qué registro descargarla, y digest (el índice multiplataforma que
+# resolvió la construcción de la evidencia) para que una etiqueta re-publicada no cambie la base.
+ARG IMAGEN_PYTHON=docker.io/library/python:3.14.8-slim-trixie@sha256:fbecd461fc72d21b2143c6eaba25143738079154a6d0ea3da3aec724f50eed4a
 
 # ---------- Etapa 1: dependencias en un entorno virtual ----------
 FROM ${IMAGEN_PYTHON} AS dependencias
@@ -27,6 +30,7 @@ RUN /opt/venv/bin/pip install --only-binary=:all: -r /tmp/requirements-api.txt
 
 # ---------- Etapa 2: imagen final (sin pip cache ni archivos de construcción) ----------
 FROM ${IMAGEN_PYTHON}
+ARG MODELO_VERSION=1
 
 LABEL org.opencontainers.image.title="mibici-p1-api" \
       org.opencontainers.image.description="API REST (FastAPI) del modelo P1 de MiBici registrado en MLflow" \
@@ -34,7 +38,7 @@ LABEL org.opencontainers.image.title="mibici-p1-api" \
       org.opencontainers.image.authors="Leydy Johanna Camargo Medina (Equipo 32, TC5061)" \
       org.opencontainers.image.licenses="MIT" \
       mx.tec.tc5061.modelo="mibici-equipo32-p1-demanda" \
-      mx.tec.tc5061.modelo.version="1"
+      mx.tec.tc5061.modelo.version="${MODELO_VERSION}"
 
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \

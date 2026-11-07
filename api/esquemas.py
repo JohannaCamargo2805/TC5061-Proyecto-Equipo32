@@ -65,7 +65,7 @@ RANGO_ENTRENAMIENTO: dict[str, tuple[float, float]] = {
     "lag_1": (0, 550),
     "lag_2": (0, 550),
     "lag_7": (0, 550),
-    "lag_14": (0, 550),
+    "lag_14": (0, 325),
     "media_7d": (0, 273.857),
     "media_28d": (0, 263.464),
     "media_mismo_dia_4sem": (0, 295.25),
@@ -113,6 +113,7 @@ class EntradaP1(BaseModel):
     estacion_id: int | None = Field(
         None,
         ge=1,
+        le=99_999,
         description="Identificador de la estación (opcional; se devuelve con la predicción).",
     )
     fecha: date | None = Field(
@@ -142,13 +143,22 @@ class EntradaP1(BaseModel):
     dias_activa: int = Field(..., ge=28, le=3650, description=DESCRIPCIONES["dias_activa"])
     capacidad: int = Field(..., ge=1, le=100, description=DESCRIPCIONES["capacidad"])
 
-    @field_validator(*_ENTEROS, *_REALES, mode="before")
+    @field_validator("estacion_id", *_ENTEROS, *_REALES, mode="before")
     @classmethod
     def _solo_numeros(cls, valor):
         """Rechaza textos y booleanos que Pydantic convertiría en número en modo flexible."""
         if isinstance(valor, (str, bool)):
             # ValueError (no TypeError): Pydantic solo convierte ValueError en un error 422.
             raise ValueError("debe ser un número (no texto ni booleano)")  # noqa: TRY004
+        return valor
+
+    @field_validator("fecha", mode="before")
+    @classmethod
+    def _fecha_iso(cls, valor):
+        """Solo texto AAAA-MM-DD o fecha: un número (p. ej. una marca Unix) no es una fecha válida."""
+        if valor is not None and not isinstance(valor, (str, date)):
+            # ValueError (no TypeError): Pydantic solo convierte ValueError en un error 422.
+            raise ValueError("debe ser una fecha AAAA-MM-DD")
         return valor
 
     @model_validator(mode="after")

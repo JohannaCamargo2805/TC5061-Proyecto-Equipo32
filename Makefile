@@ -9,7 +9,9 @@ TRACKING_URI = http://127.0.0.1:5000
 EXPERIMENT = mibici-equipo32
 ENV_MANAGER = local
 MOTOR ?= podman
-IMAGEN = mibici-p1-api:modelo-v1
+# La etiqueta de la imagen lleva la versión del registry que está en models/servicio/registro.json
+MODELO_VERSION = $(shell $(PYTHON_INTERPRETER) -c "import json; print(json.load(open('models/servicio/registro.json'))['version'])")
+IMAGEN = mibici-p1-api:modelo-v$(MODELO_VERSION)
 CONTENEDOR = mibici-p1-api
 
 #################################################################################
@@ -135,7 +137,7 @@ api:
 ## Entrega 4: construye la imagen de la API (MOTOR=podman por defecto; MOTOR=docker también sirve)
 .PHONY: imagen
 imagen:
-	$(MOTOR) build -f Containerfile -t $(IMAGEN) .
+	$(MOTOR) build -f Containerfile --build-arg MODELO_VERSION=$(MODELO_VERSION) -t $(IMAGEN) .
 
 ## Entrega 4: levanta el contenedor en el puerto 8000
 .PHONY: contenedor
@@ -143,10 +145,10 @@ contenedor:
 	-$(MOTOR) rm -f $(CONTENEDOR)
 	$(MOTOR) run -d --name $(CONTENEDOR) -p 8000:8000 $(IMAGEN)
 
-## Entrega 4: petición de prueba al contenedor (POST /predict con docs/ejemplos/peticion_predict.json)
+## Entrega 4: petición de prueba al contenedor (espera a /health y envía docs/ejemplos/peticion_predict.json)
 .PHONY: probar-api
 probar-api:
-	curl -s http://localhost:8000/health && echo
+	curl -s --retry 60 --retry-delay 1 --retry-all-errors http://localhost:8000/health && echo
 	curl -s -X POST http://localhost:8000/predict -H "Content-Type: application/json" \
 		--data-binary @docs/ejemplos/peticion_predict.json && echo
 

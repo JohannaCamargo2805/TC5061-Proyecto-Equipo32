@@ -70,8 +70,10 @@ def uri_sin_credenciales(uri: str) -> str:
 
 
 def metricas_de_corrida(metricas: dict[str, float]) -> dict[str, float]:
+    """Validación y prueba (justifican la versión) más costo de inferencia y tamaño del modelo."""
     return {k: round(float(v), 6) for k, v in sorted(metricas.items())
-            if k.startswith(("val_", "test_")) and not k.endswith("prevalencia")}
+            if k.startswith(("val_", "test_", "costo_inferencia", "tamano_modelo"))
+            and not k.endswith("prevalencia")}
 
 
 def _fecha(ms) -> str | None:
@@ -143,7 +145,9 @@ def exportar(nombre: str, version: int, alias: str, destino: Path, tracking_uri:
 
 def verificar(destino: Path) -> list[float]:
     """Carga la copia con mlflow.pyfunc y predice su input_example: prueba que es utilizable."""
-    modelo = mlflow.pyfunc.load_model(str(destino))
+    # suppress_warnings: igual que la API; las versiones que importan las comprueba
+    # tests/test_contenedor.py contra models/servicio/requirements.txt.
+    modelo = mlflow.pyfunc.load_model(str(destino), suppress_warnings=True)
     ejemplo = json.loads((destino / "input_example.json").read_text(encoding="utf-8"))
     x = pd.DataFrame(ejemplo["data"], columns=ejemplo["columns"])
     return [round(float(v), 3) for v in modelo.predict(x)]

@@ -68,11 +68,12 @@ def sha256(ruta: Path) -> str:
 
 
 def metricas_de_corrida(metricas: dict[str, float]) -> dict[str, float]:
-    """Métricas de validación y prueba de la corrida de origen (las que justifican la versión)."""
+    """Validación y prueba (justifican la versión) más costo de inferencia y tamaño del modelo."""
     return {
         k: round(float(v), 6)
         for k, v in sorted(metricas.items())
-        if k.startswith(("val_", "test_")) and not k.endswith("prevalencia")
+        if k.startswith(("val_", "test_", "costo_inferencia", "tamano_modelo"))
+        and not k.endswith("prevalencia")
     }
 
 
