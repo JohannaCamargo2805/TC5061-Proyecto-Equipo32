@@ -91,3 +91,16 @@ entry_points:
     parameters:
       modelo: {type: string, default: champion}
     command: "python -m mibici.monitoreo drift --modelo models:/mibici-equipo32-p1-demanda@{modelo}"
+
+  # Versión alternativa reentrenada con datos hasta may 2026 (alias challenger).
+  retrain:
+    parameters:
+      alias: {type: string, default: challenger}
+    command: "python -m mibici.modeling.reentrenamiento --alias {alias}"
+
+  # A/B testing pareado de dos versiones sobre jul-sep 2026.
+  abtest:
+    parameters:
+      a: {type: string, default: champion}
+      b: {type: string, default: challenger}
+    command: "python -m mibici.modeling.ab_testing --a {a} --b {b}"

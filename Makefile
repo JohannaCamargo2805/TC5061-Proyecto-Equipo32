@@ -162,6 +162,20 @@ ingesta-produccion:
 monitoreo:
 	MLFLOW_TRACKING_URI=$(TRACKING_URI) $(PYTHON_INTERPRETER) -m mibici.monitoreo drift
 
+## Entrega 5: versión reentrenada de P1 registrada como @challenger
+.PHONY: reentrenar
+reentrenar:
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) $(PYTHON_INTERPRETER) -m mibici.modeling.reentrenamiento
+
+## Entrega 5: A/B testing @champion contra @challenger en jul-sep 2026
+.PHONY: ab-test
+ab-test:
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) $(PYTHON_INTERPRETER) -m mibici.modeling.ab_testing
+
+## Entrega 5: monitoreo, reentrenamiento y A/B de una sola vez
+.PHONY: entrega5
+entrega5: monitoreo reentrenar ab-test
+
 #################################################################################
 # Self Documenting Commands                                                     #
 #################################################################################
