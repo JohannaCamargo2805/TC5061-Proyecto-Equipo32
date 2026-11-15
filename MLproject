@@ -78,3 +78,16 @@ entry_points:
       question: {type: string, default: all}
       alias: {type: string, default: champion}
     command: "python -m mibici.modeling.predict --question {question} --alias {alias}"
+
+  # ---------- Entrega 5: monitoreo, reentrenamiento y A/B testing ----------
+  # Datos de producción (2026) con su propio manifiesto y data_version.
+  ingest_produccion:
+    parameters:
+      raw_source: {type: string, default: config}
+    command: "python -m mibici.monitoreo ingesta --raw-source {raw_source}"
+
+  # Reportes de Evidently: drift por variable, calidad de datos y desempeño de la v1.
+  monitor:
+    parameters:
+      modelo: {type: string, default: champion}
+    command: "python -m mibici.monitoreo drift --modelo models:/mibici-equipo32-p1-demanda@{modelo}"
