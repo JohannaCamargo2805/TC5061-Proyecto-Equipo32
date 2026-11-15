@@ -31,6 +31,13 @@ httpx2==2.16.0
 # Validación de datos (ver mibici/compat_deepchecks.py)
 deepchecks==0.19.1
 
+# Monitoreo de drift (entrega 5). evidently 0.7.23 exige plotly < 6: se fija la última 5.x
+# (deepchecks 0.19.1 acepta plotly >= 5.13.1). scipy ya llega con scikit-learn; se fija porque
+# el A/B testing la usa directamente (prueba de Wilcoxon).
+evidently==0.7.23
+plotly==5.24.1
+scipy==1.18.1
+
 # Chequeos de seguridad: código (bandit), dependencias (pip-audit) y secretos (detect-secrets)
 bandit==1.9.4
 pip-audit==2.10.1

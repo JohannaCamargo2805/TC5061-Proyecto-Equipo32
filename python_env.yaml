@@ -17,3 +17,6 @@ dependencies:
   - python-dotenv==1.2.4
   - tqdm==4.70.1
   - typer==0.27.3
+  - evidently==0.7.23
+  - plotly==5.24.1
+  - scipy==1.18.1
