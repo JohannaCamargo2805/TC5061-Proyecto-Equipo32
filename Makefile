@@ -152,6 +152,16 @@ probar-api:
 	curl -s -X POST http://localhost:8000/predict -H "Content-Type: application/json" \
 		--data-binary @docs/ejemplos/peticion_predict.json && echo
 
+## Entrega 5: datos de producción 2026 (RAW=<carpeta con los CSV> para no descargar)
+.PHONY: ingesta-produccion
+ingesta-produccion:
+	$(PYTHON_INTERPRETER) -m mibici.monitoreo ingesta --raw-source $(or $(RAW),config)
+
+## Entrega 5: reportes de Evidently (drift y calidad) del modelo @champion
+.PHONY: monitoreo
+monitoreo:
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) $(PYTHON_INTERPRETER) -m mibici.monitoreo drift
+
 #################################################################################
 # Self Documenting Commands                                                     #
 #################################################################################
