@@ -44,13 +44,14 @@ SENSIBLES = [
     ".env", ".env.local", "data/raw/viajes_2025_01.csv", "data/processed/viajes.parquet",
     "data/interim/cache.parquet", "mlflow.db", "mlruns/0/meta.yaml", "mlartifacts/x/model.pkl",
     "models/p3_model_bundle.joblib", "credentials.json", "llave.pem", ".pypirc",
+    "data/raw/viajes_2026_09.csv", "data/processed/viajes_produccion.parquet",
 ]
 
 
 # (regla, condición sobre el archivo y la línea marcada). Todas fueron revisadas a mano.
 FALSOS_POSITIVOS = [
     ("hash SHA-256 o data_version del manifiesto de datos",
-     lambda archivo, linea: archivo.endswith("manifest.json")
+     lambda archivo, linea: archivo.endswith(("manifest.json", "manifest_produccion.json"))
      and re.search(r'"(\w*sha256|data_version)": "[0-9a-f]{12,64}"', linea) is not None),
     ("vector de prueba de SHA-256 (cadenas 'abc' y vacía)",
      lambda archivo, linea: archivo.startswith("tests/")
