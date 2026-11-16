@@ -1,0 +1,38 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.8, pytest-9.1.1, pluggy-1.7.0 -- C:\Users\jlmed\Desktop\Tareas Maestria\mibici_datos\TC5061-Equipo32-equipo\.venv\Scripts\python.exe
+rootdir: C:\Users\jlmed\Desktop\Tareas Maestria\mibici_datos\TC5061-Equipo32-equipo
+configfile: pyproject.toml
+plugins: anyio-4.15.1, Faker-40.54.0, platformdirs-4.13.5
+collecting ... collected 29 items
+
+tests/test_monitoreo_ab.py::test_periodos_sin_traslape_y_sin_fuga PASSED [  3%]
+tests/test_monitoreo_ab.py::test_feriados_2026_son_los_de_la_ley PASSED  [  6%]
+tests/test_monitoreo_ab.py::test_reglas_de_decision_fijas_en_config PASSED [ 10%]
+tests/test_monitoreo_ab.py::test_evidently_detecta_drift_solo_en_la_variable_desplazada PASSED [ 13%]
+tests/test_monitoreo_ab.py::test_evidently_psi_y_html PASSED             [ 17%]
+tests/test_monitoreo_ab.py::test_estadisticos_fuera_de_rango PASSED      [ 20%]
+tests/test_monitoreo_ab.py::test_efecto_en_modelo_glm PASSED             [ 24%]
+tests/test_monitoreo_ab.py::test_bootstrap_por_dias_detecta_mejora_y_es_reproducible PASSED [ 27%]
+tests/test_monitoreo_ab.py::test_bootstrap_sin_diferencia_incluye_cero PASSED [ 31%]
+tests/test_monitoreo_ab.py::test_asignacion_de_brazo_determinista_y_balanceada PASSED [ 34%]
+tests/test_monitoreo_ab.py::test_decision_aplica_las_cuatro_reglas PASSED [ 37%]
+tests/test_monitoreo_ab.py::test_uri_por_alias_version_o_carpeta PASSED  [ 41%]
+tests/test_monitoreo_ab.py::test_conjuntos_reales_reproducen_los_de_la_v1 PASSED [ 44%]
+tests/test_mlproject.py::test_entry_points_y_entorno PASSED              [ 48%]
+tests/test_mlproject.py::test_mlproject_no_repite_rutas_fechas_ni_semillas PASSED [ 51%]
+tests/test_mlproject.py::test_python_env_igual_a_requirements PASSED     [ 55%]
+tests/test_mlproject.py::test_valores_por_defecto_desde_config PASSED    [ 58%]
+tests/test_mlproject.py::test_hiperparametros_se_convierten_y_validan PASSED [ 62%]
+tests/test_mlproject.py::test_regla_un_error_estandar_prefiere_el_modelo_simple PASSED [ 65%]
+tests/test_mlproject.py::test_restricciones_de_p3 PASSED                 [ 68%]
+tests/test_mlproject.py::test_estimadores_propios PASSED                 [ 72%]
+tests/test_features_p1.py::test_panel_contiguo_desde_primera_actividad PASSED [ 75%]
+tests/test_features_p1.py::test_rezagos_solo_usan_dias_anteriores PASSED [ 79%]
+tests/test_features_p1.py::test_rezago_menor_al_horizonte_lanza_error PASSED [ 82%]
+tests/test_features_p1.py::test_viajes_fuera_del_rango_dan_panel_vacio PASSED [ 86%]
+tests/test_features_p1.py::test_calendario_feriado_y_fin_de_semana PASSED [ 89%]
+tests/test_features_p1.py::test_capacidad_desconocida_se_rellena_con_cero PASSED [ 93%]
+tests/test_features_p1.py::test_sin_historia_suficiente_los_rezagos_son_nulos PASSED [ 96%]
+tests/test_features_p1.py::test_features_identicas_si_cambia_el_futuro PASSED [100%]
+
+======================== 29 passed in 69.26s (0:01:09) ========================

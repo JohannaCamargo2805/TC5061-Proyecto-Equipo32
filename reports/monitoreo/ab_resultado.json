@@ -1,0 +1,107 @@
+{
+  "evaluacion": {
+    "desde": "2026-07-01",
+    "hasta_excl": "2026-10-01",
+    "filas": 40512,
+    "dias": 92,
+    "estaciones": 472
+  },
+  "versiones": {
+    "A": {
+      "version": 1,
+      "run_id": "38260a3c12e84155b76d9c126b7be2e1",
+      "ref": "champion",
+      "aliases": [
+        "champion"
+      ]
+    },
+    "B": {
+      "version": 3,
+      "run_id": "1d685b6b91744c979f3f7ffab5220819",
+      "ref": "challenger",
+      "aliases": [
+        "challenger"
+      ]
+    }
+  },
+  "metricas": {
+    "A": {
+      "mae": 5.872595154654168,
+      "rmse": 10.782867849789305,
+      "wape": 0.19727130514611413,
+      "r2": 0.898874744822188,
+      "sesgo": -1.9608758314998915,
+      "mape_total_dia": 0.0901827707758719,
+      "devianza_poisson": 2.5988841819466257
+    },
+    "B": {
+      "mae": 5.6571766742072,
+      "rmse": 10.373684006857696,
+      "wape": 0.1900350009788352,
+      "r2": 0.9064040418234263,
+      "sesgo": -1.056202099355485,
+      "mape_total_dia": 0.07997801060236764,
+      "devianza_poisson": 2.398153597827917
+    }
+  },
+  "costo_inferencia_ms_1k": {
+    "A": 1.994231338862304,
+    "B": 1.9164938783647436
+  },
+  "delta": {
+    "mae": -0.2154184804469681,
+    "mae_rel_pct": -3.6681990631730166,
+    "rmse": -0.4091838429316095,
+    "wape": -0.00723630416727894
+  },
+  "bootstrap": {
+    "reps": 2000,
+    "unidad": "día",
+    "ic95_delta_mae": [
+      -0.3156079803340159,
+      -0.1192279932214997
+    ],
+    "ic95_delta_rmse": [
+      -0.5893232441882961,
+      -0.2343410220301616
+    ],
+    "ic95_delta_wape": [
+      -0.010271314733477036,
+      -0.004149519417486776
+    ],
+    "ic95_cambio_mae_rel_pct": [
+      -5.173699181323425,
+      -2.105348038866158
+    ],
+    "p_bootstrap_b_no_mejor": 0.0
+  },
+  "wilcoxon_mae_diario": {
+    "estadistico": 1234.0,
+    "p_valor": 0.00042512267649124486,
+    "dias_b_mejor": 59,
+    "dias": 92
+  },
+  "estaciones_b_mejor_pct": 75.0,
+  "simulacion_en_linea": {
+    "estaciones_A": 234,
+    "estaciones_B": 238,
+    "mae_brazo_A": 5.799592201240822,
+    "mae_brazo_B": 5.699757548265901,
+    "delta_mae": -0.09983465297492078,
+    "ic95": [
+      -1.0100762734598117,
+      0.7829797261069169
+    ],
+    "ancho_ic95": 1.7930559995667286
+  },
+  "decision": {
+    "reglas": {
+      "1_ic95_delta_mae_bajo_cero": true,
+      "2_sin_empeorar_mas_de_2pct_en_ningun_mes": true,
+      "3_sesgo_no_peor": true,
+      "4_costo_inferencia_aceptable": true
+    },
+    "ganadora": "B",
+    "promover_B": true
+  }
+}

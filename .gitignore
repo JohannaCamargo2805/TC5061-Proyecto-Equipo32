@@ -236,3 +236,9 @@ reports/p1/
 
 # Reportes HTML de DeepChecks (~10 MB cada uno; se regeneran con python -m mibici.validacion)
 reports/deepchecks/*.html
+
+# Entrega 5 (monitoreo y A/B): se versionan los HTML principales de Evidently, los resúmenes JSON
+# y las gráficas; las tablas CSV, los snapshots JSON y el reporte PSI viven como artefactos en MLflow.
+reports/monitoreo/drift_datos.json
+reports/monitoreo/desempeno_v1.json
+reports/monitoreo/drift_psi.html
