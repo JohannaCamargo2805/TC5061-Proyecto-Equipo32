@@ -55,10 +55,15 @@ def test_detecta_secretos_reales(archivo, contenido):
         ("src/config.py", '"sha256": "' + "ab" * 32 + '"', None),  # fuera del manifiesto
         ("notebooks/x.ipynb", f'"token": "{TOKEN_GITHUB}"', None),
         ("models/servicio/registro.json", f'  "token": "{TOKEN_GITHUB}",', None),  # no es hex
+        ("reports/monitoreo/drift_datos.html", "    var metric_" + "ab" * 16 + ' = {"name": "Report"', "Evidently"),
+        ("reports/monitoreo/drift_datos.html", "function f(){" + "x" * 100_001 + "}", "Evidently"),
+        ("reports/monitoreo/drift_datos.html", f'var token = "{TOKEN_GITHUB}";', None),
+        ("docs/otro.html", "    var metric_" + "ab" * 16 + " = {", None),
     ],
     ids=["hash-en-manifiesto", "png-en-notebook", "hash-git-en-reporte", "hash-en-registro-modelo",
          "commit-en-respuesta-api", "token-en-respuesta-api", "hash-fuera-del-manifiesto",
-         "token-en-notebook", "token-en-registro-modelo"],
+         "token-en-notebook", "token-en-registro-modelo", "widget-en-reporte-evidently",
+         "javascript-de-evidently", "token-en-reporte-evidently", "widget-fuera-de-monitoreo"],
 )
 def test_falsos_positivos_solo_con_reglas_explicitas(archivo, linea, esperado):
     motivo = escanear_secretos._clasificar(archivo, linea)

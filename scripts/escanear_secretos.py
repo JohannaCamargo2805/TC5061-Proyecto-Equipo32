@@ -66,6 +66,12 @@ FALSOS_POSITIVOS = [
      lambda archivo, linea: archivo.startswith("reports/servicio/")
      and re.search(r'"(git_commit|data_version|run_id|model_id)": "(m-)?[0-9a-f]{12,40}"', linea)
      is not None),
+    ("identificador de widget en un reporte HTML generado por Evidently (entrega 5)",
+     lambda archivo, linea: re.fullmatch(r"reports/monitoreo/\w+\.html", archivo) is not None
+     and re.match(r"\s*var metric_[0-9a-f]{32} = \{", linea) is not None),
+    ("JavaScript minificado que Evidently incrusta en sus reportes HTML (entrega 5)",
+     lambda archivo, linea: re.fullmatch(r"reports/monitoreo/\w+\.html", archivo) is not None
+     and len(linea) > 100_000 and "function" in linea),
     ("imagen PNG en base64 dentro de la salida de un notebook",
      lambda archivo, linea: archivo.endswith(".ipynb")
      and re.search(r'"image/png": "iVBORw0KGgo', linea) is not None),
