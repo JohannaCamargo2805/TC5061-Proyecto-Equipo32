@@ -13,6 +13,133 @@ El proyecto responde tres preguntas de negocio:
 
 El ML Canvas y el diagrama de arquitectura se encuentran en `references/`.
 
+## Entrega 5: monitoreo de drift con Evidently, reentrenamiento y A/B testing
+
+**Versión individual de Leydy Johanna Camargo Medina (A01840540)**, rama `main` de este repositorio, como las
+entregas 3 y 4. Se agrega al proyecto la capa de observabilidad del modelo **P1** que sirve la API:
+`mibici-equipo32-p1-demanda` v1 (`@champion`). Reporte en PDF: `TC5061_Drift_ABTest_Equipo32.pdf` (Canvas).
+
+| Pieza | Dónde |
+|---|---|
+| Datos de producción 2026 (ingesta con manifiesto SHA-256 propio) | `mibici/monitoreo.py ingesta` → `data/manifest_produccion.json` |
+| Conjuntos de referencia y actual, reportes de Evidently y corrida `p1-monitoreo-drift` | `mibici/monitoreo.py drift` |
+| Versión alternativa reentrenada, registrada como v3 `@challenger` | `mibici/modeling/reentrenamiento.py` |
+| A/B testing pareado v1 contra v3 con reglas de decisión | `mibici/modeling/ab_testing.py` |
+| Periodos, umbrales y reglas (fijados antes de ver resultados) | `mibici/config.py` (sección *Entrega 5*) |
+| Puntos de entrada del MLflow Project | `ingest_produccion`, `monitor`, `retrain`, `abtest` en `MLproject` |
+| Pruebas | `tests/test_monitoreo_ab.py` (13) |
+| Evidencia | `reports/monitoreo/` (HTML de Evidently, resúmenes JSON y gráficas; las tablas CSV quedan como artefactos en MLflow) y `docs/evidencia/entrega5/` (capturas) |
+
+### Cómo ejecutarlo
+
+```bash
+python -m pip install -r requirements.txt                       # agrega evidently 0.7.23 (con plotly 5.24.1)
+make server                                                      # MLflow con SQLite (Windows: scripts\servidor_mlflow.ps1)
+python -m mibici.monitoreo ingesta --raw-source <carpeta CSV>   # o sin opción: descarga de PRODUCCION_URLS
+python -m mibici.monitoreo drift                                 # Evidently sobre models:/mibici-equipo32-p1-demanda@champion
+python -m mibici.modeling.reentrenamiento                        # nueva versión -> @challenger
+python -m mibici.modeling.ab_testing                             # A=@champion contra B=@challenger
+# o: mlflow run . -e monitor|retrain|abtest --env-manager local ;  make entrega5
+```
+
+### 1. Conjuntos
+
+| Conjunto | Periodo | Estación-días | Estaciones | Viajes por estación-día |
+|---|---|---|---|---|
+| Referencia = TRAIN de la v1 | 2025-01-29 a 2025-09-30 | 90,230 | 369 | 33.03 |
+| Prueba de la v1 (para el desempeño) | 2025-11-01 a 2025-12-31 | 22,565 | 370 | 30.87 |
+| Actual = producción | 2026-07-01 a 2026-09-30 | 40,512 | 472 | 29.77 |
+
+El panel se arma continuo de ene 2025 a sep 2026 con las mismas funciones de `mibici/features.py`; la prueba de la
+v1 reconstruida reproduce su `test_mae` registrado (5.4097, `tests/test_monitoreo_ab.py`). La API no guarda sus
+peticiones, por eso el periodo actual sale de los datos abiertos de 2026 (`data_version` 5fb2c4834870).
+
+### 2. Reporte de drift (Evidently 0.7.23)
+
+`DataDriftPreset` (Wasserstein normalizada / Jensen-Shannon, umbral 0.1; drift del conjunto con ≥ 50 % de columnas)
++ `DataSummaryPreset` con pruebas, el mismo drift con PSI (umbral 0.2), el drift solo de estaciones existentes y
+`RegressionPreset` de la v1. Resultado: **drift del conjunto, 10 de 14 columnas (71.4 %)**.
+
+![Resumen de Evidently](docs/evidencia/entrega5/ev_01_drift_resumen.png)
+
+| Variable | Wasserstein/JS | ¿Drift? | PSI | Solo estaciones existentes | Media ref. → actual |
+|---|---|---|---|---|---|
+| `dias_activa` | 5.044 | **sí** | 10.483 | 6.237 (sí) | 149.9 → 506.7 |
+| `media_28d` | 0.177 | **sí** | 0.060 | 0.070 | 33.1 → 27.9 |
+| `media_mismo_dia_4sem` | 0.173 | **sí** | 0.059 | 0.067 | 33.1 → 27.7 |
+| `lag_14` | 0.168 | **sí** | 0.042 | 0.065 | 33.1 → 27.8 |
+| `prediccion_v1` | 0.167 | **sí** | 0.042 | 0.065 | 33.0 → 27.8 |
+| `lag_7` | 0.140 | **sí** | 0.031 | 0.038 | 33.1 → 28.7 |
+| `media_7d` | 0.139 | **sí** | 0.037 | 0.040 | 33.1 → 29.1 |
+| `lag_2` | 0.119 | **sí** | 0.027 | 0.027 | 33.1 → 29.4 |
+| `lag_1` | 0.113 | **sí** | 0.026 | 0.026 | 33.0 → 29.6 |
+| `viajes` | 0.109 | **sí** | 0.026 | 0.026 | 33.0 → 29.8 |
+| `capacidad` | 0.087 | no | 0.033 | 0.002 | 16.9 → 17.0 |
+| `feriado` | 0.034 | no | 0.010 | 0.037 | 0.0 → 0.0 |
+| `dia_semana` | 0.009 | no | 0.001 | 0.009 | 3.0 → 3.0 |
+| `fin_semana` | 0.003 | no | 0.000 | 0.002 | 0.3 → 0.3 |
+
+**Interpretación.** `dias_activa` tiene drift estructural (la antigüedad crece cada día; 84 % de las filas actuales
+superan el máximo de TRAIN y la v1 extrapola). El drift de la demanda es de **composición**: entre jun y sep 2026 la
+red pasó de 369 a 472 estaciones y las 103 nuevas, con menos viajes, bajan el promedio por estación; con solo las
+estaciones existentes únicamente `dias_activa` conserva drift y el PSI de la demanda es < 0.07. La v1 se degradó del
+periodo de prueba al actual: MAE 5.41 → 5.87, WAPE 17.5 % → 19.7 % y sesgo
++1.36 → -1.96 (subestima), sobre todo en sep 2026, cuando el sistema creció ~29 %. El monitoreo
+también reveló que el calendario de feriados solo cubría 2025: se agregaron los de 2026.
+
+### 3. Versión alternativa y A/B testing
+
+**v3** = mismo pipeline e hiperparámetros, TRAIN ene 2025-may 2026, compuerta en VAL jun 2026 (MAE 7.27 contra
+7.47 de la v1), registrada como `@challenger`. A/B **pareado** sobre las mismas 40,512 estación-días de jul-sep 2026,
+IC 95 % por *bootstrap* de días (2,000 réplicas) y Wilcoxon sobre el MAE diario:
+
+| Métrica | A: v1 `@champion` | B: v3 `@challenger` | B − A [IC 95 %] |
+|---|---|---|---|
+| MAE | 5.873 | 5.657 | -0.215 [-0.316, -0.119] |
+| RMSE | 10.783 | 10.374 | -0.409 |
+| WAPE | 19.73 % | 19.00 % | -0.72 pp |
+| R² | 0.8989 | 0.9064 | +0.0075 |
+| Sesgo | -1.961 | -1.056 | +0.905 |
+| Días con menor MAE (Wilcoxon) | | 59 de 92 | p = 0.0004 |
+
+| Mes | MAE A | MAE B | Cambio | Sesgo A | Sesgo B |
+|---|---|---|---|---|---|
+| 2026-07 | 5.577 | 5.568 | -0.1 % | -0.20 | +0.47 |
+| 2026-08 | 4.847 | 4.792 | -1.1 % | -0.96 | -0.20 |
+| 2026-09 | 7.141 | 6.584 | -7.8 % | -4.52 | -3.27 |
+
+Se cumplen las cuatro reglas de `config.py` (IC bajo cero, ningún mes peor por más de 2 %, sesgo no mayor, costo
+similar): **la v3 debe quedar como versión vigente.** La decisión quedó como etiqueta `ab_test_jul_sep_2026` en las
+dos versiones del registry; mover `@champion` se hace junto con la reconstrucción de la imagen de la API
+(`scripts\ejecutar_servicio.ps1 -Exportar`). Un A/B en línea simulado (estaciones 50/50 por *hash*) da un IC
+9 veces más ancho que el pareado.
+
+**Recomendación (Continuous Training):** reentrenamiento mensual con ventana creciente y la misma compuerta + A/B;
+disparadores por desempeño (MAE móvil de 7 días +10 % o sesgo > 1.5) porque la etiqueta llega al día siguiente;
+Evidently semanal como diagnóstico estratificado por cohorte; acotar o quitar `dias_activa` y registrar las
+peticiones de la API.
+
+### Ejecución en la computadora de la autora
+
+Windows 11, Python 3.14.8, MLflow 3.17.2 con SQLite, commit `62b4cf0` (rama local `entrega5-monitoreo`). Corridas en el
+experimento `mibici-equipo32`: `p1-monitoreo-drift` (b6e0a185…), `p1-reentreno-ventana-2026` (1d685b6b…) y
+`p1-ab-test-v1-vs-v3` (93d20255…). Pruebas: 29 aprobadas (`reports/monitoreo/pytest_entrega5.txt`); ruff sin hallazgos.
+
+![Model Registry con la v3 como challenger](docs/evidencia/entrega5/e5_01_registry_versiones.png)
+
+### Historial de Git de la entrega 5
+
+| Rama | Contenido |
+|---|---|
+| `feat/monitoreo-evidently` | Configuración (periodos, feriados 2026, umbrales y reglas), dependencias, `mibici/monitoreo.py`, `MLproject` y `make monitoreo` |
+| `feat/reentrenamiento-ab-testing` | `reentrenamiento.py`, `ab_testing.py`, puntos de entrada `retrain` y `abtest` |
+| `test/monitoreo-ab` | 13 pruebas y reglas del escáner de secretos para los datos de 2026 |
+| `docs/reporte-drift-ab` | Evidencia de la ejecución (Evidently, A/B y capturas de MLflow) y este README |
+
+**Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
+(Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. La ejecución, el registro en MLflow y las capturas
+se hicieron en la computadora de la autora.
+
 ## Entrega 4: el modelo P1 como API REST en un contenedor (FastAPI + Podman/Docker)
 
 **Versión individual de Leydy Johanna Camargo Medina (A01840540).** Por el acuerdo de la coordinación
