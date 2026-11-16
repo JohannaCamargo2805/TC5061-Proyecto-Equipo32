@@ -1,0 +1,98 @@
+{
+  "modelo": "models:/mibici-equipo32-p1-demanda@champion",
+  "conjuntos": [
+    {
+      "conjunto": "referencia",
+      "desde": "2025-01-29",
+      "hasta": "2025-09-30",
+      "dias": 245,
+      "filas": 90230,
+      "estaciones": 369,
+      "viajes_totales": 2979883,
+      "media_viajes_estacion_dia": 33.025
+    },
+    {
+      "conjunto": "actual",
+      "desde": "2026-07-01",
+      "hasta": "2026-09-30",
+      "dias": 92,
+      "filas": 40512,
+      "estaciones": 472,
+      "viajes_totales": 1206007,
+      "media_viajes_estacion_dia": 29.769
+    },
+    {
+      "conjunto": "prueba_v1",
+      "desde": "2025-11-01",
+      "hasta": "2025-12-31",
+      "dias": 61,
+      "filas": 22565,
+      "estaciones": 370,
+      "viajes_totales": 696526,
+      "media_viajes_estacion_dia": 30.868
+    }
+  ],
+  "criterio": {
+    "metodo": "Evidently por defecto (Wasserstein normalizada / Jensen-Shannon)",
+    "umbral_columna": 0.1,
+    "umbral_conjunto": 0.5,
+    "psi_umbral": 0.2
+  },
+  "columnas_con_drift": 10,
+  "proporcion_con_drift": 0.7142857142857143,
+  "columnas_evaluadas": 14,
+  "conjunto_con_drift": true,
+  "con_drift": [
+    "dias_activa",
+    "media_28d",
+    "media_mismo_dia_4sem",
+    "lag_14",
+    "prediccion_v1",
+    "lag_7",
+    "media_7d",
+    "lag_2",
+    "lag_1",
+    "viajes"
+  ],
+  "con_drift_psi": [
+    "dias_activa"
+  ],
+  "estaciones_existentes": {
+    "columnas_con_drift": 1,
+    "proporcion_con_drift": 0.07142857142857142,
+    "filas": 33948,
+    "con_drift": [
+      "dias_activa"
+    ]
+  },
+  "pruebas_evidently": {
+    "SUCCESS": 66,
+    "FAIL": 63
+  },
+  "desempeno_v1": {
+    "referencia": {
+      "v1_mae": 5.195046897485471,
+      "v1_rmse": 8.497779930669928,
+      "v1_wape": 0.15730452556698168,
+      "v1_r2": 0.9348216019674791,
+      "v1_sesgo": -2.98226430023459e-05,
+      "v1_mape_total_dia": 0.05685982325279499
+    },
+    "prueba_v1": {
+      "v1_mae": 5.4097360258323866,
+      "v1_rmse": 9.139280632591419,
+      "v1_wape": 0.17525647775231334,
+      "v1_r2": 0.923407220974587,
+      "v1_sesgo": 1.3576078543196115,
+      "v1_mape_total_dia": 0.09089332386889555
+    },
+    "actual": {
+      "v1_mae": 5.872595154654168,
+      "v1_rmse": 10.782867849789305,
+      "v1_wape": 0.19727130514611413,
+      "v1_r2": 0.898874744822188,
+      "v1_sesgo": -1.9608758314998915,
+      "v1_mape_total_dia": 0.0901827707758719
+    }
+  }
+}
