@@ -174,7 +174,7 @@ en `main` de este repositorio. Ramas y commits (todos a su nombre), integradas c
 | `feat/monitoreo-evidently` | 4 | Sección *Entrega 5* de `mibici/config.py` (periodos, feriados 2026, umbrales y reglas del A/B), `evidently` en las dependencias, `mibici/monitoreo.py` (ingesta 2026, conjuntos de referencia y actual, cuatro reportes de Evidently, efecto del drift en la v1 y corrida en MLflow), `MLproject` y `make monitoreo` |
 | `feat/reentrenamiento-ab-testing` | 3 | `mibici/modeling/reentrenamiento.py` (v3 con datos hasta may 2026, compuerta en jun 2026, registro como `@challenger`), `mibici/modeling/ab_testing.py` (A/B pareado, bootstrap por días, Wilcoxon, segmentos, simulación en línea y reglas de decisión), `MLproject` y `make` |
 | `test/monitoreo-ab` | 2 | `tests/test_monitoreo_ab.py` (13 pruebas) y reglas del escáner para los datos de 2026 |
-| `docs/reporte-drift-ab` | 4 | Reglas revisadas del escáner para los HTML de Evidently, evidencia de la ejecución (`reports/monitoreo/`, `docs/evidencia/entrega5/`), README y este archivo |
+| `docs/reporte-drift-ab` | 6 | Reglas revisadas del escáner para los HTML de Evidently, evidencia de la ejecución (`reports/monitoreo/`, `docs/evidencia/entrega5/`), README y este archivo |
 
 Ejecutó en su computadora la ingesta de 2026, los reportes de Evidently, el reentrenamiento y registro de
 la v3 en el Model Registry, el A/B testing y las capturas de MLflow (`ENTREGA5_1_ejecutar.cmd`), y redactó el
