@@ -242,3 +242,9 @@ reports/deepchecks/*.html
 reports/monitoreo/drift_datos.json
 reports/monitoreo/desempeno_v1.json
 reports/monitoreo/drift_psi.html
+
+# Entrega 6 (prueba de carga y FinOps): los resultados son evidencia pequeña y se versionan,
+# incluidas sus tablas CSV (escalones, estadísticas de Locust y escenarios de costo).
+!reports/carga/**/*.csv
+!reports/finops/*.csv
+reports/carga/**/compose.log

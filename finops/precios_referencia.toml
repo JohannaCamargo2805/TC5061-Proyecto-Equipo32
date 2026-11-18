@@ -1,0 +1,48 @@
+# Precios de referencia para el análisis FinOps (entrega 6). Precios de lista en USD, bajo demanda,
+# Linux, sin impuestos ni descuentos negociados, consultados el 18 de noviembre de 2026.
+# Las dos regiones de nube que usa el análisis son Tier 1 / us-east-1; northamerica-south1
+# (Querétaro, México) está en el Tier 1 de Cloud Run, con el mismo precio que us-central1.
+# Si un precio cambia, se edita aquí y se vuelve a correr finops/costo_inferencia.py.
+
+[fuentes]
+fargate = "https://aws.amazon.com/fargate/pricing/"
+ec2 = "https://aws.amazon.com/ec2/pricing/on-demand/"
+cloud_run = "https://cloud.google.com/run/pricing"
+consulta = "2026-11-18"
+
+# AWS Fargate (ECS), us-east-1: por vCPU-hora y por GB-hora de lo que se reserva para la tarea.
+[fargate.x86]
+vcpu_hora = 0.04048
+gb_hora = 0.004445
+[fargate.arm]          # Graviton: ~20 % menos; requiere imagen linux/arm64
+vcpu_hora = 0.03238
+gb_hora = 0.00356
+[fargate.spot_x86]     # puede interrumpirse con 2 minutos de aviso
+vcpu_hora = 0.0124419
+gb_hora = 0.00136621
+
+# Google Cloud Run, Tier 1 (us-central1 y northamerica-south1).
+[cloud_run.por_peticion]   # CPU solo mientras atiende; se cobra en múltiplos de 100 ms
+vcpu_segundo = 0.000024
+gib_segundo = 0.0000025
+millon_peticiones = 0.40
+redondeo_s = 0.1
+[cloud_run.por_instancia]  # CPU siempre asignada mientras la instancia vive; sin cargo por petición
+vcpu_segundo = 0.000018
+gib_segundo = 0.000002
+
+# Amazon EC2 bajo demanda, us-east-1 (por hora).
+[ec2]
+"t4g.small" = { vcpu = 2, gib = 2, hora = 0.0168, arquitectura = "arm64", nota = "ráfagas (créditos de CPU)" }
+"t3.small" = { vcpu = 2, gib = 2, hora = 0.0208, arquitectura = "x86_64", nota = "ráfagas (créditos de CPU)" }
+"c7g.medium" = { vcpu = 1, gib = 2, hora = 0.0363, arquitectura = "arm64", nota = "CPU dedicada" }
+"c7g.large" = { vcpu = 2, gib = 4, hora = 0.0725, arquitectura = "arm64", nota = "CPU dedicada" }
+"t3.medium" = { vcpu = 2, gib = 4, hora = 0.0416, arquitectura = "x86_64", nota = "ráfagas (créditos de CPU)" }
+
+[supuestos]
+horas_mes = 730
+utilizacion_objetivo = 0.6     # se escala antes de saturar: margen para picos y para el SLO
+pico_sobre_promedio = 5.0      # el tráfico de la app se concentra en horas de traslado
+estaciones = 470               # estaciones de MiBici con datos en 2026
+dias_mes = 30
+arranque_trabajo_s = 45        # arranque del contenedor + descarga y carga del modelo (lote diario)
