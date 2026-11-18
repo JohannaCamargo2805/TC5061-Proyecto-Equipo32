@@ -148,7 +148,7 @@ def _desde_carpeta(carpeta: Path, verificar: bool) -> ModeloServicio:
     return ModeloServicio(modelo=modelo, info=info)
 
 
-def _desde_registry(uri: str, tracking_uri: str) -> ModeloServicio:
+def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> ModeloServicio:
     partes = _URI_REGISTRY.match(uri)
     if not partes:
         raise ErrorModelo(
@@ -163,8 +163,17 @@ def _desde_registry(uri: str, tracking_uri: str) -> ModeloServicio:
         if version
         else cliente.get_model_version_by_alias(nombre, alias)
     )
-    # Se carga por versión: si el alias se mueve después, este proceso sigue sirviendo la misma.
-    modelo = mlflow.pyfunc.load_model(f"models:/{nombre}/{mv.version}", suppress_warnings=True)
+    # Se descarga por versión: si el alias se mueve después, este proceso sigue sirviendo la misma.
+    local = Path(
+        mlflow.artifacts.download_artifacts(artifact_uri=f"models:/{nombre}/{mv.version}")
+    )
+    # Si la versión trae registro.json (la registra así el servicio registrar-modelo de
+    # docker-compose.yml), se comprueban las mismas huellas SHA-256 que en el modo empaquetado.
+    ruta_registro = local / ARCHIVO_REGISTRO
+    verificada = verificar and ruta_registro.is_file()
+    if verificada:
+        _verificar_integridad(local, json.loads(ruta_registro.read_text(encoding="utf-8")))
+    modelo = mlflow.pyfunc.load_model(str(local), suppress_warnings=True)
     _verificar_firma(modelo)
     etiquetas = dict(mv.tags or {})
     info = InfoModelo(
@@ -182,12 +191,14 @@ def _desde_registry(uri: str, tracking_uri: str) -> ModeloServicio:
         variables=_variables(),
         salida=SALIDA,
         recuperado=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        integridad_verificada=False,
+        integridad_verificada=verificada,
     )
     return ModeloServicio(modelo=modelo, info=info)
 
 
 def cargar_modelo(ajustes: Ajustes) -> ModeloServicio:
     if ajustes.desde_registry:
-        return _desde_registry(ajustes.modelo_uri, ajustes.tracking_uri)
+        return _desde_registry(
+            ajustes.modelo_uri, ajustes.tracking_uri, ajustes.verificar_integridad
+        )
     return _desde_carpeta(Path(ajustes.modelo_uri), ajustes.verificar_integridad)
