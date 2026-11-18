@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 
@@ -27,7 +28,15 @@ import numpy as np
 import pandas as pd
 
 from api.config import Ajustes
-from api.esquemas import DESCRIPCIONES, VARIABLES_P1, InfoModelo, ModeloResumen, Variable
+from api.esquemas import (
+    DESCRIPCIONES,
+    VARIABLES_P1,
+    EntradaP1,
+    InfoModelo,
+    ModeloResumen,
+    PrediccionItem,
+    Variable,
+)
 
 ARCHIVO_REGISTRO = "registro.json"
 SALIDA = "Viajes que se espera inicien en la estación el día D (conteo, regresión de Poisson)."
@@ -57,6 +66,26 @@ class ModeloServicio:
                 "el modelo devolvió una predicción no válida (NaN, infinito o tamaño distinto)"
             )
         return np.clip(pred, 0, None)  # igual que en la evaluación: no hay viajes negativos
+
+
+def redondear(valor: float) -> int:
+    """Redondeo comercial (0.5 sube), no el bancario de ``round``."""
+    return math.floor(valor + 0.5)
+
+
+def predicciones(servicio: ModeloServicio, entradas: list[EntradaP1]) -> list[PrediccionItem]:
+    """Una sola llamada al modelo para todas las entradas; la usan la API y el worker de RQ."""
+    valores = servicio.predecir([e.fila() for e in entradas])
+    return [
+        PrediccionItem(
+            estacion_id=e.estacion_id,
+            fecha=e.fecha,
+            viajes_esperados=round(float(v), 3),
+            viajes_esperados_redondeado=redondear(float(v)),
+            advertencias=e.advertencias(),
+        )
+        for e, v in zip(entradas, valores)
+    ]
 
 
 def sha256(ruta: Path) -> str:
@@ -148,7 +177,7 @@ def _desde_carpeta(carpeta: Path, verificar: bool) -> ModeloServicio:
     return ModeloServicio(modelo=modelo, info=info)
 
 
-def _desde_registry(uri: str, tracking_uri: str) -> ModeloServicio:
+def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> ModeloServicio:
     partes = _URI_REGISTRY.match(uri)
     if not partes:
         raise ErrorModelo(
@@ -163,8 +192,17 @@ def _desde_registry(uri: str, tracking_uri: str) -> ModeloServicio:
         if version
         else cliente.get_model_version_by_alias(nombre, alias)
     )
-    # Se carga por versión: si el alias se mueve después, este proceso sigue sirviendo la misma.
-    modelo = mlflow.pyfunc.load_model(f"models:/{nombre}/{mv.version}", suppress_warnings=True)
+    # Se descarga por versión: si el alias se mueve después, este proceso sigue sirviendo la misma.
+    local = Path(
+        mlflow.artifacts.download_artifacts(artifact_uri=f"models:/{nombre}/{mv.version}")
+    )
+    # Si la versión trae registro.json (la registra así el servicio registrar-modelo de
+    # docker-compose.yml), se comprueban las mismas huellas SHA-256 que en el modo empaquetado.
+    ruta_registro = local / ARCHIVO_REGISTRO
+    verificada = verificar and ruta_registro.is_file()
+    if verificada:
+        _verificar_integridad(local, json.loads(ruta_registro.read_text(encoding="utf-8")))
+    modelo = mlflow.pyfunc.load_model(str(local), suppress_warnings=True)
     _verificar_firma(modelo)
     etiquetas = dict(mv.tags or {})
     info = InfoModelo(
@@ -182,12 +220,14 @@ def _desde_registry(uri: str, tracking_uri: str) -> ModeloServicio:
         variables=_variables(),
         salida=SALIDA,
         recuperado=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        integridad_verificada=False,
+        integridad_verificada=verificada,
     )
     return ModeloServicio(modelo=modelo, info=info)
 
 
 def cargar_modelo(ajustes: Ajustes) -> ModeloServicio:
     if ajustes.desde_registry:
-        return _desde_registry(ajustes.modelo_uri, ajustes.tracking_uri)
+        return _desde_registry(
+            ajustes.modelo_uri, ajustes.tracking_uri, ajustes.verificar_integridad
+        )
     return _desde_carpeta(Path(ajustes.modelo_uri), ajustes.verificar_integridad)

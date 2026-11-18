@@ -319,3 +319,27 @@ class InfoModelo(BaseModel):
         None, description="Fecha (UTC) en que se descargó del registry."
     )
     integridad_verificada: bool
+
+
+class TareaCreada(BaseModel):
+    """Respuesta 202 de ``POST /predict/asincrono``: el lote quedó en la cola de Redis."""
+
+    tarea_id: str = Field(..., description="Identificador para consultar el resultado.")
+    estado: str = Field(..., description="Estado inicial en RQ (normalmente 'queued').")
+    n: int = Field(..., ge=1, description="Instancias del lote encolado.")
+    consultar: str = Field(..., description="Ruta para consultar el estado y el resultado.")
+
+
+class EstadoTarea(BaseModel):
+    """Estado de una tarea de predicción asíncrona y, al terminar, su resultado."""
+
+    tarea_id: str
+    estado: str = Field(
+        ..., description="queued, started, finished, failed, canceled... (estados de RQ)."
+    )
+    resultado: RespuestaLote | None = Field(
+        None, description="Predicciones, cuando estado = finished."
+    )
+    error: str | None = Field(None, description="Motivo, cuando estado = failed.")
+    encolada: str | None = None
+    terminada: str | None = None

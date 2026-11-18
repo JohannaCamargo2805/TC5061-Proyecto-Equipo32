@@ -50,3 +50,9 @@ tornado==6.6
 pyasn1==0.6.5
 
 -e .
+
+# Entrega 6: predicciones asíncronas (mismas versiones que requirements-api.txt) y Redis en
+# memoria para probar la cola sin un servidor (tests/test_asincrono.py)
+redis==8.1.0
+rq==3.0.0
+fakeredis==2.40.0
