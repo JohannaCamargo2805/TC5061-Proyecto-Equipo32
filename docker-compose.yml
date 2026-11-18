@@ -1,0 +1,191 @@
+# Sistema MiBici P1 (Equipo 32, TC5061) orquestado con Docker Compose. Entrega 6.
+#
+#   docker compose up -d --build --wait     # levanta todo con un solo comando y espera a que esté sano
+#   docker compose ps                       # estado y salud de cada servicio
+#   docker compose logs -f api worker       # registros
+#   docker compose down                     # detiene (agrega -v para borrar también registry y cola)
+#
+# También funciona con podman-compose (podman-compose up -d --build).
+#
+# Flujo de arranque (depends_on con condiciones):
+#   mlflow (sano) -> registrar-modelo (termina con éxito) -> api y worker (sanos)
+#   redis (sano) --------------------------------------------^
+#
+# * mlflow: servidor de tracking y Model Registry (SQLite y artefactos en el volumen mlflow-datos).
+# * registrar-modelo: trabajo de una sola vez; verifica el SHA-256 de models/servicio, prueba el
+#   modelo y lo registra como mibici-equipo32-p1-demanda@champion (idempotente).
+# * api: FastAPI; descarga del registry la versión que apunta el alias (MODELO_URI) y la sirve.
+# * redis + worker: predicciones asíncronas con RQ (POST /predict/asincrono, GET /tareas/{id}).
+#
+# Redes: "registro" (MLflow y quien lo consulta), "cola" (interna: Redis no sale del host ni se
+# publica) y "frontal" (la API). Los puertos se publican solo en 127.0.0.1.
+# Todas las variables tienen valor por defecto; se cambian con un archivo .env (ver .env.example).
+# API_IMAGEN y MLFLOW_IMAGEN permiten levantar el sistema con las imágenes publicadas en GHCR por el
+# pipeline de CI/CD en lugar de construirlas (docker compose up -d --no-build --wait).
+
+name: mibici-equipo32
+
+x-imagen-python: &imagen-python
+  IMAGEN_PYTHON: ${IMAGEN_PYTHON:-docker.io/library/python:3.14.8-slim-trixie@sha256:fbecd461fc72d21b2143c6eaba25143738079154a6d0ea3da3aec724f50eed4a}
+
+x-registros: &registros
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-entorno-modelo: &entorno-modelo
+  MODELO_URI: ${MODELO_URI:-models:/mibici-equipo32-p1-demanda@champion}
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  VERIFICAR_INTEGRIDAD: "1"
+  REDIS_URL: redis://redis:6379/0
+  MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR: "false"
+  MLFLOW_DISABLE_AGENT_HINT: "1"
+
+services:
+  mlflow:
+    build:
+      context: ./docker/mlflow
+      args: *imagen-python
+    image: ${MLFLOW_IMAGEN:-mibici-mlflow:3.17.2}
+    command:
+      - mlflow
+      - server
+      - --backend-store-uri
+      - sqlite:////mlflow/mlflow.db
+      - --artifacts-destination
+      - /mlflow/artifacts
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --workers
+      - ${MLFLOW_WORKERS:-1}
+      - --allowed-hosts
+      - mlflow,mlflow:5000,localhost,localhost:${MLFLOW_PUERTO:-5000},127.0.0.1,127.0.0.1:${MLFLOW_PUERTO:-5000}
+    environment:
+      # MLflow 3.17 arranca por defecto un ejecutor de trabajos de GenAI (huey, 7 procesos de
+      # ~250 MB cada uno) que este proyecto no usa. Apagarlo y usar 1 proceso web (el registry
+      # recibe pocas peticiones) baja la memoria en reposo de ~2 GB a ~0.4 GB
+      # (scripts/medir_reposo.py lo mide; ver el análisis FinOps).
+      MLFLOW_SERVER_ENABLE_JOB_EXECUTION: ${MLFLOW_TRABAJOS:-false}
+    ports:
+      - "127.0.0.1:${MLFLOW_PUERTO:-5000}:5000"
+    volumes:
+      - mlflow-datos:/mlflow
+    networks: [registro]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=4).status != 200)"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 6
+    cpus: ${MLFLOW_CPUS:-1.0}
+    mem_limit: ${MLFLOW_MEMORIA:-1g}
+    restart: unless-stopped
+    logging: *registros
+
+  registrar-modelo:
+    image: ${MLFLOW_IMAGEN:-mibici-mlflow:3.17.2}
+    command: ["python", "/app/registrar_modelo.py"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODELO_DIR: /modelo
+      MODELO_ALIAS: champion
+      EXPERIMENTO: mibici-equipo32
+      MLFLOW_DISABLE_AGENT_HINT: "1"
+      MPLCONFIGDIR: /tmp/matplotlib
+    volumes:
+      - ./models/servicio:/modelo:ro
+    networks: [registro]
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: "no"
+    logging: *registros
+
+  redis:
+    image: ${REDIS_IMAGEN:-docker.io/library/redis:8.10.3-alpine3.23}
+    # Sin contraseña a propósito: Redis solo está en la red interna "cola" (sin puerto publicado),
+    # así que el modo protegido (que solo acepta conexiones locales) se apaga de forma explícita.
+    command: ["redis-server", "--protected-mode", "no", "--appendonly", "yes",
+              "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis-datos:/data
+    networks: [cola]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    cpus: ${REDIS_CPUS:-0.5}
+    mem_limit: ${REDIS_MEMORIA:-256m}
+    restart: unless-stopped
+    logging: *registros
+
+  api:
+    build:
+      context: .
+      args:
+        <<: *imagen-python
+        MODELO_VERSION: "1"
+    image: ${API_IMAGEN:-mibici-p1-api:modelo-v1}
+    environment:
+      <<: *entorno-modelo
+      # Uvicorn lee sus opciones de variables UVICORN_*: procesos y bitácora de accesos.
+      UVICORN_WORKERS: ${API_WORKERS:-1}
+      UVICORN_ACCESS_LOG: ${API_ACCESS_LOG:-true}
+    ports:
+      - "127.0.0.1:${API_PUERTO:-8000}:8000"
+    networks: [frontal, registro, cola]
+    depends_on:
+      registrar-modelo:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status != 200)"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 6
+    # Límites fijos: la prueba de carga mide cuánto rinde una réplica de tamaño conocido, que es
+    # lo que el análisis FinOps convierte en costo por inferencia.
+    cpus: ${API_CPUS:-1.0}
+    mem_limit: ${API_MEMORIA:-1g}
+    restart: unless-stopped
+    logging: *registros
+
+  worker:
+    image: ${API_IMAGEN:-mibici-p1-api:modelo-v1}
+    command: ["python", "-m", "api.worker"]
+    environment:
+      <<: *entorno-modelo
+    networks: [registro, cola]
+    depends_on:
+      registrar-modelo:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-m", "api.worker", "--salud"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 6
+    cpus: ${WORKER_CPUS:-1.0}
+    mem_limit: ${WORKER_MEMORIA:-1g}
+    restart: unless-stopped
+    logging: *registros
+
+networks:
+  frontal:
+  registro:
+  cola:
+    internal: true
+
+volumes:
+  mlflow-datos:
+  redis-datos:
