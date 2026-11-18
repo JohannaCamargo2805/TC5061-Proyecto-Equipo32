@@ -1,0 +1,8 @@
+# Imagen de la prueba de carga (servicio "locust", perfil "carga" de docker-compose.yml): Locust
+# para generar la carga y pandas/matplotlib para las gráficas y el análisis FinOps.
+#   cd carga && uv pip compile requirements-carga.in -o requirements-carga.txt \
+#       --python-version 3.14 --python-platform x86_64-manylinux_2_28 --no-header --annotation-style line
+locust==2.47.0
+pandas==3.0.6
+numpy==2.5.4
+matplotlib==3.11.2
