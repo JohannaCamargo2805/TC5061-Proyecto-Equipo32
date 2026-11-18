@@ -1,0 +1,310 @@
+# Pipeline de CI/CD del proyecto MiBici P1 (Equipo 32, TC5061). Entrega 6.
+#
+#   calidad ──┐
+#             ├─> imagenes (api, mlflow) ──> sistema (Compose + humo de carga) ──> despliegue
+#   pruebas ──┘   [matriz]                                                        (solo main)
+#   [matriz Linux/Windows]
+#
+# * calidad: ruff, bandit, escaneo de secretos en TODO el historial y validación del compose.
+# * pruebas: PyTest en Ubuntu y Windows (la autora trabaja en Windows), con caché de pip.
+# * imagenes: construye la imagen de la API y la de MLflow con caché de capas (GitHub Actions
+#   cache), prueba la API en un contenedor y, en main, publica ambas en GitHub Container Registry.
+# * sistema: levanta los 5 servicios con "docker compose up --wait", prueba la API (síncrona y
+#   asíncrona) y corre una prueba de humo con Locust + docker stats; deja los reportes como
+#   artefacto y un resumen en la página de la ejecución.
+# * despliegue (solo main): baja de GHCR las imágenes publicadas por digest, levanta el sistema
+#   con ellas sin construir nada y verifica que responda (entorno "produccion").
+
+name: CI/CD
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      prueba_carga_completa:
+        description: "Además de la de humo, correr la prueba de carga por escalones (~7 min)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.14"
+  PYTHONUTF8: "1"
+  MLFLOW_DISABLE_AGENT_HINT: "1"
+  REGISTRO: ghcr.io/johannacamargo2805
+
+jobs:
+  calidad:
+    name: Calidad y seguridad
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # el escáner de secretos revisa todo el historial
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Herramientas (mismas versiones que requirements.txt)
+        run: |
+          version() { grep -oP "^$1==\K\S+" requirements.txt; }
+          python -m pip install "ruff==$(version ruff)" "bandit==$(version bandit)" \
+            "detect-secrets==$(version detect-secrets)" "python-dotenv==$(version python-dotenv)"
+          python -m pip install --no-deps -e .   # el escáner usa mibici.config y mibici.git_seguro
+      - name: Ruff
+        run: ruff check --output-format=github
+      - name: Bandit (código del paquete, API, scripts, carga, FinOps y MLflow)
+        run: bandit -c pyproject.toml -r mibici api scripts carga finops docker -q
+      - name: Secretos en todo el historial de Git
+        run: python scripts/escanear_secretos.py
+      - name: docker-compose.yml válido
+        run: docker compose config --quiet && docker compose --profile carga config --services
+
+  pruebas:
+    name: Pruebas (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.14"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Dependencias
+        run: python -m pip install -r requirements.txt
+      - name: PyTest
+        run: python -m pytest -p no:cacheprovider --junitxml=reports/pytest-${{ matrix.os }}.xml
+      - name: Resultados de las pruebas
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: pytest-${{ matrix.os }}
+          path: reports/pytest-${{ matrix.os }}.xml
+          retention-days: 14
+
+  imagenes:
+    name: Imagen ${{ matrix.imagen.nombre }}
+    needs: [calidad, pruebas]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write  # publicar en GitHub Container Registry
+    strategy:
+      fail-fast: true
+      matrix:
+        imagen:
+          - { nombre: mibici-p1-api, contexto: ".", local: "mibici-p1-api:modelo-v1", version: modelo-v1 }
+          - { nombre: mibici-mlflow, contexto: "docker/mlflow", local: "mibici-mlflow:3.17.2", version: "3.17.2" }
+    env:
+      PUBLICAR: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - name: Etiquetas
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRO }}/${{ matrix.imagen.nombre }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=${{ matrix.imagen.version }},enable={{is_default_branch}}
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Construir (caché de capas de GitHub Actions)
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.imagen.contexto }}
+          load: true
+          tags: ${{ matrix.imagen.local }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.imagen.nombre }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.imagen.nombre }}
+      - name: Prueba del contenedor de la API (modelo empaquetado)
+        if: matrix.imagen.nombre == 'mibici-p1-api'
+        run: |
+          docker run -d --name api -p 8000:8000 mibici-p1-api:modelo-v1
+          for i in $(seq 1 60); do curl -sf localhost:8000/health && break; sleep 2; done
+          echo
+          r=$(curl -sf -X POST localhost:8000/predict -H 'Content-Type: application/json' \
+                --data-binary @docs/ejemplos/peticion_predict.json)
+          echo "$r"
+          echo "$r" | python -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-64.549)<1e-3, v"
+          docker inspect --format '{{.State.Health.Status}}' api
+          docker image ls mibici-p1-api --format 'Tamaño de la imagen: {{.Size}}'
+          docker rm -f api
+      - name: Iniciar sesión en GHCR
+        if: env.PUBLICAR == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publicar en GHCR
+        if: env.PUBLICAR == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.imagen.contexto }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.imagen.nombre }}
+
+  sistema:
+    name: Sistema con Docker Compose + prueba de carga
+    needs: imagenes
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - name: Imagen de la API (desde la caché de capas)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: mibici-p1-api:modelo-v1
+          cache-from: type=gha,scope=mibici-p1-api
+      - name: Imagen de MLflow (desde la caché de capas)
+        uses: docker/build-push-action@v7
+        with:
+          context: docker/mlflow
+          load: true
+          tags: mibici-mlflow:3.17.2
+          cache-from: type=gha,scope=mibici-mlflow
+      - name: Imagen de Locust (prueba de carga)
+        uses: docker/build-push-action@v7
+        with:
+          context: carga
+          load: true
+          tags: mibici-carga:2.47.0
+          cache-from: type=gha,scope=mibici-carga
+          cache-to: type=gha,mode=max,scope=mibici-carga
+      - name: Levantar el sistema con un solo comando
+        run: docker compose up -d --no-build --wait --wait-timeout 300
+      - name: Estado de los servicios
+        run: docker compose ps -a
+      - name: API servida desde el Model Registry de Compose
+        run: |
+          set -e
+          curl -sf localhost:8000/modelo | python -c "import json,sys; m=json.load(sys.stdin); print(m['nombre'], m['version'], m['origen'], m['alias']); assert m['origen']=='registry' and m['integridad_verificada']"
+          r=$(curl -sf -X POST localhost:8000/predict -H 'Content-Type: application/json' \
+                --data-binary @docs/ejemplos/peticion_predict.json)
+          echo "$r" | python -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-64.549)<1e-3, v; print('predict OK', v)"
+          curl -sf -o /dev/null localhost:5000/health && echo "MLflow OK"
+      - name: Predicción asíncrona (Redis + worker de RQ)
+        run: |
+          set -e
+          id=$(curl -sf -X POST localhost:8000/predict/asincrono -H 'Content-Type: application/json' \
+                 --data-binary @docs/ejemplos/peticion_lote.json | python -c "import json,sys; print(json.load(sys.stdin)['tarea_id'])")
+          for i in $(seq 1 30); do
+            estado=$(curl -sf localhost:8000/tareas/$id | python -c "import json,sys; print(json.load(sys.stdin)['estado'])")
+            [ "$estado" = "finished" ] && break; sleep 1
+          done
+          echo "tarea $id: $estado"; test "$estado" = "finished"
+      - name: Prueba de carga de humo (Locust + docker stats)
+        run: python scripts/prueba_carga.py --escenario humo --duracion 60 --sin-construir
+      - name: Prueba de carga por escalones
+        if: github.event_name == 'workflow_dispatch' && inputs.prueba_carga_completa
+        run: python scripts/prueba_carga.py --nombre escalones-ci --sin-construir
+      - name: Resumen en la página de la ejecución
+        if: always()
+        run: |
+          python - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+          print("## Prueba de carga en el runner de GitHub Actions\n")
+          for r in sorted(pathlib.Path("reports/carga").glob("*/resumen.json")):
+              d = json.loads(r.read_text())
+              print(f"### {d['nombre']} (API: {d['api']['workers']} proceso(s), {d['api']['cpus']} vCPU)\n")
+              print("| Usuarios | Pet/s | p50 ms | p95 ms | p99 ms | Errores % | CPU API % | Mem API MiB |")
+              print("|---:|---:|---:|---:|---:|---:|---:|---:|")
+              for e in d["escalones"]:
+                  print(f"| {e['usuarios']} | {e['rps']} | {e['p50_ms']} | {e['p95_ms']} | {e['p99_ms']} | {e['errores_pct']} | {e['cpu_api_pct']} | {e['mem_api_mib']} |")
+              print()
+          EOF
+      - name: Bitácoras de los servicios
+        if: always()
+        run: docker compose logs --no-color > reports/carga/compose.log 2>&1 || true
+      - name: Reportes de carga
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: prueba-de-carga
+          path: reports/carga
+          retention-days: 30
+      - name: Apagar
+        if: always()
+        run: docker compose down -v
+
+  despliegue:
+    name: Despliegue desde GHCR (main)
+    needs: sistema
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    environment:
+      name: produccion
+      url: https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pkgs/container/mibici-p1-api
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bajar las imágenes publicadas de este commit
+        id: imagenes
+        run: |
+          set -e
+          corto=$(git rev-parse --short=7 HEAD)
+          for img in mibici-p1-api mibici-mlflow; do
+            docker pull "$REGISTRO/$img:sha-$corto"
+            digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$REGISTRO/$img:sha-$corto")
+            echo "$img=$digest" >> "$GITHUB_OUTPUT"
+          done
+      - name: Levantar el sistema con las imágenes publicadas (sin construir)
+        env:
+          API_IMAGEN: ${{ steps.imagenes.outputs.mibici-p1-api }}
+          MLFLOW_IMAGEN: ${{ steps.imagenes.outputs.mibici-mlflow }}
+        run: docker compose up -d --no-build --wait --wait-timeout 300
+      - name: Verificación posterior al despliegue
+        run: |
+          set -e
+          curl -sf localhost:8000/health
+          echo
+          r=$(curl -sf -X POST localhost:8000/predict -H 'Content-Type: application/json' \
+                --data-binary @docs/ejemplos/peticion_predict.json)
+          echo "$r" | python3 -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-64.549)<1e-3, v; print('predict OK', v)"
+      - name: Resumen del despliegue
+        run: |
+          {
+            echo "## Despliegue verificado"
+            echo
+            echo "| Imagen | Digest |"
+            echo "|---|---|"
+            echo "| API | \`${{ steps.imagenes.outputs.mibici-p1-api }}\` |"
+            echo "| MLflow | \`${{ steps.imagenes.outputs.mibici-mlflow }}\` |"
+            echo
+            echo "Para levantar exactamente esta versión: \`API_IMAGEN=<digest de la API> MLFLOW_IMAGEN=<digest de MLflow> docker compose up -d --no-build --wait\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Apagar
+        if: always()
+        run: docker compose down -v
