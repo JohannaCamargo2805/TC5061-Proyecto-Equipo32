@@ -3,6 +3,7 @@
 #   docker compose up -d --build --wait     # levanta todo con un solo comando y espera a que esté sano
 #   docker compose ps                       # estado y salud de cada servicio
 #   docker compose logs -f api worker       # registros
+#   python scripts/prueba_carga.py          # prueba de carga con Locust + docker stats (perfil "carga")
 #   docker compose down                     # detiene (agrega -v para borrar también registry y cola)
 #
 # También funciona con podman-compose (podman-compose up -d --build).
@@ -16,9 +17,10 @@
 #   modelo y lo registra como mibici-equipo32-p1-demanda@champion (idempotente).
 # * api: FastAPI; descarga del registry la versión que apunta el alias (MODELO_URI) y la sirve.
 # * redis + worker: predicciones asíncronas con RQ (POST /predict/asincrono, GET /tareas/{id}).
+# * locust (perfil "carga", no arranca con "up"): generador de carga y análisis (carga/, finops/).
 #
 # Redes: "registro" (MLflow y quien lo consulta), "cola" (interna: Redis no sale del host ni se
-# publica) y "frontal" (la API). Los puertos se publican solo en 127.0.0.1.
+# publica) y "frontal" (la API y el generador de carga). Los puertos se publican solo en 127.0.0.1.
 # Todas las variables tienen valor por defecto; se cambian con un archivo .env (ver .env.example).
 # API_IMAGEN y MLFLOW_IMAGEN permiten levantar el sistema con las imágenes publicadas en GHCR por el
 # pipeline de CI/CD en lugar de construirlas (docker compose up -d --no-build --wait).
@@ -178,6 +180,36 @@ services:
     cpus: ${WORKER_CPUS:-1.0}
     mem_limit: ${WORKER_MEMORIA:-1g}
     restart: unless-stopped
+    logging: *registros
+
+  locust:
+    profiles: ["carga"]
+    build:
+      context: ./carga
+      args: *imagen-python
+    image: mibici-carga:2.47.0
+    # Usa el locustfile del repositorio montado (no la copia de la imagen) para que un cambio en
+    # carga/ no requiera reconstruir.
+    entrypoint: ["locust", "-f", "/proyecto/carga/locustfile.py"]
+    command: ["--host", "http://api:8000"]
+    environment:
+      ESCENARIO: ${ESCENARIO:-escalones}
+      ESCALONES: ${ESCALONES:-10:45,25:45,50:45,100:45,150:45,200:45,250:45,300:45}
+      DURACION: ${DURACION:-60}
+      USUARIOS_LOTE: ${USUARIOS_LOTE:-4}
+      USUARIOS_ASINC: ${USUARIOS_ASINC:-10}
+    ports:
+      - "127.0.0.1:${LOCUST_PUERTO:-8089}:8089"
+    volumes:
+      - .:/proyecto:ro              # código (carga/, finops/) de solo lectura
+      - ./reports:/proyecto/reports  # aquí escribe los resultados
+    networks: [frontal]
+    depends_on:
+      api:
+        condition: service_healthy
+    # El generador también consume CPU: se limita para que no le quite procesador a la API.
+    cpus: ${LOCUST_CPUS:-2.0}
+    mem_limit: ${LOCUST_MEMORIA:-1g}
     logging: *registros
 
 networks:
