@@ -1,0 +1,13 @@
+# Servidor de MLflow (tracking + Model Registry) del docker-compose.yml. Misma versión que el
+# proyecto (requirements.txt) para que el registro, la UI y los clientes hablen el mismo esquema.
+# requirements-mlflow.txt se genera con todas las transitivas fijas:
+#   cd docker/mlflow && uv pip compile requirements-mlflow.in -o requirements-mlflow.txt \
+#       --python-version 3.14 --python-platform x86_64-manylinux_2_28 --no-header --annotation-style line
+mlflow==3.17.2
+# El trabajo registrar-modelo carga el modelo y predice el ejemplo antes de registrarlo:
+# mismas versiones con las que se entrenó (models/servicio/requirements.txt).
+numpy==2.5.4
+pandas==3.0.6
+scikit-learn==1.9.1
+scipy==1.18.1
+skops==0.16.0
