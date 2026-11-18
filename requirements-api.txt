@@ -2,6 +2,7 @@
 #
 # * Directas (marcadas "directa"): FastAPI/Uvicorn/Pydantic para la API y mlflow-skinny para
 #   cargar el modelo con mlflow.pyfunc (y, si se pide, leer el Model Registry por HTTP).
+#   redis y rq (entrega 6) dan las predicciones asíncronas con el worker de RQ.
 # * scikit-learn, scipy, numpy, pandas y skops llevan EXACTAMENTE las versiones de
 #   requirements.txt con las que se entrenó y registró el modelo (tests/test_contenedor.py lo
 #   comprueba): servir con otras versiones podría cambiar las predicciones o impedir la carga.
@@ -17,8 +18,9 @@ cachetools==7.3.0         # via mlflow-skinny
 certifi==2026.10.23       # via databricks-sdk, requests
 cffi==2.1.1               # via cryptography
 charset-normalizer==3.5.2  # via requests
-click==8.5.1              # via mlflow-skinny, uvicorn
+click==8.5.1              # via mlflow-skinny, rq, uvicorn
 cloudpickle==3.1.2        # via joblib, mlflow-skinny
+croniter==7.0.0           # via rq
 cryptography==50.0.2      # via google-auth
 databricks-sdk==0.162.0   # via mlflow-skinny
 fastapi==0.146.0          # via mlflow-skinny, directa
@@ -29,7 +31,7 @@ h11==0.16.0               # via uvicorn
 idna==3.20                # via anyio, requests
 importlib-metadata==9.1.0  # via mlflow-skinny
 joblib==1.6.0             # via scikit-learn
-mlflow-skinny==3.17.2     # directa
+mlflow-skinny==3.17.2     # via directa
 narwhals==2.28.0          # via scikit-learn
 numpy==2.5.4              # via pandas, scikit-learn, scipy, skops, directa
 opentelemetry-api==1.45.2  # via fastapi, mlflow-skinny, opentelemetry-sdk, opentelemetry-semantic-conventions
@@ -37,7 +39,7 @@ opentelemetry-proto==1.45.2  # via mlflow-skinny
 opentelemetry-sdk==1.45.2  # via mlflow-skinny
 opentelemetry-semantic-conventions==0.66b2  # via opentelemetry-sdk
 packaging==26.3           # via mlflow-skinny, skops
-pandas==3.0.6             # directa
+pandas==3.0.6             # via directa
 prettytable==3.18.0       # via skops
 protobuf==7.36.2          # via databricks-sdk, mlflow-skinny, opentelemetry-proto
 pyasn1==0.6.5             # via pyasn1-modules
@@ -45,13 +47,15 @@ pyasn1-modules==0.4.2     # via google-auth
 pycparser==3.12           # via cffi
 pydantic==2.14.1          # via fastapi, mlflow-skinny, directa
 pydantic-core==2.50.1     # via pydantic
-python-dateutil==4.0.0    # via pandas
+python-dateutil==4.0.0    # via croniter, pandas
 python-dotenv==1.2.4      # via mlflow-skinny
 pyyaml==6.0.3             # via mlflow-skinny
+redis==8.1.0              # via rq, directa
 requests==2.34.2          # via databricks-sdk, mlflow-skinny
+rq==3.0.0                 # directa
 scikit-learn==1.9.1       # via skops, directa
 scipy==1.18.1             # via scikit-learn, skops, directa
-skops==0.16.0             # directa
+skops==0.16.0             # via directa
 smmap==5.0.3              # via gitdb
 sqlparse==0.6.1           # via mlflow-skinny
 starlette==1.9.0          # via fastapi, mlflow-skinny, directa

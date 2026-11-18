@@ -13,3 +13,6 @@ scipy==1.18.1
 numpy==2.5.4
 pandas==3.0.6
 skops==0.16.0
+# Predicciones asíncronas (entrega 6): cola en Redis y worker de RQ (api/asincrono.py, api/worker.py)
+redis==8.1.0
+rq==3.0.0
