@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 
@@ -27,7 +28,15 @@ import numpy as np
 import pandas as pd
 
 from api.config import Ajustes
-from api.esquemas import DESCRIPCIONES, VARIABLES_P1, InfoModelo, ModeloResumen, Variable
+from api.esquemas import (
+    DESCRIPCIONES,
+    VARIABLES_P1,
+    EntradaP1,
+    InfoModelo,
+    ModeloResumen,
+    PrediccionItem,
+    Variable,
+)
 
 ARCHIVO_REGISTRO = "registro.json"
 SALIDA = "Viajes que se espera inicien en la estación el día D (conteo, regresión de Poisson)."
@@ -57,6 +66,26 @@ class ModeloServicio:
                 "el modelo devolvió una predicción no válida (NaN, infinito o tamaño distinto)"
             )
         return np.clip(pred, 0, None)  # igual que en la evaluación: no hay viajes negativos
+
+
+def redondear(valor: float) -> int:
+    """Redondeo comercial (0.5 sube), no el bancario de ``round``."""
+    return math.floor(valor + 0.5)
+
+
+def predicciones(servicio: ModeloServicio, entradas: list[EntradaP1]) -> list[PrediccionItem]:
+    """Una sola llamada al modelo para todas las entradas; la usan la API y el worker de RQ."""
+    valores = servicio.predecir([e.fila() for e in entradas])
+    return [
+        PrediccionItem(
+            estacion_id=e.estacion_id,
+            fecha=e.fecha,
+            viajes_esperados=round(float(v), 3),
+            viajes_esperados_redondeado=redondear(float(v)),
+            advertencias=e.advertencias(),
+        )
+        for e, v in zip(entradas, valores)
+    ]
 
 
 def sha256(ruta: Path) -> str:

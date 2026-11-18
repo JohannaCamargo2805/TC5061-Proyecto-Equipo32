@@ -32,7 +32,7 @@ from api.esquemas import (
     RespuestaLote,
     SolicitudLote,
 )
-from api.modelo import ErrorModelo, ModeloServicio, cargar_modelo
+from api.modelo import ErrorModelo, ModeloServicio, cargar_modelo, predicciones
 
 log = logging.getLogger("uvicorn.error")
 
@@ -48,6 +48,10 @@ versión exacta, su corrida de origen y sus métricas.
 * Las entradas se validan por tipo, rango y consistencia entre campos; un error
   devuelve **422** con el detalle de cada campo.
 """
+
+# Los anuncia "GET /" cuando hay cola (api/asincrono.py, que se importa solo si hay REDIS_URL:
+# así la API no necesita redis ni rq, que además no funcionan en Windows fuera de un contenedor).
+ENDPOINTS_ASINCRONOS = ["POST /predict/asincrono", "GET /tareas/{tarea_id}"]
 
 ERROR_422 = {422: {"description": "Entrada inválida: tipo, rango o consistencia entre campos"}}
 
@@ -91,38 +95,32 @@ def servicio_actual(request: Request) -> ModeloServicio:
 Servicio = Annotated[ModeloServicio, Depends(servicio_actual)]
 
 
-def _redondear(valor: float) -> int:
-    return math.floor(valor + 0.5)
-
-
 def _predecir(servicio: ModeloServicio, entradas: list[EntradaP1]) -> list[PrediccionItem]:
     try:
-        valores = servicio.predecir([e.fila() for e in entradas])
+        return predicciones(servicio, entradas)
     except ErrorModelo as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    return [
-        PrediccionItem(
-            estacion_id=e.estacion_id,
-            fecha=e.fecha,
-            viajes_esperados=round(float(v), 3),
-            viajes_esperados_redondeado=_redondear(float(v)),
-            advertencias=e.advertencias(),
-        )
-        for e, v in zip(entradas, valores)
-    ]
 
 
 router = APIRouter()
 
 
 @router.get("/", tags=["servicio"], summary="Descripción del servicio")
-def inicio(servicio: Servicio) -> dict:
+def inicio(request: Request, servicio: Servicio) -> dict:
+    con_cola = getattr(request.app.state, "cola", None) is not None
     return {
         "servicio": "API MiBici P1 (Equipo 32)",
         "version_api": __version__,
         "modelo": f"{servicio.info.nombre} v{servicio.info.version}",
         "documentacion": "/docs",
-        "endpoints": ["GET /health", "GET /modelo", "POST /predict", "POST /predict/lote"],
+        "endpoints": [
+            "GET /health",
+            "GET /modelo",
+            "POST /predict",
+            "POST /predict/lote",
+            *(ENDPOINTS_ASINCRONOS if con_cola else []),
+        ],
+        "predicciones_asincronas": con_cola,
     }
 
 
@@ -178,9 +176,11 @@ def predecir_lote(solicitud: SolicitudLote, servicio: Servicio) -> RespuestaLote
 def crear_app(ajustes: Ajustes | None = None) -> FastAPI:
     """Crea la aplicación. Sin ``ajustes`` los lee de las variables de entorno al arrancar."""
 
+    configuracion = ajustes or cargar_ajustes()
+
     @asynccontextmanager
     async def ciclo_de_vida(aplicacion: FastAPI):
-        servicio = cargar_modelo(ajustes or cargar_ajustes())
+        servicio = cargar_modelo(configuracion)
         aplicacion.state.servicio = servicio
         i = servicio.info
         log.info(
@@ -203,6 +203,12 @@ def crear_app(ajustes: Ajustes | None = None) -> FastAPI:
     aplicacion.middleware("http")(cabeceras_de_trazabilidad)
     aplicacion.add_exception_handler(RequestValidationError, error_de_validacion)
     aplicacion.include_router(router)
+    if configuracion.redis_url:
+        # Predicciones asíncronas (Redis + worker de RQ): solo si el despliegue trae una cola.
+        from api import asincrono
+
+        aplicacion.state.cola = asincrono.crear_cola(configuracion.redis_url)
+        aplicacion.include_router(asincrono.router)
     return aplicacion
 
 
