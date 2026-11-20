@@ -217,12 +217,16 @@ def main() -> int:
                         v / SEG_MES * sup["pico_sobre_promedio"] / (rps3 * u)))})
 
     # Escalado: ¿2 procesos en 2 vCPU rinden el doble? (costo por petición constante si es lineal)
+    # La capacidad bajo el SLO solo distingue escalones (25 contra 50 usuarios), así que la
+    # eficiencia se calcula con el rendimiento máximo sostenido (saturación) de cada corrida.
     escala = None
-    if escalado and escalado.get("capacidad"):
-        c2 = escalado["capacidad"]
-        escala = {"rps_1": rps, "rps_2": c2["rps"], "vcpu_2": escalado["api"]["cpus"],
-                  "eficiencia": round(c2["rps"] / (rps * escalado["api"]["cpus"] / vcpu), 3),
-                  "p95_ms_2": c2["p95_ms"]}
+    if escalado and escalado.get("saturacion") and base.get("saturacion"):
+        c2, s1, s2 = escalado["capacidad"], base["saturacion"], escalado["saturacion"]
+        factor = escalado["api"]["cpus"] / vcpu
+        escala = {"rps_slo_1": rps, "rps_slo_2": c2["rps"], "p95_ms_slo_2": c2["p95_ms"],
+                  "rps_saturacion_1": s1["rps"], "rps_saturacion_2": s2["rps"],
+                  "vcpu_2": escalado["api"]["cpus"],
+                  "eficiencia": round(s2["rps"] / (s1["rps"] * factor), 3)}
 
     resultado = {
         "fuente_precios": precios["fuentes"],
