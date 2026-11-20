@@ -118,7 +118,13 @@ Para correrlo: basta con hacer *push*; el resultado se ve en la pestaña **Actio
 cualquier máquina exactamente lo que se publicó: `API_IMAGEN=ghcr.io/johannacamargo2805/mibici-p1-api:latest
 MLFLOW_IMAGEN=ghcr.io/johannacamargo2805/mibici-mlflow:latest docker compose up -d --no-build --wait`.
 
-El estado de cada ejecución se ve en la [pestaña Actions](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml) y en la insignia de arriba.
+La ejecución [#1](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/44794465928) del commit `21ae92c` en `main` terminó **en verde**: sus siete jobs (calidad, pruebas en Ubuntu y en Windows, las imágenes de la API y de MLflow, el sistema completo y el despliegue) concluyeron con éxito en 26 minutos de reloj, compartiendo los runners con las ejecuciones de las nueve ramas, que también pasaron. Las imágenes quedaron públicas en GHCR con las etiquetas `sha-21ae92c` y `latest`, más `modelo-v1` (API) y `3.17.2` (MLflow).
+
+![Ejecución en GitHub Actions](docs/evidencia/entrega6/e6_05_github_actions.png)
+
+![Imagen publicada en GHCR](docs/evidencia/entrega6/e6_06_ghcr.png)
+
+![Ejecuciones en main y en las ramas de la entrega](docs/evidencia/entrega6/e6_07_actions_lista.png)
 
 ### 3. Prueba de carga con Locust
 
@@ -281,6 +287,8 @@ Ramas de la versión individual integradas en `main` con `git merge --no-ff` (to
 | `feat/carga-comparacion` | 1 | Gráfica comparativa de las tres configuraciones |
 | `feat/grafica-desempeno-compacta` | 1 | Gráfica de desempeño en cuadrícula de 2 × 2 |
 | `docs/operacion-finops` | 3 | Resultados de las pruebas, evidencia, regla del escáner para las tablas de resultados, README y contribuciones |
+| `fix/titulo-endpoints` | 1 | Título de la gráfica por endpoint con el número de usuarios entero |
+| `docs/evidencia-ci` | 1 | Capturas de la ejecución en verde de GitHub Actions y de la imagen en GHCR, README y contribuciones |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. Las pruebas de carga, las mediciones con `docker
