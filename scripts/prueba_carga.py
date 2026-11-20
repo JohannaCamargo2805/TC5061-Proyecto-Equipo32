@@ -5,6 +5,7 @@ Solo usa la biblioteca estándar de Python y la CLI de Docker, así que corre ig
 
     python scripts/prueba_carga.py                                  # escalones, réplica 1 vCPU
     python scripts/prueba_carga.py --nombre escalado --workers 2 --cpus 2
+    python scripts/prueba_carga.py --nombre optimizado --acelerar    # motor en NumPy
     python scripts/prueba_carga.py --escenario humo --duracion 60   # la usa el pipeline de CI/CD
     python scripts/prueba_carga.py --escenario lote --duracion 60     # costo por inferencia en lote
     python scripts/prueba_carga.py --escenario asincrono --duracion 60
@@ -104,6 +105,8 @@ def main() -> int:
     p.add_argument("--workers", type=int, default=1, help="procesos de Uvicorn de la API")
     p.add_argument("--cpus", default="1.0", help="límite de CPU del contenedor de la API")
     p.add_argument("--memoria", default="1g", help="límite de memoria del contenedor de la API")
+    p.add_argument("--acelerar", action="store_true",
+                   help="motor de inferencia en NumPy verificado (ACELERAR_INFERENCIA=1)")
     p.add_argument("--intervalo", type=float, default=2.0, help="segundos entre muestras de stats")
     p.add_argument("--slo-p95-ms", type=float, default=300.0, help="objetivo de latencia p95")
     p.add_argument("--sin-construir", action="store_true", help="no pasar --build a compose up")
@@ -124,7 +127,8 @@ def main() -> int:
     for archivo in a.compose:
         compose += ["-f", archivo]
     entorno = {**os.environ, "API_WORKERS": str(a.workers), "API_CPUS": str(a.cpus),
-               "API_MEMORIA": a.memoria, "ESCENARIO": a.escenario,
+               "API_MEMORIA": a.memoria, "API_ACELERAR": "1" if a.acelerar else "0",
+               "ESCENARIO": a.escenario,
                "ESCALONES": a.escalones, "DURACION": str(a.duracion)}
 
     arriba = compose + ["up", "-d", "--wait"] + ([] if a.sin_construir else ["--build"])
@@ -144,7 +148,8 @@ def main() -> int:
         "escenario": a.escenario,
         "escalones": a.escalones if a.escenario == "escalones" else None,
         "duracion_s": a.duracion if a.escenario != "escalones" else None,
-        "api": {"workers": a.workers, "cpus": float(a.cpus), "memoria": a.memoria},
+        "api": {"workers": a.workers, "cpus": float(a.cpus), "memoria": a.memoria,
+                "acelerar": a.acelerar},
         "slo_p95_ms": a.slo_p95_ms,
         "inicio_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "anfitrion": {"sistema": platform.platform(), "equipo": platform.node(),
@@ -154,7 +159,8 @@ def main() -> int:
         "compose": salida([DOCKER, "compose", "version", "--short"]),
         "git_commit": salida([GIT, "rev-parse", "--short", "HEAD"]),
         "modelo": {k: modelo.get(k) for k in ("nombre", "version", "alias", "origen",
-                                              "uri_registry", "integridad_verificada")},
+                                              "uri_registry", "integridad_verificada",
+                                              "motor_inferencia")},
     }
     (carpeta / "entorno.json").write_text(json.dumps(registro, indent=2, ensure_ascii=False),
                                           encoding="utf-8")

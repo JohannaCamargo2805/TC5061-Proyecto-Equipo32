@@ -37,6 +37,10 @@ def leer(ruta: Path) -> dict | list | None:
     return json.loads(ruta.read_text(encoding="utf-8")) if ruta.exists() else None
 
 
+def cap_slo(resumen: dict) -> float:
+    return float(resumen.get("slo_p95_ms", 300))
+
+
 def hora_fargate(p: dict, vcpu: float, gb: float) -> float:
     return vcpu * p["vcpu_hora"] + gb * p["gb_hora"]
 
@@ -62,6 +66,8 @@ def main() -> int:
         print("Falta reports/carga/base/resumen.json (python scripts/prueba_carga.py --nombre base)")
         return 1
     escalado = leer(CARGA / "escalado" / "resumen.json")
+    optimizado = leer(CARGA / "optimizado" / "resumen.json")
+    perfil = leer(SALIDA / "perfil_inferencia.json")
     lote = leer(CARGA / "lote" / "resumen.json")
     asinc = leer(CARGA / "asincrono" / "resumen.json")
     reposo = leer(SALIDA / "reposo.json") or []
@@ -97,7 +103,7 @@ def main() -> int:
 
     # 2. Plataforma fija: MLflow + Redis + worker (memoria medida en reposo).
     def mem_reposo(servicio, configuracion=None):
-        filas = [r for r in reposo if r["servicio"] == servicio
+        filas = [r for r in reposo if r["servicio"] == servicio and r.get("mem_mib")
                  and (configuracion is None or r["configuracion"] == configuracion)]
         return filas[-1]["mem_mib"] / 1024 if filas else None
 
@@ -117,11 +123,14 @@ def main() -> int:
     fijo = plataforma["usd_mes"]
 
     # 3. Curvas de costo contra volumen mensual.
-    def siempre_encendido(v, h):
+    def siempre_encendido_con(v, h, capacidad):
         # Flota fija dimensionada para la hora pico (sin autoescalado), mínimo una réplica.
         pico = v / SEG_MES * sup["pico_sobre_promedio"]
-        replicas = max(1, math.ceil(pico / (rps * u)))
+        replicas = max(1, math.ceil(pico / (capacidad * u)))
         return replicas * h * horas + fijo
+
+    def siempre_encendido(v, h):
+        return siempre_encendido_con(v, h, rps)
 
     def cloud_run(v):
         promedio = v / SEG_MES
@@ -163,6 +172,29 @@ def main() -> int:
         pico = e["inferencias_mes"] / SEG_MES * sup["pico_sobre_promedio"]
         e["replicas_en_pico"] = max(1, math.ceil(pico / (rps * u)))
 
+    # Optimización medida: la misma réplica con el motor en NumPy (ACELERAR_INFERENCIA=1).
+    opt = None
+    if optimizado and optimizado.get("capacidad"):
+        c3 = optimizado["capacidad"]
+        rps3 = c3["rps"]
+        opt = {
+            "capacidad_rps": rps3,
+            "capacidad_usuarios": c3["usuarios"],
+            "p95_ms": c3["p95_ms"],
+            "cpu_api_pct": c3["cpu_api_pct"],
+            "cpu_s_por_peticion": round(c3["cpu_api_pct"] / 100 / rps3, 6),
+            "factor_capacidad": round(rps3 / rps, 2),
+            "usd_por_millon_en_linea": {
+                k: round(1e6 * h / (rps3 * u * 3600), 4) for k, h in hora.items()},
+            "max_rps_observado": max(e["rps"] for e in optimizado["escalones"]),
+            "escalon_saturado": not all(e["p95_ms"] <= cap_slo(optimizado)
+                                        for e in optimizado["escalones"]),
+        }
+        opt["usd_por_millon_en_linea"]["Cloud Run por petición"] = round(
+            1e6 * (por_s_cr / (rps3 * u) + cr["por_peticion"]["millon_peticiones"] / 1e6), 4)
+        curvas["Fargate x86 + motor NumPy"] = [
+            (v, 1000 * siempre_encendido_con(v, hora["Fargate x86"], rps3) / v) for v in volumenes]
+
     # Escalado: ¿2 procesos en 2 vCPU rinden el doble? (costo por petición constante si es lineal)
     escala = None
     if escalado and escalado.get("capacidad"):
@@ -185,6 +217,8 @@ def main() -> int:
             "inferencias_por_s_lote": inf_lote,
             "asincrono": (asinc or {}).get("asincrono"),
             "escalado": escala,
+            "optimizado": opt,
+            "perfil_ms": (perfil or {}).get("ms_por_llamada"),
         },
         "precio_hora_replica": {k: round(v, 5) for k, v in hora.items()},
         "fargate_gb_reservados": gb_fg,
@@ -218,7 +252,7 @@ def grafica(curvas: dict, lote: dict, ruta: Path) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    colores = ["#2a78d6", "#eb6834", "#1baf7a"]  # paleta categórica de referencia, orden fijo
+    colores = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]  # paleta categórica, orden fijo
     texto_2, rejilla = "#52514e", "#e6e5e0"
     plt.rcParams.update({"font.size": 9, "axes.edgecolor": rejilla, "axes.grid": True,
                          "grid.color": rejilla, "grid.linewidth": 0.6, "axes.spines.top": False,
