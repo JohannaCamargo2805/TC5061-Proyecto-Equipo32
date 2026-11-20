@@ -13,12 +13,14 @@ El proyecto responde tres preguntas de negocio:
 
 El ML Canvas y el diagrama de arquitectura se encuentran en `references/`.
 
+**Navegación.** Entregas: [6 · Operación, CI/CD y FinOps](#entrega-6-sistema-operable-con-docker-compose-cicd-prueba-de-carga-y-finops) (la más reciente) · [5 · Drift y A/B testing](#entrega-5-monitoreo-de-drift-con-evidently-reentrenamiento-y-ab-testing) · [4 · API en contenedor](#entrega-4-el-modelo-p1-como-api-rest-en-un-contenedor-fastapi--podmandocker) · [3 · Pruebas y seguridad](#entrega-3-pruebas-automatizadas-validación-de-datos-y-seguridad) · [2 · MLflow Project y Model Registry](#entrega-2-mlflow-project-experimentación-y-model-registry) · [1 · Propuesta](#reproducción-de-la-propuesta-de-proyecto-entrega-1). Estructura del repositorio: [Project Organization](#project-organization); contribuciones: [`CONTRIBUCIONES.md`](CONTRIBUCIONES.md).
+
 ## Entrega 6: sistema operable con Docker Compose, CI/CD, prueba de carga y FinOps
 
 [![CI/CD](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml)
 
 **Versión individual de Leydy Johanna Camargo Medina (A01840540)**, rama `main` de este repositorio, como las
-entregas 3 a 5 (Entregable 7 del curso). La API contenerizada de la entrega 4 y el modelo del Model Registry de la
+entregas 3 a 5 (Entregable 7 del curso; el profesor cambió estas actividades de grupales a individuales). La API contenerizada de la entrega 4 y el modelo del Model Registry de la
 entrega 5 se convierten en un sistema que se levanta con **un solo comando**, se prueba y despliega con **GitHub
 Actions**, se mide bajo carga con **Locust** y `docker stats` y se analiza en **costo por inferencia**. Reporte en
 PDF: `TC5061_Operacion_FinOps_Equipo32.pdf` (Canvas).
@@ -32,9 +34,11 @@ PDF: `TC5061_Operacion_FinOps_Equipo32.pdf` (Canvas).
 | Consumo en reposo según la configuración | `scripts/medir_reposo.py` |
 | Costo por inferencia y escenarios de volumen | `finops/costo_inferencia.py`, `finops/precios_referencia.toml` |
 | Motor de inferencia en NumPy verificado contra el Pipeline (optimización medida) | `api/acelerado.py`, `scripts/perfil_inferencia.py` |
-| Flujo con Pull Requests (cada cambio entra por PR con el CI en verde) | `.github/pull_request_template.md`, [PR #7](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/7) y [PR #8](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/8) |
+| Flujo con Pull Requests (cada cambio entra por PR con el CI en verde) | `.github/pull_request_template.md`, [PR #7](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/7), [#8](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/8) y [#9](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/9) |
 | Pruebas | `tests/test_entrega6.py` (21), `tests/test_asincrono.py` (7), `tests/test_acelerado.py` (7) |
 | Resultados | `reports/carga/<corrida>/` y `reports/finops/` |
+
+**Contenido de esta sección:** [1. Levantar el sistema con un solo comando](#1-levantar-el-sistema-con-un-solo-comando) · [2. Pipeline de CI/CD (GitHub Actions)](#2-pipeline-de-cicd-github-actions) · [3. Prueba de carga con Locust](#3-prueba-de-carga-con-locust) · [4. Monitoreo de recursos y análisis FinOps](#4-monitoreo-de-recursos-y-análisis-finops) · [5. Historial de Git de la entrega 6](#5-historial-de-git-de-la-entrega-6).
 
 ### 1. Levantar el sistema con un solo comando
 
@@ -102,6 +106,53 @@ curl -s -X POST localhost:8000/predict/asincrono -H "Content-Type: application/j
 curl -s localhost:8000/tareas/b4ff…    # estado "finished" y las mismas predicciones que POST /predict/lote
 ```
 
+#### Probar el sistema levantado
+
+```bash
+curl -s -X POST localhost:8000/predict -H "Content-Type: application/json" --data-binary @docs/ejemplos/peticion_predict.json
+# {"viajes_esperados":64.549,"viajes_esperados_redondeado":65,...}  (estación 2, 4 de noviembre de 2025)
+curl -s localhost:8000/modelo           # versión del registry que se sirve, linaje, métricas y motor de inferencia
+```
+
+Interfaces: Swagger de la API en <http://localhost:8000/docs> y MLflow (experimento y Model Registry) en
+<http://localhost:5000>. En PowerShell, usa `curl.exe` en lugar de `curl`.
+
+| Endpoint | Método | Qué hace |
+|---|---|---|
+| `/health` | GET | Salud del servicio y versión del modelo (la usa el `HEALTHCHECK`) |
+| `/modelo` | GET | Versión del Model Registry, linaje, métricas, integridad verificada y motor de inferencia |
+| `/predict` | POST | Viajes esperados de una estación para un día; responde **422** si la entrada es inválida o inconsistente |
+| `/predict/lote` | POST | Hasta 1,000 estaciones o días por petición |
+| `/predict/asincrono` | POST | Encola un lote en Redis y responde **202** con el id de la tarea |
+| `/tareas/{tarea_id}` | GET | Estado y resultado de una tarea asíncrona |
+| `/docs` | GET | Documentación OpenAPI interactiva |
+
+#### Variables de entorno principales
+
+Todas tienen valor por defecto en `docker-compose.yml`; para cambiarlas, copia `.env.example` como `.env` (ignorado por
+Git) y descomenta la línea.
+
+| Variable | Por defecto | Para qué sirve |
+|---|---|---|
+| `API_PUERTO` / `MLFLOW_PUERTO` / `LOCUST_PUERTO` | `8000` / `5000` / `8089` | Puertos publicados en `127.0.0.1` |
+| `MODELO_URI` | `models:/mibici-equipo32-p1-demanda@champion` | Alias o versión del registry (o `/app/models/servicio`, la copia empaquetada) |
+| `API_WORKERS`, `API_CPUS`, `API_MEMORIA` | `1`, `1.0`, `1g` | Tamaño de la réplica de la API (lo que mide la prueba de carga) |
+| `API_ACELERAR` | `0` | `1` activa el motor de inferencia en NumPy (×4 de capacidad, mismas predicciones) |
+| `MLFLOW_WORKERS`, `MLFLOW_TRABAJOS` | `1`, `false` | Procesos de MLflow y su ejecutor de trabajos (la configuración de fábrica usa ~2 GB) |
+| `API_IMAGEN`, `MLFLOW_IMAGEN` | imágenes locales | Usar las imágenes publicadas por el pipeline en GHCR |
+| `ESCENARIO`, `ESCALONES`, `DURACION` | `escalones`, 10→300 usuarios, `60` | Escenario de Locust del perfil `carga` |
+
+#### Solución de problemas
+
+| Síntoma | Causa y solución |
+|---|---|
+| `port is already allocated` en el 5000 | Otro programa usa el puerto (en macOS, AirPlay). Levanta con otro: `MLFLOW_PUERTO=5050 docker compose up -d --wait` |
+| `mlflow` queda `unhealthy` o se reinicia | Poca memoria para Docker: asigna al menos 4 GB en Docker Desktop y no actives `MLFLOW_TRABAJOS=true` con 1 vCPU |
+| La API no arranca y `registrar-modelo` termina con error | Las huellas SHA-256 de `models/servicio` no coinciden con `registro.json` (archivo modificado o incompleto): `git checkout -- models/servicio` y vuelve a levantar |
+| Cambié código y la API sigue igual | Reconstruye las imágenes: `docker compose up -d --build --wait` |
+| `pytest` omite `tests/test_asincrono.py` en Windows | RQ no corre de forma nativa en Windows; esas 7 pruebas corren en Linux, en el CI y dentro de Compose |
+| Quiero empezar de cero | `docker compose down -v` borra también el registry y la cola; el siguiente `up` registra el modelo otra vez |
+
 ### 2. Pipeline de CI/CD (GitHub Actions)
 
 `.github/workflows/ci-cd.yml` corre en cada *push* (todas las ramas), *pull request* y a mano (`workflow_dispatch`, con
@@ -116,7 +167,7 @@ la opción de correr la prueba de carga completa en el runner).
 | `despliegue` | Solo en `main`, entorno `produccion`: baja de GHCR las imágenes de ese commit **por digest**, levanta el sistema con ellas sin construir nada y verifica que responda | — |
 | `notificar` | Corre al final aunque algo falle: resume el resultado de cada job; en un *pull request* deja (y actualiza) un comentario con la tabla de resultados, y en `main` abre un issue `ci-fallo` asignado a la dueña del repositorio si algo falla (GitHub lo notifica por correo) y lo cierra al volver a verde | **notificaciones** |
 
-Para correrlo: basta con hacer *push*; el resultado se ve en la pestaña **Actions** del repositorio. Para levantar en
+Para correrlo: basta con hacer *push* o abrir un *pull request*; el resultado se ve en la pestaña **Actions** del repositorio y, en un PR, en el comentario del job `notificar`. Para correrlo a mano: **Actions → CI/CD → Run workflow** (con la casilla opcional para la prueba de carga completa). Las mismas verificaciones en local: `ruff check .`, `python -m pytest -q` y `python scripts/escanear_secretos.py`. Para levantar en
 cualquier máquina exactamente lo que se publicó: `API_IMAGEN=ghcr.io/johannacamargo2805/mibici-p1-api:latest
 MLFLOW_IMAGEN=ghcr.io/johannacamargo2805/mibici-mlflow:latest docker compose up -d --no-build --wait`.
 
@@ -141,6 +192,7 @@ con *merge commit* solo cuando todo está en verde.
 |---|---|---|
 | [#7](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/7) | `ci/notificaciones` | Job `notificar` del pipeline y plantilla de PR |
 | [#8](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/8) | `docs/flujo-pull-requests` | Evidencia de la ejecución con notificaciones, este README y `CONTRIBUCIONES.md` |
+| [#9](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/9) | `docs/readme-excelente` | README más completo (navegación, prueba del sistema, endpoints, variables, solución de problemas y reproducción de punta a punta) e integración de las correcciones de la entrega 2 del [PR #6](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/6) |
 
 Las ramas anteriores de la entrega 6 (tabla de la sección 5) se integraron con `git merge --no-ff` antes de retomar este
 flujo.
@@ -293,6 +345,16 @@ sin trabajos, la configuración del `docker-compose.yml` (`reports/finops/reposo
 6. **Memoria y salud**: 512 MiB bastan para la API donde la memoria se cobra aparte, y el worker puede comprobar su
    latido en Redis en lugar de arrancar un intérprete en cada verificación de salud (picos periódicos de CPU).
 
+#### Reproducir toda la entrega de punta a punta
+
+1. `docker compose up -d --build --wait` y verificar con `curl -s localhost:8000/health`.
+2. Prueba de carga de cada configuración con `scripts/prueba_carga.py` (sección 3): `base`, `escalado`, `optimizado`,
+   `lote` y `asincrono`; cada corrida deja su carpeta en `reports/carga/`.
+3. `python scripts/medir_reposo.py` (memoria y CPU en reposo) y el perfil de la inferencia con
+   `scripts/perfil_inferencia.py` (sección 4).
+4. `python finops/costo_inferencia.py` y `python carga/comparar.py reports/carga`: costos, escenarios y gráficas.
+5. `docker compose down` al terminar.
+
 ### 5. Historial de Git de la entrega 6
 
 Ramas de la versión individual integradas en `main` con `git merge --no-ff` (todos los commits a nombre de la autora):
@@ -316,6 +378,7 @@ Ramas de la versión individual integradas en `main` con `git merge --no-ff` (to
 | `docs/precision-error-carga` | 1 | Descripción precisa del único error de la prueba de carga |
 | `ci/notificaciones` (PR #7) | 2 | Job `notificar` del pipeline y plantilla de PR |
 | `docs/flujo-pull-requests` (PR #8) | 1 | Evidencia de la ejecución con notificaciones, README y contribuciones |
+| `docs/readme-excelente` (PR #9) | 2 | README más completo e integración del PR #6 (correcciones de la entrega 2) |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. Las pruebas de carga, las mediciones con `docker
