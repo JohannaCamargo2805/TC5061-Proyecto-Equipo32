@@ -12,7 +12,8 @@ Locust, ``recursos.jsonl`` de ``docker stats`` y ``entorno.json``) y escribe:
   de varios segundos) no se subestima y el último escalón no pierde las que seguían en curso.
 * ``resumen.json``: lo anterior más la capacidad de una réplica (el escalón con más peticiones por
   segundo que cumple el SLO de p95 y < 1 % de errores), el CPU por inferencia y el consumo en reposo.
-* ``01_desempeno.png``, ``02_capacidad.png``, ``03_recursos.png`` y ``04_endpoints.png``.
+* ``01_desempeno.png`` (y su versión de 2 × 2, ``01_desempeno_compacto.png``), ``02_capacidad.png``,
+  ``03_recursos.png`` y ``04_endpoints.png``.
 """
 
 import json
@@ -125,17 +126,22 @@ def resumen_tramo(t: dict, pet: pd.DataFrame, rec: pd.DataFrame) -> dict:
     }
 
 
-def figura_desempeno(pet, hist, tr, carpeta, t0):
+def _serie(pet, t0, ventana=5):
+    """Peticiones por segundo, percentiles y % de error en ventanas fijas (por hora de término)."""
     s = pet[pet["tipo"] != "ASYNC"].copy()
     s["t"] = s["fin"] - t0
-    s["bin"] = (s["t"] // 5) * 5
-    s = s[s["bin"] + 5 <= s["t"].max()]  # sin la última ventana incompleta
+    s["bin"] = (s["t"] // ventana) * ventana
+    s = s[s["bin"] + ventana <= s["t"].max()]  # sin la última ventana incompleta
     g = s.groupby("bin")
-    serie = pd.DataFrame({
-        "rps": g.size() / 5,
+    return pd.DataFrame({
+        "rps": g.size() / ventana,
         "p50": g["ms"].quantile(0.5), "p95": g["ms"].quantile(0.95), "p99": g["ms"].quantile(0.99),
         "err": 100 * (1 - g["ok"].mean()),
     })
+
+
+def figura_desempeno(pet, hist, tr, carpeta, t0):
+    serie = _serie(pet, t0)
     ag = hist[hist["Name"] == "Aggregated"].copy()
     ag["t"] = ag["Timestamp"] - t0
     fig, ejes = plt.subplots(4, 1, figsize=(7.2, 7.6), sharex=True,
@@ -158,6 +164,45 @@ def figura_desempeno(pet, hist, tr, carpeta, t0):
             eje.axvline(t["inicio"] - t0, color=REJILLA, lw=0.8, zorder=0)
     fig.align_ylabels(ejes)
     fig.savefig(carpeta / "01_desempeno.png")
+    plt.close(fig)
+
+
+def figura_desempeno_compacta(pet, tr, rec, slo, carpeta, t0):
+    """Las mismas series en una cuadrícula de 2 × 2 (para el reporte): rendimiento con el número
+    de usuarios de cada escalón, percentiles con el SLO, errores y CPU de la API."""
+    serie = _serie(pet, t0)
+    fig, ejes = plt.subplots(2, 2, figsize=(7.2, 4.4), sharex=True)
+    (a, b), (c, d) = ejes
+    a.plot(serie.index, serie["rps"], color=SERIE, lw=2)
+    a.set_title("Peticiones por segundo (arriba: usuarios)")
+    a.set_ylim(bottom=0, top=float(serie["rps"].max()) * 1.22)
+    for t in tr:
+        a.annotate(f"{t['usuarios']}", ((t["inicio"] + t["fin"]) / 2 - t0, 1), xytext=(0, -2),
+                   xycoords=("data", "axes fraction"), textcoords="offset points", ha="center",
+                   va="top", fontsize=7, color=TEXTO_2)
+    for clave, color in PERCENTILES.items():
+        b.plot(serie.index, serie[clave], color=color, lw=2, label=clave)
+    b.axhline(slo, color=CRITICO, lw=1)
+    b.annotate(f"SLO {slo:.0f} ms", (1, slo), xycoords=("axes fraction", "data"), xytext=(-2, 3),
+               textcoords="offset points", ha="right", fontsize=7, color=TEXTO_2)
+    b.set_yscale("log")
+    b.set_title("Latencia (ms, escala log)")
+    b.legend(loc="upper left", ncols=3, fontsize=7)
+    c.plot(serie.index, serie["err"], color=CRITICO, lw=2)
+    c.set_title("Errores (%)")
+    c.set_ylim(bottom=0, top=max(1.0, float(serie["err"].max()) * 1.2))
+    c.set_xlabel("Segundos desde el inicio")
+    api = rec[rec["servicio"] == "api"].sort_values("ts") if not rec.empty else rec
+    if len(api):
+        d.plot(api["ts"] - t0, api["cpu_pct"], color=SERVICIOS["api"], lw=2)
+    d.set_title("CPU de la API (% de un núcleo)")
+    d.set_ylim(bottom=0)
+    d.set_xlabel("Segundos desde el inicio")
+    for eje in ejes.flat:
+        for t in tr[1:]:
+            eje.axvline(t["inicio"] - t0, color=REJILLA, lw=0.8, zorder=0)
+    fig.tight_layout(h_pad=1.2)
+    fig.savefig(carpeta / "01_desempeno_compacto.png")
     plt.close(fig)
 
 
@@ -276,6 +321,7 @@ def main(carpeta: Path) -> int:
     (carpeta / "resumen.json").write_text(json.dumps(resumen, indent=2, ensure_ascii=False,
                                                      default=float), encoding="utf-8")
     figura_desempeno(pet, hist, tr, carpeta, t0)
+    figura_desempeno_compacta(pet, tr, rec, slo, carpeta, t0)
     if len(df) > 1:
         figura_capacidad(df, slo, carpeta)
     figura_recursos(rec, hist, carpeta, t0)
