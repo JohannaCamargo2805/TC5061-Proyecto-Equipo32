@@ -14,6 +14,10 @@
 #   artefacto y un resumen en la página de la ejecución.
 # * despliegue (solo main): baja de GHCR las imágenes publicadas por digest, levanta el sistema
 #   con ellas sin construir nada y verifica que responda (entorno "produccion").
+# * notificar: al terminar todo, resume el resultado de cada job y avisa: en un pull request,
+#   con un comentario en el PR (se actualiza en cada push); en main, si algo falla abre (o
+#   actualiza) un issue "ci-fallo" que GitHub notifica por correo, y lo cierra cuando vuelve
+#   a estar en verde.
 
 name: CI/CD
 
@@ -308,3 +312,75 @@ jobs:
       - name: Apagar
         if: always()
         run: docker compose down -v
+
+  notificar:
+    name: Notificación del resultado
+    needs: [calidad, pruebas, imagenes, sistema, despliegue]
+    if: always() && github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RESULTADOS: ${{ toJSON(needs) }}
+      EJECUCION: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      EVENTO: ${{ github.event_name }}
+      RAMA: ${{ github.head_ref || github.ref_name }}
+      COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Resumen de la ejecución
+        id: resumen
+        run: |
+          python3 - <<'PY'
+          import json, os
+          nombres = {"calidad": "Calidad y seguridad", "pruebas": "Pruebas (Ubuntu y Windows)",
+                     "imagenes": "Imágenes de la API y de MLflow",
+                     "sistema": "Sistema con Docker Compose + prueba de carga",
+                     "despliegue": "Despliegue desde GHCR (solo main)"}
+          iconos = {"success": "✅ éxito", "failure": "❌ falló", "cancelled": "⚪ cancelado",
+                    "skipped": "⏭️ omitido"}
+          needs = json.loads(os.environ["RESULTADOS"])
+          fallo = any(v["result"] in ("failure", "cancelled") for v in needs.values())
+          estado = "❌ falló" if fallo else "✅ en verde"
+          filas = "\n".join(f"| {nombres.get(k, k)} | {iconos.get(v['result'], v['result'])} |"
+                            for k, v in needs.items())
+          texto = (f"### CI/CD {estado}\n\n"
+                   f"Rama `{os.environ['RAMA']}`, commit `{os.environ['COMMIT'][:7]}` "
+                   f"({os.environ['EVENTO']}). [Ver la ejecución]({os.environ['EJECUCION']})\n\n"
+                   f"| Job | Resultado |\n|---|---|\n{filas}\n")
+          with open("notificacion.md", "w", encoding="utf-8") as f:
+              f.write(texto)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write(texto)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"fallo={'true' if fallo else 'false'}\n")
+          print(texto)
+          PY
+      - name: Comentario en el pull request
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: gh pr comment "$PR" --edit-last --body-file notificacion.md || gh pr comment "$PR" --body-file notificacion.md
+      - name: Issue de aviso si main falla
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.resumen.outputs.fallo == 'true'
+        continue-on-error: true
+        run: |
+          gh label create ci-fallo --color d73a4a --description "El pipeline de CI/CD falló en main" --force
+          abierto=$(gh issue list --label ci-fallo --state open --json number --jq '.[0].number')
+          if [ -n "$abierto" ]; then
+            gh issue comment "$abierto" --body-file notificacion.md
+          else
+            gh issue create --title "CI/CD falló en main" --label ci-fallo --assignee "$GITHUB_REPOSITORY_OWNER" --body-file notificacion.md
+          fi
+      - name: Cerrar el aviso cuando main vuelve a verde
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.resumen.outputs.fallo == 'false'
+        continue-on-error: true
+        run: |
+          for n in $(gh issue list --label ci-fallo --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Resuelto: main vuelve a estar en verde. $EJECUCION"
+          done
