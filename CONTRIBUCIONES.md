@@ -196,9 +196,11 @@ en `main` de este repositorio. Ramas y commits (todos a su nombre), integradas c
 | `fix/carga-ventanas`, `fix/perfil-inferencia`, `fix/finops-eficiencia` | 3 | Correcciones del análisis encontradas al revisar los resultados |
 | `feat/finops-motor-numpy`, `feat/carga-comparacion`, `feat/grafica-desempeno-compacta` | 3 | Escenarios con el motor medido y gráficas para el reporte |
 | `docs/operacion-finops` | 3 | Resultados de las pruebas (`reports/carga/`, `reports/finops/`), evidencia (`docs/evidencia/entrega6/`), regla del escáner de secretos para las tablas de resultados, README y este archivo |
+| `fix/titulo-endpoints` | 1 | Título de la gráfica por endpoint con el número de usuarios entero (gráficas regeneradas) |
+| `docs/evidencia-ci` | 1 | Capturas de la ejecución #1 de GitHub Actions en verde y de la imagen publicada en GHCR, README y este archivo |
 
 Levantó el sistema con Docker Compose y corrió en su computadora las cinco pruebas de carga (base, escalado,
 optimizado, lote y asíncrona), las mediciones en reposo y el perfil de la inferencia
-(`ENTREGA6_1_ejecutar.cmd` a `ENTREGA6_2c_mlflow_fabrica.cmd`), publicó el repositorio que dispara el pipeline de
-GitHub Actions y redactó el reporte `TC5061_Operacion_FinOps_Equipo32.pdf`. Los commits incluyen la línea
+(`ENTREGA6_1_ejecutar.cmd` a `ENTREGA6_2c_mlflow_fabrica.cmd`), publicó el repositorio, con lo que el pipeline de
+GitHub Actions corrió en verde en `main` y en las ramas (ejecución #1), y redactó el reporte `TC5061_Operacion_FinOps_Equipo32.pdf`. Los commits incluyen la línea
 `Co-Authored-By: Claude` porque se usó Claude (Anthropic) como asistente de programación.
