@@ -12,8 +12,13 @@ Dos orígenes, según ``MODELO_URI`` (ver ``config.py``):
 
 En ambos casos se comprueba que la firma del modelo tenga exactamente las 12
 variables de ``esquemas.VARIABLES_P1``; si no, la API no arranca.
+
+Con ``ACELERAR_INFERENCIA=1`` (entrega 6) se compila una versión en NumPy de la misma
+transformación y predicción (``acelerado.py``) y solo se usa si da las mismas predicciones que el
+Pipeline registrado; si no, se sigue usando ``pyfunc``.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
@@ -51,6 +56,7 @@ class ErrorModelo(RuntimeError):
 class ModeloServicio:
     modelo: object  # mlflow.pyfunc.PyFuncModel
     info: InfoModelo
+    rapido: Callable[[np.ndarray], np.ndarray] | None = None  # motor en NumPy verificado
 
     @property
     def resumen(self) -> ModeloResumen:
@@ -59,8 +65,12 @@ class ModeloServicio:
 
     def predecir(self, filas: list[dict[str, float]]) -> np.ndarray:
         """Predice en una sola llamada; devuelve conteos finitos y no negativos."""
-        x = pd.DataFrame(filas, columns=list(VARIABLES_P1)).astype("float64")
-        pred = np.asarray(self.modelo.predict(x), dtype="float64").reshape(-1)
+        if self.rapido is not None:
+            x = np.array([[f[c] for c in VARIABLES_P1] for f in filas], dtype="float64")
+            pred = np.asarray(self.rapido(x), dtype="float64").reshape(-1)
+        else:
+            x = pd.DataFrame(filas, columns=list(VARIABLES_P1)).astype("float64")
+            pred = np.asarray(self.modelo.predict(x), dtype="float64").reshape(-1)
         if pred.shape[0] != len(filas) or not np.all(np.isfinite(pred)):
             raise ErrorModelo(
                 "el modelo devolvió una predicción no válida (NaN, infinito o tamaño distinto)"
@@ -225,9 +235,30 @@ def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> Mode
     return ModeloServicio(modelo=modelo, info=info)
 
 
+def acelerar(servicio: ModeloServicio) -> ModeloServicio:
+    """Activa el motor en NumPy solo si reproduce el Pipeline registrado (si no, deja pyfunc)."""
+    from api import acelerado
+
+    motor = acelerado.compilar(servicio.modelo)
+    if motor is None:
+        servicio.info.motor_inferencia = (
+            "mlflow.pyfunc (el modelo no tiene la estructura conocida)"
+        )
+        return servicio
+    diferencia = acelerado.verificar(motor, servicio.modelo)
+    if diferencia > acelerado.TOLERANCIA:
+        servicio.info.motor_inferencia = f"mlflow.pyfunc (NumPy difiere {diferencia:.1e})"
+        return servicio
+    servicio.rapido = motor
+    servicio.info.motor_inferencia = f"numpy (verificado contra el Pipeline: {diferencia:.1e})"
+    return servicio
+
+
 def cargar_modelo(ajustes: Ajustes) -> ModeloServicio:
     if ajustes.desde_registry:
-        return _desde_registry(
+        servicio = _desde_registry(
             ajustes.modelo_uri, ajustes.tracking_uri, ajustes.verificar_integridad
         )
-    return _desde_carpeta(Path(ajustes.modelo_uri), ajustes.verificar_integridad)
+    else:
+        servicio = _desde_carpeta(Path(ajustes.modelo_uri), ajustes.verificar_integridad)
+    return acelerar(servicio) if ajustes.acelerar else servicio

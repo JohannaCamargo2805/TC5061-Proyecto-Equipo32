@@ -41,6 +41,8 @@ x-entorno-modelo: &entorno-modelo
   MLFLOW_TRACKING_URI: http://mlflow:5000
   VERIFICAR_INTEGRIDAD: "1"
   REDIS_URL: redis://redis:6379/0
+  # 1: motor en NumPy equivalente al Pipeline (api/acelerado.py), verificado al arrancar.
+  ACELERAR_INFERENCIA: ${API_ACELERAR:-0}
   MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR: "false"
   MLFLOW_DISABLE_AGENT_HINT: "1"
 
@@ -97,6 +99,7 @@ services:
       EXPERIMENTO: mibici-equipo32
       MLFLOW_DISABLE_AGENT_HINT: "1"
       MPLCONFIGDIR: /tmp/matplotlib
+      GIT_PYTHON_REFRESH: quiet  # el contenedor no tiene git (MLflow solo lo usa para etiquetas)
     volumes:
       - ./models/servicio:/modelo:ro
     networks: [registro]
