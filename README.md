@@ -32,6 +32,7 @@ PDF: `TC5061_Operacion_FinOps_Equipo32.pdf` (Canvas).
 | Consumo en reposo según la configuración | `scripts/medir_reposo.py` |
 | Costo por inferencia y escenarios de volumen | `finops/costo_inferencia.py`, `finops/precios_referencia.toml` |
 | Motor de inferencia en NumPy verificado contra el Pipeline (optimización medida) | `api/acelerado.py`, `scripts/perfil_inferencia.py` |
+| Flujo con Pull Requests (cada cambio entra por PR con el CI en verde) | `.github/pull_request_template.md`, [PR #7](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/7) y [PR #8](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/8) |
 | Pruebas | `tests/test_entrega6.py` (21), `tests/test_asincrono.py` (7), `tests/test_acelerado.py` (7) |
 | Resultados | `reports/carga/<corrida>/` y `reports/finops/` |
 
@@ -113,16 +114,38 @@ la opción de correr la prueba de carga completa en el runner).
 | `imagenes` | Construye la imagen de la API y la de MLflow, prueba la API en un contenedor (la predicción de referencia debe dar 64.549) y, en `main`, **publica ambas en GitHub Container Registry** (`sha-<commit>`, `modelo-v1`/`3.17.2`, `latest`) | **matriz** por imagen; caché de capas de Buildx en GitHub Actions |
 | `sistema` | `docker compose up --no-build --wait` con las 5 piezas, prueba la API servida desde el registry (síncrona y asíncrona) y corre una **prueba de humo con Locust + `docker stats`**; resumen en la página de la ejecución y reportes como artefacto | imágenes desde la caché de capas |
 | `despliegue` | Solo en `main`, entorno `produccion`: baja de GHCR las imágenes de ese commit **por digest**, levanta el sistema con ellas sin construir nada y verifica que responda | — |
+| `notificar` | Corre al final aunque algo falle: resume el resultado de cada job; en un *pull request* deja (y actualiza) un comentario con la tabla de resultados, y en `main` abre un issue `ci-fallo` asignado a la dueña del repositorio si algo falla (GitHub lo notifica por correo) y lo cierra al volver a verde | **notificaciones** |
 
 Para correrlo: basta con hacer *push*; el resultado se ve en la pestaña **Actions** del repositorio. Para levantar en
 cualquier máquina exactamente lo que se publicó: `API_IMAGEN=ghcr.io/johannacamargo2805/mibici-p1-api:latest
 MLFLOW_IMAGEN=ghcr.io/johannacamargo2805/mibici-mlflow:latest docker compose up -d --no-build --wait`.
 
-La ejecución [#1](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/44794465928) del commit `21ae92c` en `main` terminó **en verde**: sus siete jobs (calidad, pruebas en Ubuntu y en Windows, las imágenes de la API y de MLflow, el sistema completo y el despliegue) concluyeron con éxito en 26 minutos de reloj, compartiendo los runners con las ejecuciones de las nueve ramas, que también pasaron. Las imágenes quedaron públicas en GHCR con las etiquetas `sha-21ae92c` y `latest`, más `modelo-v1` (API) y `3.17.2` (MLflow).
+La ejecución [#18](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/44815760281) de `main` (commit `0b016ac`, la fusión del PR #7) terminó
+**en verde** con sus ocho jobs, incluido `notificar`. Antes, la ejecución
+[#1](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/44794465928) (commit `21ae92c`) había
+publicado por primera vez las imágenes en GHCR con las etiquetas `sha-<commit>` y `latest`, más `modelo-v1` (API) y
+`3.17.2` (MLflow); todas las ejecuciones de `main` y de las ramas están en verde.
 
 ![Ejecución en GitHub Actions](docs/evidencia/entrega6/e6_05_github_actions.png)
 
 ![Imagen publicada en GHCR](docs/evidencia/entrega6/e6_06_ghcr.png)
+
+#### Flujo de trabajo con Pull Requests
+
+Atendiendo la observación de la entrega anterior, el trabajo vuelve a entrar a `main` mediante *pull requests*: cada
+cambio se hace en una rama, se abre un PR con la plantilla `.github/pull_request_template.md` (qué cambia, cómo se probó y
+la lista de verificación), el pipeline corre sobre el PR y el job `notificar` comenta ahí el resultado, y el PR se fusiona
+con *merge commit* solo cuando todo está en verde.
+
+| PR | Rama | Contenido |
+|---|---|---|
+| [#7](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/7) | `ci/notificaciones` | Job `notificar` del pipeline y plantilla de PR |
+| [#8](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/8) | `docs/flujo-pull-requests` | Evidencia de la ejecución con notificaciones, este README y `CONTRIBUCIONES.md` |
+
+Las ramas anteriores de la entrega 6 (tabla de la sección 5) se integraron con `git merge --no-ff` antes de retomar este
+flujo.
+
+![PR #7 con el CI en verde y el comentario del job notificar](docs/evidencia/entrega6/e6_08_pr_notificaciones.png)
 
 ![Ejecuciones en main y en las ramas de la entrega](docs/evidencia/entrega6/e6_07_actions_lista.png)
 
@@ -291,6 +314,8 @@ Ramas de la versión individual integradas en `main` con `git merge --no-ff` (to
 | `fix/titulo-endpoints` | 1 | Título de la gráfica por endpoint con el número de usuarios entero |
 | `docs/evidencia-ci` | 1 | Capturas de la ejecución en verde de GitHub Actions y de la imagen en GHCR, README y contribuciones |
 | `docs/precision-error-carga` | 1 | Descripción precisa del único error de la prueba de carga |
+| `ci/notificaciones` (PR #7) | 2 | Job `notificar` del pipeline y plantilla de PR |
+| `docs/flujo-pull-requests` (PR #8) | 1 | Evidencia de la ejecución con notificaciones, README y contribuciones |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. Las pruebas de carga, las mediciones con `docker
