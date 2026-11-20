@@ -141,6 +141,12 @@ def escanear_arbol(por_blob: dict[str, list[dict]]) -> list[dict]:
     return hallazgos
 
 
+# Tablas CSV de resultados de la entrega 6 que se versionan a propósito (ver .gitignore): métricas
+# por escalón y estadísticas de Locust generadas con entradas sintéticas, y escenarios de costo.
+# Revisadas: no contienen datos de MiBici, credenciales ni datos personales.
+RESULTADOS_VERSIONADOS = re.compile(r"reports/carga/(\w+/)?[\w-]+\.csv|reports/finops/[\w-]+\.csv")
+
+
 def revisar_ignorados() -> list[dict]:
     """Cada ruta sensible debe estar ignorada y ningún archivo así debe estar versionado."""
     problemas = []
@@ -152,6 +158,8 @@ def revisar_ignorados() -> list[dict]:
     extensiones = (".pem", ".key", ".p12", ".pfx", ".parquet", ".csv", ".db", ".joblib", ".pkl")
     nombres_exactos = {".netrc", ".pypirc", "mlflow.db"}
     for nombre in git("ls-files").splitlines():
+        if RESULTADOS_VERSIONADOS.fullmatch(nombre):
+            continue
         base = PurePosixPath(nombre).name
         sensible = (
             (base.startswith(".env") and base != ".env.example")
