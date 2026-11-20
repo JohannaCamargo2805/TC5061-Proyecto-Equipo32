@@ -24,6 +24,9 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.getenv("CARGA_DIR", "/carga"))
+# El paquete api: /app dentro de la imagen; la raíz del repositorio al correrlo localmente.
+sys.path.insert(0, os.getenv("APP_DIR", "/app"))
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1]))
 from peticiones import generar  # noqa: E402
 
 from api.esquemas import VARIABLES_P1, EntradaP1  # noqa: E402
