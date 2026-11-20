@@ -132,11 +132,12 @@ def main() -> int:
     def siempre_encendido(v, h):
         return siempre_encendido_con(v, h, rps)
 
-    def cloud_run(v):
+    def cloud_run(v, capacidad=None):
+        capacidad = capacidad or rps
         promedio = v / SEG_MES
         # Con poco tráfico cada petición paga al menos 100 ms de instancia; con mucho, la
         # concurrencia reparte la instancia y el tiempo facturado tiende a 1 / (capacidad × u).
-        seg = cr["por_peticion"]["redondeo_s"] if promedio < 1 else 1 / (rps * u)
+        seg = cr["por_peticion"]["redondeo_s"] if promedio < 1 else 1 / (capacidad * u)
         return v * (seg * por_s_cr + cr["por_peticion"]["millon_peticiones"] / 1e6) + fijo
 
     opciones = {
@@ -146,7 +147,14 @@ def main() -> int:
         "Cloud Run por petición (escala a cero)": cloud_run,
     }
     volumenes = [10 ** (4 + i / 8) for i in range(33)]  # 1e4 .. 1e8
-    curvas = {n: [(v, 1000 * f(v) / v) for v in volumenes] for n, f in opciones.items()}
+    # Curvas de la gráfica: Fargate (siempre encendido) y Cloud Run (escala a cero), cada una
+    # con el motor de MLflow (pyfunc) medido en la corrida base y, si existe, con el motor NumPy.
+    curvas = {
+        "Fargate x86 siempre encendido · pyfunc":
+            [(v, 1000 * opciones["Fargate x86 siempre encendido"](v) / v) for v in volumenes],
+        "Cloud Run por petición · pyfunc":
+            [(v, 1000 * cloud_run(v) / v) for v in volumenes],
+    }
 
     # Lote diario: trabajo de Cloud Run que arranca, predice las 470 estaciones y termina.
     n_mes = sup["estaciones"] * sup["dias_mes"]
@@ -192,8 +200,21 @@ def main() -> int:
         }
         opt["usd_por_millon_en_linea"]["Cloud Run por petición"] = round(
             1e6 * (por_s_cr / (rps3 * u) + cr["por_peticion"]["millon_peticiones"] / 1e6), 4)
-        curvas["Fargate x86 + motor NumPy"] = [
+        curvas["Fargate x86 siempre encendido · motor NumPy"] = [
             (v, 1000 * siempre_encendido_con(v, hora["Fargate x86"], rps3) / v) for v in volumenes]
+        curvas["Cloud Run por petición · motor NumPy"] = [
+            (v, 1000 * cloud_run(v, rps3) / v) for v in volumenes]
+        for v, nombre in ((1e6, "App: 1 M peticiones/mes"), (3e7, "App: 30 M peticiones/mes")):
+            for opcion, f in (("Fargate x86 siempre encendido · motor NumPy",
+                               lambda x: siempre_encendido_con(x, hora["Fargate x86"], rps3)),
+                              ("Cloud Run por petición · motor NumPy",
+                               lambda x: cloud_run(x, rps3))):
+                usd = f(v)
+                escenarios.append({
+                    "escenario": nombre, "inferencias_mes": int(v), "opcion": opcion,
+                    "usd_mes": round(usd, 2), "usd_por_1000": round(1000 * usd / v, 4),
+                    "replicas_en_pico": max(1, math.ceil(
+                        v / SEG_MES * sup["pico_sobre_promedio"] / (rps3 * u)))})
 
     # Escalado: ¿2 procesos en 2 vCPU rinden el doble? (costo por petición constante si es lineal)
     escala = None
@@ -252,29 +273,37 @@ def grafica(curvas: dict, lote: dict, ruta: Path) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    colores = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]  # paleta categórica, orden fijo
+    # Paleta categórica de referencia: un color por forma de desplegar; el motor se distingue
+    # además por el trazo (continuo = pyfunc, discontinuo = NumPy), no solo por el color.
+    estilos = {
+        "Fargate x86 siempre encendido · pyfunc": ("#2a78d6", "-"),
+        "Fargate x86 siempre encendido · motor NumPy": ("#2a78d6", "--"),
+        "Cloud Run por petición · pyfunc": ("#1baf7a", "-"),
+        "Cloud Run por petición · motor NumPy": ("#1baf7a", "--"),
+    }
     texto_2, rejilla = "#52514e", "#e6e5e0"
     plt.rcParams.update({"font.size": 9, "axes.edgecolor": rejilla, "axes.grid": True,
                          "grid.color": rejilla, "grid.linewidth": 0.6, "axes.spines.top": False,
                          "axes.spines.right": False, "xtick.color": texto_2,
                          "ytick.color": texto_2, "axes.labelcolor": texto_2,
                          "legend.frameon": False})
-    fig, ax = plt.subplots(figsize=(7.2, 3.8))
-    for (nombre, puntos), color in zip(curvas.items(), colores):
+    fig, ax = plt.subplots(figsize=(7.2, 3.6))
+    for nombre, puntos in curvas.items():
+        color, trazo = estilos.get(nombre, ("#eb6834", "-"))
         xs, ys = zip(*puntos)
-        ax.plot(xs, ys, color=color, lw=2, label=nombre)
-    ax.scatter([lote["inferencias_mes"]], [lote["usd_por_1000"]], s=36, color="#0b0b0b",
+        ax.plot(xs, ys, color=color, ls=trazo, lw=2, label=nombre)
+    ax.scatter([lote["inferencias_mes"]], [lote["usd_por_1000"]], s=40, color="#0b0b0b",
                zorder=3, label="Lote diario como trabajo de Cloud Run")
-    ax.annotate(f"lote diario: ${lote['usd_por_1000']:.3f} por 1,000",
-                (lote["inferencias_mes"], lote["usd_por_1000"]), xytext=(6, -12),
-                textcoords="offset points", fontsize=8, color=texto_2)
+    ax.annotate(f"lote diario (470 estaciones):\n${lote['usd_por_1000']:.4f} por 1,000",
+                (lote["inferencias_mes"], lote["usd_por_1000"]), xytext=(10, 4),
+                textcoords="offset points", fontsize=8, color=texto_2, va="bottom")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Inferencias (peticiones) al mes")
     ax.set_ylabel("USD por cada 1,000 inferencias")
     ax.set_title("Costo por inferencia contra volumen (incluye plataforma fija)", loc="left",
                  fontsize=10, fontweight="bold")
-    ax.legend(loc="lower left", fontsize=8)
+    ax.legend(loc="upper right", fontsize=7.5)
     fig.savefig(ruta, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
