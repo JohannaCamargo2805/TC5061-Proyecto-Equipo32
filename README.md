@@ -177,7 +177,8 @@ versión previa del merge de `ci/github-actions` que difiere de `845defb` solo e
   89 % y p95 de 2.0 s: las peticiones esperan en cola.
 * Después del codo el rendimiento no crece (22–24 pet/s) y el p95 sube hasta 15.6 s.
 * Errores: 1 de 7,740 peticiones (0.013 %), un `/predict/lote` que
-  el cliente cerró por tiempo de espera durante la sobrecarga. Las entradas inválidas respondieron 422 como se espera.
+  falló en 3 ms con estado HTTP 0: un error de conexión del cliente, no una respuesta de la API (se repitió una vez
+  en cada corrida, con y sin saturación). Las entradas inválidas respondieron 422 como se espera.
 
 ![Comparación de configuraciones](reports/carga/comparacion_configuraciones.png)
 
@@ -289,6 +290,7 @@ Ramas de la versión individual integradas en `main` con `git merge --no-ff` (to
 | `docs/operacion-finops` | 3 | Resultados de las pruebas, evidencia, regla del escáner para las tablas de resultados, README y contribuciones |
 | `fix/titulo-endpoints` | 1 | Título de la gráfica por endpoint con el número de usuarios entero |
 | `docs/evidencia-ci` | 1 | Capturas de la ejecución en verde de GitHub Actions y de la imagen en GHCR, README y contribuciones |
+| `docs/precision-error-carga` | 1 | Descripción precisa del único error de la prueba de carga |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. Las pruebas de carga, las mediciones con `docker

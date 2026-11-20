@@ -198,6 +198,7 @@ en `main` de este repositorio. Ramas y commits (todos a su nombre), integradas c
 | `docs/operacion-finops` | 3 | Resultados de las pruebas (`reports/carga/`, `reports/finops/`), evidencia (`docs/evidencia/entrega6/`), regla del escáner de secretos para las tablas de resultados, README y este archivo |
 | `fix/titulo-endpoints` | 1 | Título de la gráfica por endpoint con el número de usuarios entero (gráficas regeneradas) |
 | `docs/evidencia-ci` | 1 | Capturas de la ejecución #1 de GitHub Actions en verde y de la imagen publicada en GHCR, README y este archivo |
+| `docs/precision-error-carga` | 1 | Descripción precisa del único error de la prueba de carga (error de conexión del cliente, en 3 ms) |
 
 Levantó el sistema con Docker Compose y corrió en su computadora las cinco pruebas de carga (base, escalado,
 optimizado, lote y asíncrona), las mediciones en reposo y el perfil de la inferencia
