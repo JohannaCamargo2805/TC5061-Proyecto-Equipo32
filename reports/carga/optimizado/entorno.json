@@ -1,0 +1,40 @@
+{
+  "nombre": "optimizado",
+  "escenario": "escalones",
+  "escalones": "50:45,100:45,200:45,300:45,400:45,500:45,600:45,800:45",
+  "duracion_s": null,
+  "api": {
+    "workers": 1,
+    "cpus": 1.0,
+    "memoria": "1g",
+    "acelerar": true
+  },
+  "slo_p95_ms": 300.0,
+  "inicio_utc": "2026-11-20T17:59:07+00:00",
+  "anfitrion": {
+    "sistema": "Windows-11-10.0.26200-SP0",
+    "equipo": "JohannaCamargo",
+    "python": "3.14.8"
+  },
+  "motor": {
+    "ServerVersion": "29.9.2",
+    "OperatingSystem": "Docker Desktop",
+    "KernelVersion": "6.18.58.1-microsoft-standard-WSL2",
+    "NCPU": 8,
+    "MemTotal": 8199503872,
+    "Architecture": "x86_64"
+  },
+  "compose": "5.6.1",
+  "git_commit": "6431d71",
+  "modelo": {
+    "nombre": "mibici-equipo32-p1-demanda",
+    "version": 1,
+    "alias": [
+      "champion"
+    ],
+    "origen": "registry",
+    "uri_registry": "models:/mibici-equipo32-p1-demanda/1",
+    "integridad_verificada": true,
+    "motor_inferencia": "numpy (verificado contra el Pipeline: 0.0e+00)"
+  }
+}

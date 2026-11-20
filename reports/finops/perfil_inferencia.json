@@ -1,0 +1,27 @@
+{
+  "entorno": {
+    "python": "3.14.8",
+    "cpus_visibles": 8,
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "mlflow": "3.17.2"
+  },
+  "repeticiones": 300,
+  "diferencia_maxima_numpy_vs_pipeline": 0.0,
+  "ms_por_llamada": {
+    "validacion_pydantic_1": 0.0254,
+    "dataframe_1": 0.6515,
+    "pyfunc_mlflow_1": 15.5207,
+    "pyfunc_mlflow_100": 19.7173,
+    "pipeline_sklearn_1": 11.6903,
+    "pipeline_sklearn_100": 15.7168,
+    "numpy_1": 0.0838,
+    "numpy_100": 0.1043
+  },
+  "ms_por_inferencia": {
+    "pyfunc_individual": 15.5207,
+    "pyfunc_en_lote_100": 0.19717,
+    "numpy_individual": 0.0838,
+    "numpy_en_lote_100": 0.001043
+  }
+}

@@ -1,0 +1,6 @@
+Configuracion de fabrica de MLflow 3.17.2 (2 procesos web + ejecutor de trabajos), 2 vCPU y 3 GB
+salud=healthy reinicios=0 oom=false
+mibici-equipo32-mlflow-1 2.48% 2.034GiB / 3GiB 175
+mibici-equipo32-mlflow-1 2.23% 2.034GiB / 3GiB 175
+mibici-equipo32-mlflow-1 2.54% 2.034GiB / 3GiB 175
+mibici-equipo32-mlflow-1 2.25% 2.034GiB / 3GiB 175
