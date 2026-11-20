@@ -319,6 +319,11 @@ class InfoModelo(BaseModel):
         None, description="Fecha (UTC) en que se descargó del registry."
     )
     integridad_verificada: bool
+    motor_inferencia: str = Field(
+        "mlflow.pyfunc",
+        description="Cómo se calcula la predicción: pyfunc de MLflow o el motor en NumPy "
+        "verificado contra el Pipeline (ACELERAR_INFERENCIA=1).",
+    )
 
 
 class TareaCreada(BaseModel):
