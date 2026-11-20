@@ -31,12 +31,15 @@ def _tabla(n: int = 600, desplazamiento: float = 0.0, inicio: str = "2025-01-01"
         "x_num": rng.normal(desplazamiento, 1, n),
         "x_conteo": rng.poisson(5 + 5 * desplazamiento, n).astype(float),
         "x_cat": rng.choice(["a", "b", "c"], n),
-        "y": rng.integers(0, 2, n),
+        # La etiqueta no se llama "y": con pandas 3 el índice de value_counts toma el nombre de la
+        # columna y plotly 5.24 (fijado por evidently) lo confunde con su argumento y= en el
+        # chequeo Class Imbalance (NameError). Los datos reales usan nombres descriptivos.
+        "objetivo": rng.integers(0, 2, n),
     })
 
 
 def _dataset(df: pd.DataFrame):
-    return v.Dataset(df, label="y", label_type="binary", datetime_name="fecha",
+    return v.Dataset(df, label="objetivo", label_type="binary", datetime_name="fecha",
                      features=["x_num", "x_conteo", "x_cat"], cat_features=["x_cat"])
 
 
@@ -83,7 +86,7 @@ def test_sin_columnas_conserva_etiqueta_y_tipos():
     ds = _dataset(_tabla())
     reducido = v.sin_columnas(ds, ["x_conteo"])
     assert "x_conteo" not in reducido.data.columns and "x_conteo" not in reducido.features
-    assert reducido.label_name == "y" and reducido.cat_features == ["x_cat"]
+    assert reducido.label_name == "objetivo" and reducido.cat_features == ["x_cat"]
     assert reducido.datetime_name == "fecha"
 
 
@@ -166,7 +169,7 @@ def test_compatibilidad_correlacion_entre_variables():
     """Con pandas 3 la condición original reportaba todos los pares; el ajuste lo corrige."""
     df = _tabla()
     df["x_copia"] = df["x_num"] * 2 + 1  # único par correlacionado
-    ds = v.Dataset(df, label="y", label_type="binary", datetime_name="fecha",
+    ds = v.Dataset(df, label="objetivo", label_type="binary", datetime_name="fecha",
                    features=["x_num", "x_conteo", "x_copia"], cat_features=[])
     check = v.dc.FeatureFeatureCorrelation().add_condition_max_number_of_pairs_above_threshold(
         0.9, 0)
