@@ -68,7 +68,8 @@ Rama `feat/p1-regresion-y-cierre` (PR de cierre de la entrega):
 ## Revisiones cruzadas
 
 Los números de esta tabla son los Pull Requests de la entrega 1 en el repositorio del equipo
-([`a01840537/TC5061-Proyecto-Equipo32`](https://github.com/a01840537/TC5061-Proyecto-Equipo32)).
+([`a01840537/TC5061-Proyecto-Equipo32`](https://github.com/a01840537/TC5061-Proyecto-Equipo32)). La tabla
+cubre los PR #1–#5; los PR #6–#12 de esa entrega, con sus revisiones, se consultan en ese repositorio.
 
 | PR | Autor | Revisó / aprobó | Integró |
 |---|---|---|---|
@@ -201,8 +202,9 @@ en `main` de este repositorio. Ramas y commits (todos a su nombre), integradas c
 | `docs/precision-error-carga` | 1 | Descripción precisa del único error de la prueba de carga (error de conexión del cliente, en 3 ms) |
 | `ci/notificaciones` → [PR #7](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/7) | 2 | Job `notificar` del pipeline (comentario en el PR e issue `ci-fallo` si `main` falla) y plantilla de PR |
 | `docs/flujo-pull-requests` → [PR #8](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/8) | 1 | Evidencia de la ejecución con notificaciones, README y este archivo |
+| `docs/readme-excelente` → [PR #9](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/9) | 2 | README más completo (navegación, prueba del sistema, endpoints, variables de entorno, solución de problemas y reproducción de punta a punta) e integración del [PR #6](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/6) con las correcciones pendientes de la entrega 2 |
 
-Atendiendo la observación de la entrega anterior, los dos últimos cambios entraron a `main` mediante *pull requests* (#7 y #8), con el pipeline de CI/CD en verde sobre cada PR antes de fusionarlo.
+Atendiendo la observación de la entrega anterior, los últimos cambios entraron a `main` mediante *pull requests* (#7, #8 y #9, que integra también el PR #6 pendiente de la entrega 2), con el pipeline de CI/CD en verde sobre cada PR antes de fusionarlo.
 
 Levantó el sistema con Docker Compose y corrió en su computadora las cinco pruebas de carga (base, escalado,
 optimizado, lote y asíncrona), las mediciones en reposo y el perfil de la inferencia
