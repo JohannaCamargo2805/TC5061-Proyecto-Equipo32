@@ -180,3 +180,25 @@ Ejecutó en su computadora la ingesta de 2026, los reportes de Evidently, el ree
 la v3 en el Model Registry, el A/B testing y las capturas de MLflow (`ENTREGA5_1_ejecutar.cmd`), y redactó el
 reporte `TC5061_Drift_ABTest_Equipo32.pdf`. Los commits incluyen la línea `Co-Authored-By: Claude` porque se
 usó Claude (Anthropic) como asistente de programación.
+
+## Entrega 6: microservicios, CI/CD y FinOps (versión individual)
+
+Misma mecánica que las entregas 3 a 5: versión de **Leydy Johanna Camargo Medina** (`JohannaCamargo2805`),
+en `main` de este repositorio. Ramas y commits (todos a su nombre), integradas con `git merge --no-ff`:
+
+| Rama | Commits | Qué contiene |
+|---|---|---|
+| `feat/prediccion-asincrona` | 4 | Verificación de huellas SHA-256 también al cargar desde el registry, `POST /predict/asincrono` y `GET /tareas/{id}` con Redis y RQ, `api/worker.py` y pruebas con fakeredis |
+| `feat/compose-orquestacion` | 2 | Imagen del servidor de MLflow 3.17.2, registro idempotente del modelo y `docker-compose.yml` (MLflow, registro, API, Redis y worker; perfil de Locust) |
+| `feat/prueba-carga-finops` | 4 | Escenario de Locust con peticiones realistas, `scripts/prueba_carga.py` con `docker stats`, gráficas por escalón, `finops/costo_inferencia.py`, `scripts/medir_reposo.py` y `tests/test_entrega6.py` |
+| `ci/github-actions` | 3 | `.github/workflows/ci-cd.yml` (calidad, pruebas en matriz, imágenes con caché y GHCR, sistema completo y despliegue), `bandit` sobre los módulos nuevos y corrección de DeepChecks con pandas 3 |
+| `perf/motor-numpy` | 3 | `api/acelerado.py` (motor en NumPy verificado contra el Pipeline), `scripts/perfil_inferencia.py`, costo con el motor optimizado y medición de MLflow de fábrica |
+| `fix/carga-ventanas`, `fix/perfil-inferencia`, `fix/finops-eficiencia` | 3 | Correcciones del análisis encontradas al revisar los resultados |
+| `feat/finops-motor-numpy`, `feat/carga-comparacion`, `feat/grafica-desempeno-compacta` | 3 | Escenarios con el motor medido y gráficas para el reporte |
+| `docs/operacion-finops` | 3 | Resultados de las pruebas (`reports/carga/`, `reports/finops/`), evidencia (`docs/evidencia/entrega6/`), regla del escáner de secretos para las tablas de resultados, README y este archivo |
+
+Levantó el sistema con Docker Compose y corrió en su computadora las cinco pruebas de carga (base, escalado,
+optimizado, lote y asíncrona), las mediciones en reposo y el perfil de la inferencia
+(`ENTREGA6_1_ejecutar.cmd` a `ENTREGA6_2c_mlflow_fabrica.cmd`), publicó el repositorio que dispara el pipeline de
+GitHub Actions y redactó el reporte `TC5061_Operacion_FinOps_Equipo32.pdf`. Los commits incluyen la línea
+`Co-Authored-By: Claude` porque se usó Claude (Anthropic) como asistente de programación.

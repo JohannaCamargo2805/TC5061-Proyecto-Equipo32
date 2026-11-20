@@ -13,6 +13,279 @@ El proyecto responde tres preguntas de negocio:
 
 El ML Canvas y el diagrama de arquitectura se encuentran en `references/`.
 
+## Entrega 6: sistema operable con Docker Compose, CI/CD, prueba de carga y FinOps
+
+[![CI/CD](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml)
+
+**Versión individual de Leydy Johanna Camargo Medina (A01840540)**, rama `main` de este repositorio, como las
+entregas 3 a 5 (Entregable 7 del curso). La API contenerizada de la entrega 4 y el modelo del Model Registry de la
+entrega 5 se convierten en un sistema que se levanta con **un solo comando**, se prueba y despliega con **GitHub
+Actions**, se mide bajo carga con **Locust** y `docker stats` y se analiza en **costo por inferencia**. Reporte en
+PDF: `TC5061_Operacion_FinOps_Equipo32.pdf` (Canvas).
+
+| Pieza | Dónde |
+|---|---|
+| Orquestación: MLflow, registro del modelo, API, Redis y worker de RQ | `docker-compose.yml`, `docker/mlflow/`, `.env.example` |
+| Predicciones asíncronas (opcional del enunciado) | `api/asincrono.py`, `api/worker.py`, `api/tareas.py` |
+| Pipeline de CI/CD | `.github/workflows/ci-cd.yml` |
+| Prueba de carga (escenario, gráficas y resumen por escalón) | `carga/locustfile.py`, `carga/peticiones.py`, `carga/graficas.py`, `carga/comparar.py`, `scripts/prueba_carga.py` |
+| Consumo en reposo según la configuración | `scripts/medir_reposo.py` |
+| Costo por inferencia y escenarios de volumen | `finops/costo_inferencia.py`, `finops/precios_referencia.toml` |
+| Motor de inferencia en NumPy verificado contra el Pipeline (optimización medida) | `api/acelerado.py`, `scripts/perfil_inferencia.py` |
+| Pruebas | `tests/test_entrega6.py` (21), `tests/test_asincrono.py` (7), `tests/test_acelerado.py` (7) |
+| Resultados | `reports/carga/<corrida>/` y `reports/finops/` |
+
+### 1. Levantar el sistema con un solo comando
+
+Requisitos: Docker Desktop (o Docker Engine con el plugin Compose v2) o Podman con `podman-compose`. No hace falta
+Python ni el registry local: todo se construye desde este repositorio.
+
+```bash
+docker compose up -d --build --wait     # construye, levanta y espera a que todo esté sano (~1 min con caché)
+docker compose ps                       # 5 servicios: 4 "healthy" y registrar-modelo "exited (0)"
+curl -s localhost:8000/health           # {"estado":"ok","modelo":"mibici-equipo32-p1-demanda","version":1,"origen":"registry"}
+docker compose down                     # detiene; con -v borra también el registry y la cola
+# podman-compose up -d --build          # equivalente con Podman
+```
+
+```mermaid
+flowchart LR
+  subgraph registro [red registro]
+    M[(mlflow<br/>tracking + Model Registry<br/>volumen mlflow-datos)]
+    R[registrar-modelo<br/>trabajo de una vez]
+  end
+  subgraph cola [red cola · interna]
+    Q[(redis<br/>volumen redis-datos)]
+  end
+  subgraph frontal [red frontal]
+    A[api · FastAPI<br/>127.0.0.1:8000]
+    L[locust · perfil carga<br/>127.0.0.1:8089]
+  end
+  W[worker · RQ]
+  R -- "1. verifica SHA-256 y registra @champion" --> M
+  A -- "2. models:/…@champion" --> M
+  W -- "2. models:/…@champion" --> M
+  A -- "POST /predict/asincrono" --> Q
+  Q --> W
+  L -- "carga" --> A
+```
+
+| Servicio | Imagen | Qué hace | Salud / límites |
+|---|---|---|---|
+| `mlflow` | `mibici-mlflow:3.17.2` (`docker/mlflow/Dockerfile`) | Tracking y Model Registry; SQLite y artefactos en el volumen `mlflow-datos` | `GET /health`; 1 vCPU, 1 GB |
+| `registrar-modelo` | la de MLflow | Verifica el SHA-256 de `models/servicio` contra `registro.json`, carga el modelo y predice el ejemplo, y lo registra como `mibici-equipo32-p1-demanda@champion` con el linaje original (idempotente) | termina con código 0 |
+| `api` | `mibici-p1-api:modelo-v1` (`Containerfile`) | La API de la entrega 4; descarga del registry la versión del alias y vuelve a verificar sus huellas | `GET /health`; 1 vCPU, 1 GB |
+| `redis` | `redis:8.10.3-alpine3.23` | Cola de las predicciones asíncronas; solo en la red interna `cola`, sin puerto publicado | `redis-cli ping`; 0.5 vCPU, 256 MB |
+| `worker` | la de la API | `python -m api.worker`: `SimpleWorker` de RQ con el modelo ya en memoria | registrado en Redis; 1 vCPU, 1 GB |
+| `locust` | `mibici-carga:2.47.0` (`carga/Dockerfile`) | Generador de carga y análisis (perfil `carga`: no arranca con `up`) | 2 vCPU, 1 GB |
+
+Decisiones de configuración:
+
+* **Arranque ordenado con condiciones**: `mlflow` sano → `registrar-modelo` termina con éxito → `api` y `worker`;
+  `redis` sano antes de ambos. Si el modelo no pasa la verificación, la API no arranca.
+* **Redes separadas**: `registro` (MLflow), `cola` (`internal: true`, Redis no es alcanzable desde el anfitrión) y
+  `frontal` (API y Locust). Los puertos se publican solo en `127.0.0.1`.
+* **Volúmenes con nombre** para el registry y la cola; el modelo se monta de solo lectura en `registrar-modelo`.
+* **Variables de entorno con valores por defecto** (`.env.example`): puertos, `MODELO_URI` (alias, versión o la copia
+  empaquetada), tamaño de la réplica (`API_WORKERS`, `API_CPUS`, `API_MEMORIA`), bitácora de accesos, imágenes
+  (`API_IMAGEN`, `MLFLOW_IMAGEN` para usar las publicadas en GHCR) y la imagen base.
+* **Rotación de bitácoras** (`json-file`, 10 MB × 3), `restart: unless-stopped` y límites de CPU y memoria en cada servicio.
+* **MLflow sin el ejecutor de trabajos de GenAI** (`MLFLOW_SERVER_ENABLE_JOB_EXECUTION=false`) y con 1 proceso web:
+  baja su memoria en reposo de ~2 GB a ~0.4 GB (`scripts/medir_reposo.py`, sección 4).
+
+Predicción asíncrona (Redis + RQ):
+
+```bash
+curl -s -X POST localhost:8000/predict/asincrono -H "Content-Type: application/json" --data-binary @docs/ejemplos/peticion_lote.json
+# {"tarea_id":"b4ff…","estado":"queued","n":3,"consultar":"/tareas/b4ff…"}
+curl -s localhost:8000/tareas/b4ff…    # estado "finished" y las mismas predicciones que POST /predict/lote
+```
+
+### 2. Pipeline de CI/CD (GitHub Actions)
+
+`.github/workflows/ci-cd.yml` corre en cada *push* (todas las ramas), *pull request* y a mano (`workflow_dispatch`, con
+la opción de correr la prueba de carga completa en el runner).
+
+| Job | Qué hace | Optimizaciones |
+|---|---|---|
+| `calidad` | `ruff check`, `bandit` (paquete, API, scripts, carga, FinOps, MLflow), escaneo de secretos en todo el historial de Git y `docker compose config` | caché de pip |
+| `pruebas` | PyTest completo | **matriz** Ubuntu × Windows (la autora trabaja en Windows); caché de pip; resultados JUnit como artefacto |
+| `imagenes` | Construye la imagen de la API y la de MLflow, prueba la API en un contenedor (la predicción de referencia debe dar 64.549) y, en `main`, **publica ambas en GitHub Container Registry** (`sha-<commit>`, `modelo-v1`/`3.17.2`, `latest`) | **matriz** por imagen; caché de capas de Buildx en GitHub Actions |
+| `sistema` | `docker compose up --no-build --wait` con las 5 piezas, prueba la API servida desde el registry (síncrona y asíncrona) y corre una **prueba de humo con Locust + `docker stats`**; resumen en la página de la ejecución y reportes como artefacto | imágenes desde la caché de capas |
+| `despliegue` | Solo en `main`, entorno `produccion`: baja de GHCR las imágenes de ese commit **por digest**, levanta el sistema con ellas sin construir nada y verifica que responda | — |
+
+Para correrlo: basta con hacer *push*; el resultado se ve en la pestaña **Actions** del repositorio. Para levantar en
+cualquier máquina exactamente lo que se publicó: `API_IMAGEN=ghcr.io/johannacamargo2805/mibici-p1-api:latest
+MLFLOW_IMAGEN=ghcr.io/johannacamargo2805/mibici-mlflow:latest docker compose up -d --no-build --wait`.
+
+El estado de cada ejecución se ve en la [pestaña Actions](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml) y en la insignia de arriba.
+
+### 3. Prueba de carga con Locust
+
+```bash
+python scripts/prueba_carga.py                                  # escalones con la réplica de 1 vCPU (~7 min)
+python scripts/prueba_carga.py --nombre escalado --workers 2 --cpus 2 --escalones "25:45,50:45,100:45,200:45,300:45,400:45,500:45,600:45"
+python scripts/prueba_carga.py --nombre optimizado --acelerar --escalones "50:45,100:45,200:45,300:45,400:45,500:45,600:45,800:45"
+python scripts/prueba_carga.py --escenario lote --duracion 60   # lotes de 100: costo por inferencia en lote
+python scripts/prueba_carga.py --escenario asincrono --duracion 60
+docker compose --profile carga up locust                        # o con interfaz web en http://localhost:8089
+```
+
+El script solo usa la biblioteca estándar y la CLI de Docker: levanta el sistema con el tamaño de réplica pedido,
+guarda el entorno (CPU y memoria del motor, versiones, commit, modelo servido), muestrea `docker stats` cada 2 s en un
+hilo aparte, corre Locust sin interfaz dentro del contenedor `locust` y genera las gráficas y el resumen por escalón.
+
+**Escenario** (`carga/locustfile.py`): el tráfico de una app de MiBici y del área de operación a la vez.
+
+* `UsuarioApp` (peso 9): `POST /predict` con entradas **distintas y realistas** en cada petición (`carga/peticiones.py`
+  simula 28 días de la estación y calcula rezagos y medias como `mibici/features.py`, así cumplen las reglas de
+  consistencia de la API), más `/health`, `/modelo` y un 4 % de entradas inválidas que deben responder **422**.
+* `UsuarioOperacion` (peso 1): `POST /predict/lote` con 100 estaciones (rebalanceo).
+* Forma de la carga: **escalones** de 10 a 300 usuarios de 45 s cada uno, para encontrar el punto en que la latencia se
+  dispara. Los percentiles por escalón se calculan con **cada petición** (no con las ventanas móviles de Locust) y sin
+  los primeros 10 s de cada escalón. SLO: p95 ≤ 300 ms con menos de 1 % de errores.
+
+#### Resultados en la computadora de la autora
+
+Intel Core i7-1065G7 (4 núcleos, 8 hilos), 16 GB, Windows 11 Pro, Docker Desktop 29.9.2 sobre WSL2 (8 vCPU y 7.6 GiB
+para Docker), Compose 5.6.1. Las corridas `base`, `escalado`, `lote` y `asincrono` usaron el commit `a6f1732` (una
+versión previa del merge de `ci/github-actions` que difiere de `845defb` solo en el flujo de CI) y `optimizado`, el
+`6431d71`. Cada carpeta de `reports/carga/<corrida>/` guarda las peticiones crudas (`peticiones.csv.gz`), `docker stats`
+(`recursos.jsonl`), el entorno, el reporte HTML de Locust, `escalones.csv`, `resumen.json` y las gráficas.
+
+![Desempeño de la réplica base](reports/carga/base/01_desempeno_compacto.png)
+
+| Usuarios | Pet/s | p50 (ms) | p95 (ms) | p99 (ms) | Errores (%) | CPU API (%) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 8.9 | 19 | 53 | 118 | 0.00 | 23 |
+| 25 | 22.1 | 23 | 104 | 220 | 0.00 | 45 |
+| 50 | 30.4 | 256 | 2,004 | 2,267 | 0.00 | 89 |
+| 100 | 22.5 | 3,499 | 5,019 | 6,165 | 0.13 | 93 |
+| 150 | 23.2 | 5,595 | 7,133 | 8,048 | 0.00 | 93 |
+| 200 | 22.1 | 7,460 | 10,628 | 10,923 | 0.00 | 93 |
+| 250 | 24.2 | 9,112 | 12,769 | 13,668 | 0.00 | 93 |
+| 300 | 23.9 | 11,242 | 15,609 | 16,425 | 0.00 | 93 |
+
+* **Capacidad de una réplica de 1 vCPU: 22.1 pet/s con p95 de 104 ms** (25 usuarios, CPU
+  de la API al 45 %). Con 50 usuarios llega a su techo, 30.4 pet/s, con la CPU al
+  89 % y p95 de 2.0 s: las peticiones esperan en cola.
+* Después del codo el rendimiento no crece (22–24 pet/s) y el p95 sube hasta 15.6 s.
+* Errores: 1 de 7,740 peticiones (0.013 %), un `/predict/lote` que
+  el cliente cerró por tiempo de espera durante la sobrecarga. Las entradas inválidas respondieron 422 como se espera.
+
+![Comparación de configuraciones](reports/carga/comparacion_configuraciones.png)
+
+| Configuración | Pet/s bajo el SLO | p95 (ms) | Pet/s máximas | CPU por petición (ms) |
+|---|---:|---:|---:|---:|
+| Base: 1 proceso, 1 vCPU, pyfunc | 22.1 | 104 | 30.4 | 20.2 |
+| Escalado: 2 procesos, 2 vCPU, pyfunc | 22.0 | 53 | 42.1 | 20.6 |
+| Optimizado: 1 proceso, 1 vCPU, motor NumPy | 89.5 | 189 | 148.0 | 6.9 |
+
+* **Escalado**: el doble de procesos y de CPU da ×1.39 de rendimiento
+  máximo (eficiencia de 69 % por vCPU) y menor latencia a 25 usuarios, pero tampoco cumple
+  el SLO con 50.
+* **Motor NumPy** (`python scripts/prueba_carga.py --nombre optimizado --acelerar ...`): ×4.04 de capacidad
+  bajo el SLO y ×4.87 de rendimiento máximo con la misma réplica. `scripts/perfil_inferencia.py` explica por
+  qué: una llamada a `pyfunc.predict` cuesta 15.5 ms con 1 fila y 19.7 ms
+  con 100, y la misma transformación en NumPy, 0.084 ms (`reports/finops/perfil_inferencia.json`).
+* **Lote** (lotes de 100 seguidos): 2,376 inferencias/s con 0.30 ms de
+  CPU por inferencia, 66 veces menos que una petición individual.
+* **Asíncrona**: 356 tareas sin fallas; de encolar a terminar, p50
+  227 ms y p95 260 ms.
+
+Pruebas en la misma computadora: 216 aprobadas y 1 omitida (RQ no corre de forma nativa en Windows; en Linux corren
+las 7 de `test_asincrono.py`) en `reports/carga/pytest_entrega6.txt`, y 71 aprobadas después del motor NumPy
+(`reports/carga/pytest_motor.txt`). Evidencia de la ejecución en `docs/evidencia/entrega6/`:
+
+![Servicios sanos y registro del modelo](docs/evidencia/entrega6/e6_00_compose_ps.png)
+
+### 4. Monitoreo de recursos y análisis FinOps
+
+```bash
+python scripts/medir_reposo.py                 # memoria y CPU en reposo de MLflow y la API según su configuración
+python finops/costo_inferencia.py              # costo por inferencia, escenarios y curva (lee reports/carga y reports/finops)
+python carga/comparar.py reports/carga         # gráfica comparativa de las corridas base, escalado y optimizado
+```
+
+**Consumo por contenedor** en la corrida base (`docker stats` cada 2 s; reposo antes de la carga, pico durante ella):
+
+| Contenedor | CPU reposo (%) | Memoria reposo (MiB) | CPU pico (%) | Memoria pico (MiB) |
+|---|---:|---:|---:|---:|
+| `api` | 6.3 | 199 | 101.3 | 250 |
+| `worker` | 10.4 | 203 | 99.8 | 232 |
+| `mlflow` | 12.6 | 392 | 74.0 | 406 |
+| `redis` | 0.3 | 11 | 10.1 | 16 |
+
+La CPU es el recurso que limita (la API llega a 1 vCPU y su memoria no pasa de 250 MiB). MLflow en reposo:
+**2,083 MiB** con la configuración de fábrica (2 procesos y ejecutor de trabajos, que además no llegó a estar
+sano con 1 vCPU), 612 MiB con 2 procesos sin trabajos y **388 MiB** con 1 proceso
+sin trabajos, la configuración del `docker-compose.yml` (`reports/finops/reposo.json`).
+
+**Costo por inferencia** (`reports/finops/costos.json`; precios de lista del 18 de noviembre de 2026 en
+`finops/precios_referencia.toml`): costo por millón = precio por hora de la réplica ÷ (capacidad en pet/s × 0.6 ×
+3,600) × 10⁶, con una utilización objetivo de 60 %. Con Fargate x86 (1 vCPU, 2 GB: USD 0.04937/h) y
+22.12 pet/s: **USD 1.03 por millón de peticiones**.
+
+| Opción de despliegue | Precio réplica (USD/h) | En línea, pyfunc | En línea, motor NumPy | Lote de 100 (por millón de inferencias) |
+|---|---:|---:|---:|---:|
+| Fargate x86 (1 vCPU, 2 GB) | 0.0494 | 1.03 | 0.26 | 0.0058 |
+| Fargate ARM (Graviton) | 0.0395 | 0.83 | 0.20 | 0.0046 |
+| Fargate Spot x86 | 0.0152 | 0.32 | 0.08 | 0.0018 |
+| EC2 c7g.medium (ARM) | 0.0363 | 0.76 | 0.19 | 0.0042 |
+| Cloud Run por petición | por uso | 2.40 | 0.89 | — |
+
+![Costo por inferencia contra volumen](reports/finops/05_costo_por_volumen.png)
+
+| Escenario | Opción | USD/mes | USD por 1,000 | Réplicas en pico |
+|---|---|---:|---:|---:|
+| Uso actual: lote diario, 14,100 pred./mes | Trabajo diario en Cloud Run | 0.03 | 0.0021 | — |
+|  | Sistema completo encendido (t4g.small) | 12.26 | 0.8695 | — |
+| App: 1 M peticiones/mes | Fargate x86 siempre encendido | 48.30 | 0.0483 | 1 |
+|  | Cloud Run por petición (escala a cero) | 15.31 | 0.0153 | 1 |
+| App: 30 M peticiones/mes | Fargate x86, pyfunc | 192.46 | 0.0064 | 5 |
+|  | Fargate x86, motor NumPy | 84.34 | 0.0028 | 2 |
+|  | Cloud Run por petición, motor NumPy | 39.07 | 0.0013 | 2 |
+
+**Optimizaciones respaldadas por los datos**
+
+1. **Motor de inferencia en NumPy** (implementado: `API_ACELERAR=1` en `.env` o `ACELERAR_INFERENCIA=1`; se verifica
+   contra el Pipeline al cargar y, si no coincide, la API sigue con pyfunc): ×4.04 de capacidad y
+   USD 0.26 por millón de peticiones en lugar de USD 1.03.
+2. **Lotes para el uso actual**: la predicción diaria de las 470 estaciones como trabajo programado que escala a cero
+   cuesta USD 0.03 al mes, frente a USD 12.26 con el sistema siempre encendido; las predicciones se
+   sirven desde Redis.
+3. **MLflow ajustado** (ya aplicado en el Compose): la plataforma fija cabe en una t4g.small
+   (USD 12.26/mes) en lugar de una t3.medium (USD 30.37/mes).
+4. **Réplicas de 1 vCPU con autoescalado al 60 % de CPU y concurrencia limitada** en lugar de réplicas más grandes
+   (la de 2 vCPU rinde ×1.39); el exceso puede ir a la cola asíncrona.
+5. **ARM y Spot**: Graviton −20 % (requiere la imagen
+   `linux/arm64`) y Spot −69 % para el lote y el worker.
+6. **Memoria y salud**: 512 MiB bastan para la API donde la memoria se cobra aparte, y el worker puede comprobar su
+   latido en Redis en lugar de arrancar un intérprete en cada verificación de salud (picos periódicos de CPU).
+
+### 5. Historial de Git de la entrega 6
+
+Ramas de la versión individual integradas en `main` con `git merge --no-ff` (todos los commits a nombre de la autora):
+
+| Rama | Commits | Contenido |
+|---|---:|---|
+| `feat/prediccion-asincrona` | 4 | Verificación SHA-256 también desde el registry, `POST /predict/asincrono` y `GET /tareas/{id}` con Redis y RQ, worker y pruebas con fakeredis |
+| `feat/compose-orquestacion` | 2 | Imagen de MLflow 3.17.2, registro idempotente del modelo y `docker-compose.yml` con cinco servicios |
+| `feat/prueba-carga-finops` | 4 | Escenario de Locust, prueba de punta a punta con `docker stats`, gráficas, costo por inferencia y 21 pruebas |
+| `ci/github-actions` | 3 | Pipeline de CI/CD, `bandit` sobre los módulos nuevos y corrección de DeepChecks con pandas 3 |
+| `perf/motor-numpy` | 3 | Motor de inferencia en NumPy verificado contra el Pipeline, perfil por capa y consumo de MLflow de fábrica |
+| `fix/carga-ventanas` | 1 | Peticiones asignadas al escalón por su hora de término |
+| `fix/perfil-inferencia` | 1 | Ruta del paquete `api` dentro de la imagen para el perfil |
+| `feat/finops-motor-numpy` | 1 | Escenarios y curva de costo con el motor medido |
+| `fix/finops-eficiencia` | 1 | Eficiencia del escalado con el rendimiento de saturación |
+| `feat/carga-comparacion` | 1 | Gráfica comparativa de las tres configuraciones |
+| `feat/grafica-desempeno-compacta` | 1 | Gráfica de desempeño en cuadrícula de 2 × 2 |
+| `docs/operacion-finops` | 3 | Resultados de las pruebas, evidencia, regla del escáner para las tablas de resultados, README y contribuciones |
+
+**Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
+(Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. Las pruebas de carga, las mediciones con `docker
+stats` y la ejecución del sistema se hicieron en la computadora de la autora.
+
 ## Entrega 5: monitoreo de drift con Evidently, reentrenamiento y A/B testing
 
 **Versión individual de Leydy Johanna Camargo Medina (A01840540)**, rama `main` de este repositorio, como las
