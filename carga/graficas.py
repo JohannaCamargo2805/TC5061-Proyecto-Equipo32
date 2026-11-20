@@ -264,7 +264,7 @@ def figura_endpoints(pet, tramo, carpeta):
                     va="center", fontsize=8, color=TEXTO_2)
     ax.set_yticks(y, q.index)
     ax.set_xlabel("Latencia (ms)")
-    ax.set_title(f"Latencia por endpoint con {tramo['usuarios']} usuarios")
+    ax.set_title(f"Latencia por endpoint con {int(tramo['usuarios'])} usuarios")
     ax.legend(loc="lower right")
     ax.grid(axis="y", visible=False)
     fig.savefig(carpeta / "04_endpoints.png")
