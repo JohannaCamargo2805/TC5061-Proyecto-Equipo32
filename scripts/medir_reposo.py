@@ -22,9 +22,13 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from prueba_carga import DOCKER, RAIZ, salida  # noqa: E402
 
+# La configuración de fábrica de MLflow no cabe en el límite de 1 GB del compose (el contenedor
+# queda "unhealthy" por falta de memoria), así que para medirla se le dan 3 GB.
 CONFIGURACIONES = [
-    ("mlflow", "fabrica_2_procesos_con_trabajos", {"MLFLOW_WORKERS": "2", "MLFLOW_TRABAJOS": "true"}),
-    ("mlflow", "2_procesos_sin_trabajos", {"MLFLOW_WORKERS": "2", "MLFLOW_TRABAJOS": "false"}),
+    ("mlflow", "fabrica_2_procesos_con_trabajos",
+     {"MLFLOW_WORKERS": "2", "MLFLOW_TRABAJOS": "true", "MLFLOW_MEMORIA": "3g"}),
+    ("mlflow", "2_procesos_sin_trabajos",
+     {"MLFLOW_WORKERS": "2", "MLFLOW_TRABAJOS": "false", "MLFLOW_MEMORIA": "3g"}),
     ("mlflow", "1_proceso_sin_trabajos", {"MLFLOW_WORKERS": "1", "MLFLOW_TRABAJOS": "false"}),
     ("api", "1_proceso", {"API_WORKERS": "1"}),
     ("api", "2_procesos", {"API_WORKERS": "2", "API_CPUS": "2"}),
@@ -52,13 +56,13 @@ def main() -> int:
     for servicio, nombre, variables in CONFIGURACIONES:
         entorno = {**os.environ, **variables}
         print(f"> {servicio}: {nombre} {variables}", flush=True)
-        if subprocess.run(compose + ["up", "-d", "--wait", servicio], cwd=RAIZ,  # nosec B603
-                          env=entorno).returncode != 0:
-            return 1
+        arranco = subprocess.run(compose + ["up", "-d", "--wait", servicio], cwd=RAIZ,  # nosec B603
+                                 env=entorno).returncode == 0
         time.sleep(20)  # que termine de arrancar y se estabilice
-        medida = muestras(servicio)
-        print(f"  {medida}", flush=True)
-        resultados.append({"servicio": servicio, "configuracion": nombre, **variables, **medida})
+        medida = muestras(servicio) if arranco else {"cpu_pct": None, "mem_mib": None}
+        print(f"  arranco={arranco} {medida}", flush=True)
+        resultados.append({"servicio": servicio, "configuracion": nombre, **variables,
+                           "arranco": arranco, **medida})
     subprocess.run(compose + ["up", "-d", "--wait"], cwd=RAIZ)  # nosec B603: valores por defecto
     destino = RAIZ / "reports" / "finops"
     destino.mkdir(parents=True, exist_ok=True)
