@@ -1086,6 +1086,8 @@ mlflow run . -e ingest --env-manager local             # data_version = 7aa5e436
 mlflow run . -e train  --env-manager local -P question=p1 -P model=poisson               # P1 champion
 mlflow run . -e train  --env-manager local -P question=p2 -P model=hgb                   # P2 champion
 mlflow run . -e train  --env-manager local -P question=p3 -P model=kmeans -P k=4         # P3 champion
+mlflow run . -e register --env-manager local -P question=p1    # repetir con p2 y p3
+mlflow run . -e verify   --env-manager local -P question=all
 ```
 
 - `--env-manager local` usa el entorno ya activado (instalado con `requirements.txt`, mismas
@@ -1134,8 +1136,8 @@ elimina el pseudónimo, el género y el año de nacimiento.
 | P3 | `mibici-equipo32-p3-grupos` | `@champion` | `@challenger` |
 
 ```bash
-mlflow run . -e register -P question=p1        # run_id=auto: aplica la regla de selección de config.py
-mlflow run . -e verify                         # carga models:/<nombre>@champion de las tres preguntas
+mlflow run . -e register --env-manager local -P question=p1   # run_id=auto: regla de selección de config.py
+mlflow run . -e verify   --env-manager local -P question=all  # carga models:/<nombre>@champion de las tres
 ```
 
 ```python
@@ -1277,7 +1279,7 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 
 El proyecto utiliza una estructura basada en Cookiecutter Data Science. La lógica final se mantiene dentro del paquete `mibici`; los notebooks se reservan para exploración.
 
-El entorno fue probado con Python 3.14.4. Las dependencias directas se encuentran fijadas por versión en `requirements.txt`.
+El entorno fue probado con Python 3.14.4 (Propuesta) y 3.14.8 (ejecución oficial de la entrega 2). Las dependencias directas se encuentran fijadas por versión en `requirements.txt`.
 También se verificó la ejecución completa (ingesta, pruebas, P1, P2 y P3) con **Python 3.12.13** desde un clon limpio.
 
 ### Instalación
@@ -1453,7 +1455,7 @@ y consultarse en `http://localhost:5000`.
 
 Los datos de MiBici, modelos serializados, base de datos de MLflow, artefactos de MLflow y resultados generados por P3 se excluyen mediante `.gitignore`. La excepción es `models/servicio/` (entrega 4): la versión del Model Registry que se empaqueta en la imagen de la API, versionada con su `registro.json` y sin conversión de finales de línea (`.gitattributes`).
 
-El código se desarrolla en ramas independientes y todo cambio hacia `main` debe incorporarse mediante Pull Request revisado por otro integrante del equipo. En las entregas 3 y 4, que son versiones individuales, cada rama se integró a `main` con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3) y [de la entrega 4](#historial-de-git-de-la-entrega-4)).
+El código se desarrolla en ramas independientes. En las entregas en equipo (1 y 2), todo cambio hacia `main` debía incorporarse mediante Pull Request revisado por otro integrante; en este repositorio la entrega 2 entró con el Pull Request #5 y las revisiones de cada integrante se registran en `CONTRIBUCIONES.md`. Las entregas 3 a 6 son versiones individuales, porque el profesor cambió la modalidad: sus ramas se integraron con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3), [de la entrega 4](#historial-de-git-de-la-entrega-4), [de la entrega 5](#historial-de-git-de-la-entrega-5) y [de la entrega 6](#5-historial-de-git-de-la-entrega-6)) y, al final de la entrega 6, de nuevo mediante Pull Request con el pipeline en verde (#6 a #9).
 
 Convenciones: ramas `feat/`, `fix/`, `docs/`, `test/`, `build/` y `chore/` + descripción corta; mensajes de commit
 siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). En el
