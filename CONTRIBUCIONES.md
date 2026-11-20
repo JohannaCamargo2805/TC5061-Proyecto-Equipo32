@@ -199,6 +199,10 @@ en `main` de este repositorio. Ramas y commits (todos a su nombre), integradas c
 | `fix/titulo-endpoints` | 1 | Título de la gráfica por endpoint con el número de usuarios entero (gráficas regeneradas) |
 | `docs/evidencia-ci` | 1 | Capturas de la ejecución #1 de GitHub Actions en verde y de la imagen publicada en GHCR, README y este archivo |
 | `docs/precision-error-carga` | 1 | Descripción precisa del único error de la prueba de carga (error de conexión del cliente, en 3 ms) |
+| `ci/notificaciones` → [PR #7](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/7) | 2 | Job `notificar` del pipeline (comentario en el PR e issue `ci-fallo` si `main` falla) y plantilla de PR |
+| `docs/flujo-pull-requests` → [PR #8](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/8) | 1 | Evidencia de la ejecución con notificaciones, README y este archivo |
+
+Atendiendo la observación de la entrega anterior, los dos últimos cambios entraron a `main` mediante *pull requests* (#7 y #8), con el pipeline de CI/CD en verde sobre cada PR antes de fusionarlo.
 
 Levantó el sistema con Docker Compose y corrió en su computadora las cinco pruebas de carga (base, escalado,
 optimizado, lote y asíncrona), las mediciones en reposo y el perfil de la inferencia
