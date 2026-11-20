@@ -1,0 +1,2 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,/predict/lote [100],CatchResponseError('HTTP 0'),1,2026-11-20T17:31:16Z,2026-11-20T17:31:16Z

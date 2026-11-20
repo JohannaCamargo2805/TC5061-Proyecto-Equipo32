@@ -1,0 +1,71 @@
+NAME                                 IMAGE                                       COMMAND                  SERVICE            CREATED         STATUS                     PORTS
+mibici-equipo32-api-1                mibici-p1-api:modelo-v1                     "uvicorn api.main:ap…"   api                4 minutes ago   Up 3 minutes (healthy)     127.0.0.1:8000->8000/tcp
+mibici-equipo32-mlflow-1             mibici-mlflow:3.17.2                        "mlflow server --bac…"   mlflow             4 minutes ago   Up 4 minutes (healthy)     127.0.0.1:5050->5000/tcp
+mibici-equipo32-redis-1              docker.io/library/redis:8.10.3-alpine3.23   "docker-entrypoint.s…"   redis              4 minutes ago   Up 4 minutes (healthy)     6379/tcp
+mibici-equipo32-registrar-modelo-1   mibici-mlflow:3.17.2                        "python /app/registr…"   registrar-modelo   4 minutes ago   Exited (0) 3 minutes ago   
+mibici-equipo32-worker-1             mibici-p1-api:modelo-v1                     "python -m api.worker"   worker             4 minutes ago   Up 3 minutes (healthy)     8000/tcp
+CONTAINER                            REPOSITORY          TAG                 PLATFORM            IMAGE ID            SIZE                CREATED
+mibici-equipo32-api-1                mibici-p1-api       modelo-v1           linux/amd64         62d496a23988        834MB               7 minutes ago
+mibici-equipo32-mlflow-1             mibici-mlflow       3.17.2              linux/amd64         584c45501192        1.29GB              6 minutes ago
+mibici-equipo32-redis-1              redis               8.10.3-alpine3.23   linux/amd64         7958cfbb9d15        161MB               2 weeks ago
+mibici-equipo32-registrar-modelo-1   mibici-mlflow       3.17.2              linux/amd64         584c45501192        1.29GB              6 minutes ago
+mibici-equipo32-worker-1             mibici-p1-api       modelo-v1           linux/amd64         62d496a23988        834MB               7 minutes ago
+registrar-modelo-1  | [registrar-modelo] integridad verificada: 25 archivos coinciden con registro.json
+registrar-modelo-1  | [registrar-modelo] el modelo carga y predice el ejemplo: 36.655 viajes
+registrar-modelo-1  | 2026/11/20 17:21:23 INFO mlflow.tracking.fluent: Experiment with name 'mibici-equipo32' does not exist. Creating a new experiment.
+registrar-modelo-1  | 2026/11/20 17:21:23 WARNING mlflow.utils.git_utils: Failed to import Git (the Git executable is probably not on your PATH), so Git SHA is not available. Error: Failed to initialize: Bad git executable.
+registrar-modelo-1  | The git executable must be specified in one of the following ways:
+registrar-modelo-1  |     - be included in your $PATH
+registrar-modelo-1  |     - be set via $GIT_PYTHON_GIT_EXECUTABLE
+registrar-modelo-1  |     - explicitly set via git.refresh(<full-path-to-git-executable>)
+registrar-modelo-1  | 
+registrar-modelo-1  | All git commands will error until this is rectified.
+registrar-modelo-1  | 
+registrar-modelo-1  | This initial message can be silenced or aggravated in the future by setting the
+registrar-modelo-1  | $GIT_PYTHON_REFRESH environment variable. Use one of the following values:
+registrar-modelo-1  |     - quiet|q|silence|s|silent|none|n|0: for no message or exception
+registrar-modelo-1  |     - warn|w|warning|log|l|1: for a warning message (logging level CRITICAL, displayed by default)
+registrar-modelo-1  |     - error|e|exception|raise|r|2: for a raised exception
+registrar-modelo-1  | 
+registrar-modelo-1  | Example:
+registrar-modelo-1  |     export GIT_PYTHON_REFRESH=quiet
+registrar-modelo-1  | 
+registrar-modelo-1  | 2026/11/20 17:21:23 WARNING mlflow.utils.git_utils: Failed to import Git (the Git executable is probably not on your PATH), so Git branch is not available. Error: Failed to initialize: Bad git executable.
+registrar-modelo-1  | The git executable must be specified in one of the following ways:
+registrar-modelo-1  |     - be included in your $PATH
+registrar-modelo-1  |     - be set via $GIT_PYTHON_GIT_EXECUTABLE
+registrar-modelo-1  |     - explicitly set via git.refresh(<full-path-to-git-executable>)
+registrar-modelo-1  | 
+registrar-modelo-1  | All git commands will error until this is rectified.
+registrar-modelo-1  | 
+registrar-modelo-1  | This initial message can be silenced or aggravated in the future by setting the
+registrar-modelo-1  | $GIT_PYTHON_REFRESH environment variable. Use one of the following values:
+registrar-modelo-1  |     - quiet|q|silence|s|silent|none|n|0: for no message or exception
+registrar-modelo-1  |     - warn|w|warning|log|l|1: for a warning message (logging level CRITICAL, displayed by default)
+registrar-modelo-1  |     - error|e|exception|raise|r|2: for a raised exception
+registrar-modelo-1  | 
+registrar-modelo-1  | Example:
+registrar-modelo-1  |     export GIT_PYTHON_REFRESH=quiet
+registrar-modelo-1  | 
+registrar-modelo-1  | 2026/11/20 17:21:23 WARNING mlflow.utils.git_utils: Failed to import Git (the Git executable is probably not on your PATH), so Git repository URL is not available. Error: Failed to initialize: Bad git executable.
+registrar-modelo-1  | The git executable must be specified in one of the following ways:
+registrar-modelo-1  |     - be included in your $PATH
+registrar-modelo-1  |     - be set via $GIT_PYTHON_GIT_EXECUTABLE
+registrar-modelo-1  |     - explicitly set via git.refresh(<full-path-to-git-executable>)
+registrar-modelo-1  | 
+registrar-modelo-1  | All git commands will error until this is rectified.
+registrar-modelo-1  | 
+registrar-modelo-1  | This initial message can be silenced or aggravated in the future by setting the
+registrar-modelo-1  | $GIT_PYTHON_REFRESH environment variable. Use one of the following values:
+registrar-modelo-1  |     - quiet|q|silence|s|silent|none|n|0: for no message or exception
+registrar-modelo-1  |     - warn|w|warning|log|l|1: for a warning message (logging level CRITICAL, displayed by default)
+registrar-modelo-1  |     - error|e|exception|raise|r|2: for a raised exception
+registrar-modelo-1  | 
+registrar-modelo-1  | Example:
+registrar-modelo-1  |     export GIT_PYTHON_REFRESH=quiet
+registrar-modelo-1  | 
+registrar-modelo-1  | 🏃 View run registro-compose-v1 at: http://mlflow:5000/#/experiments/1/runs/c20a14dcff12445db9caefcb45e5e932
+registrar-modelo-1  | 🧪 View experiment at: http://mlflow:5000/#/experiments/1
+registrar-modelo-1  | 2026/11/20 17:21:26 INFO mlflow.store.model_registry.abstract_store: Waiting up to 300 seconds for model version to finish creation. Model name: mibici-equipo32-p1-demanda, version 1
+registrar-modelo-1  | [registrar-modelo] registrada mibici-equipo32-p1-demanda v1 (origen: v1, corrida c20a14dcff12445db9caefcb45e5e932)
+registrar-modelo-1  | [registrar-modelo] alias @champion -> v1; la API puede cargar models:/mibici-equipo32-p1-demanda@champion

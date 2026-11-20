@@ -1,0 +1,13 @@
+escenario,inferencias_mes,opcion,usd_mes,usd_por_1000,replicas_en_pico
+Lote diario (uso actual: 470 estaciones x 30 días),14100,Trabajo diario en Cloud Run (sin plataforma encendida),0.03,0.0021,1
+Lote diario (uso actual: 470 estaciones x 30 días),14100,Sistema completo siempre encendido (t4g.small),12.26,0.8695,1
+App: 1 M peticiones/mes,1000000,Fargate x86 siempre encendido,48.3,0.0483,1
+App: 1 M peticiones/mes,1000000,EC2 c7g.medium (ARM) siempre encendido,38.76,0.0388,1
+App: 1 M peticiones/mes,1000000,Cloud Run por petición (escala a cero),15.31,0.0153,1
+App: 30 M peticiones/mes,30000000,Fargate x86 siempre encendido,192.46,0.0064,5
+App: 30 M peticiones/mes,30000000,EC2 c7g.medium (ARM) siempre encendido,144.75,0.0048,5
+App: 30 M peticiones/mes,30000000,Cloud Run por petición (escala a cero),84.16,0.0028,5
+App: 1 M peticiones/mes,1000000,Fargate x86 siempre encendido · motor NumPy,48.3,0.0483,1
+App: 1 M peticiones/mes,1000000,Cloud Run por petición · motor NumPy,15.31,0.0153,1
+App: 30 M peticiones/mes,30000000,Fargate x86 siempre encendido · motor NumPy,84.34,0.0028,2
+App: 30 M peticiones/mes,30000000,Cloud Run por petición · motor NumPy,39.07,0.0013,2

@@ -1,0 +1,201 @@
+{
+  "fuente_precios": {
+    "fargate": "https://aws.amazon.com/fargate/pricing/",
+    "ec2": "https://aws.amazon.com/ec2/pricing/on-demand/",
+    "cloud_run": "https://cloud.google.com/run/pricing",
+    "consulta": "2026-11-18"
+  },
+  "supuestos": {
+    "horas_mes": 730,
+    "utilizacion_objetivo": 0.6,
+    "pico_sobre_promedio": 5.0,
+    "estaciones": 470,
+    "dias_mes": 30,
+    "arranque_trabajo_s": 45
+  },
+  "medido": {
+    "replica": {
+      "workers": 1,
+      "cpus": 1.0,
+      "memoria": "1g"
+    },
+    "capacidad_rps": 22.12,
+    "capacidad_usuarios": 25.0,
+    "p95_ms_en_capacidad": 104.0,
+    "cpu_api_pct_en_capacidad": 44.6,
+    "cpu_s_por_peticion": 0.020163,
+    "mem_api_mib": 216.7,
+    "inferencias_por_s_lote": 2376.0,
+    "asincrono": {
+      "tareas": 356,
+      "p50_ms": 226.9,
+      "p95_ms": 259.9,
+      "fallidas_pct": 0.0
+    },
+    "escalado": {
+      "rps_slo_1": 22.12,
+      "rps_slo_2": 22.03,
+      "p95_ms_slo_2": 53.0,
+      "rps_saturacion_1": 30.37,
+      "rps_saturacion_2": 42.12,
+      "vcpu_2": 2.0,
+      "eficiencia": 0.693
+    },
+    "optimizado": {
+      "capacidad_rps": 89.47,
+      "capacidad_usuarios": 100.0,
+      "p95_ms": 188.8,
+      "cpu_api_pct": 61.9,
+      "cpu_s_por_peticion": 0.006919,
+      "factor_capacidad": 4.04,
+      "usd_por_millon_en_linea": {
+        "Fargate x86": 0.2555,
+        "Fargate ARM": 0.2044,
+        "Fargate Spot x86": 0.0785,
+        "EC2 c7g.medium (ARM)": 0.1878,
+        "Cloud Run por instancia": 0.3726,
+        "Cloud Run por petición": 0.8936
+      },
+      "max_rps_observado": 148.0,
+      "escalon_saturado": true
+    },
+    "perfil_ms": {
+      "validacion_pydantic_1": 0.0254,
+      "dataframe_1": 0.6515,
+      "pyfunc_mlflow_1": 15.5207,
+      "pyfunc_mlflow_100": 19.7173,
+      "pipeline_sklearn_1": 11.6903,
+      "pipeline_sklearn_100": 15.7168,
+      "numpy_1": 0.0838,
+      "numpy_100": 0.1043
+    }
+  },
+  "precio_hora_replica": {
+    "Fargate x86": 0.04937,
+    "Fargate ARM": 0.0395,
+    "Fargate Spot x86": 0.01517,
+    "EC2 c7g.medium (ARM)": 0.0363,
+    "Cloud Run por instancia": 0.072
+  },
+  "fargate_gb_reservados": 2.0,
+  "usd_por_millon_en_linea": {
+    "Fargate x86": 1.0333,
+    "Fargate ARM": 0.8267,
+    "Fargate Spot x86": 0.3176,
+    "EC2 c7g.medium (ARM)": 0.7597,
+    "Cloud Run por instancia": 1.5069,
+    "Cloud Run por petición": 2.3967
+  },
+  "usd_por_millon_en_lote": {
+    "Fargate x86": 0.0058,
+    "Fargate ARM": 0.0046,
+    "Fargate Spot x86": 0.0018,
+    "EC2 c7g.medium (ARM)": 0.0042,
+    "Cloud Run por instancia": 0.0084
+  },
+  "ahorro_lote_vs_linea": 179.0,
+  "plataforma_fija": {
+    "memoria_gib": 0.59,
+    "maquina": "t4g.small",
+    "usd_mes": 12.26
+  },
+  "segundos_trabajo_diario": 45.2,
+  "escenarios": [
+    {
+      "escenario": "Lote diario (uso actual: 470 estaciones x 30 días)",
+      "inferencias_mes": 14100,
+      "opcion": "Trabajo diario en Cloud Run (sin plataforma encendida)",
+      "usd_mes": 0.03,
+      "usd_por_1000": 0.0021,
+      "replicas_en_pico": 1
+    },
+    {
+      "escenario": "Lote diario (uso actual: 470 estaciones x 30 días)",
+      "inferencias_mes": 14100,
+      "opcion": "Sistema completo siempre encendido (t4g.small)",
+      "usd_mes": 12.26,
+      "usd_por_1000": 0.8695,
+      "replicas_en_pico": 1
+    },
+    {
+      "escenario": "App: 1 M peticiones/mes",
+      "inferencias_mes": 1000000,
+      "opcion": "Fargate x86 siempre encendido",
+      "usd_mes": 48.3,
+      "usd_por_1000": 0.0483,
+      "replicas_en_pico": 1
+    },
+    {
+      "escenario": "App: 1 M peticiones/mes",
+      "inferencias_mes": 1000000,
+      "opcion": "EC2 c7g.medium (ARM) siempre encendido",
+      "usd_mes": 38.76,
+      "usd_por_1000": 0.0388,
+      "replicas_en_pico": 1
+    },
+    {
+      "escenario": "App: 1 M peticiones/mes",
+      "inferencias_mes": 1000000,
+      "opcion": "Cloud Run por petición (escala a cero)",
+      "usd_mes": 15.31,
+      "usd_por_1000": 0.0153,
+      "replicas_en_pico": 1
+    },
+    {
+      "escenario": "App: 30 M peticiones/mes",
+      "inferencias_mes": 30000000,
+      "opcion": "Fargate x86 siempre encendido",
+      "usd_mes": 192.46,
+      "usd_por_1000": 0.0064,
+      "replicas_en_pico": 5
+    },
+    {
+      "escenario": "App: 30 M peticiones/mes",
+      "inferencias_mes": 30000000,
+      "opcion": "EC2 c7g.medium (ARM) siempre encendido",
+      "usd_mes": 144.75,
+      "usd_por_1000": 0.0048,
+      "replicas_en_pico": 5
+    },
+    {
+      "escenario": "App: 30 M peticiones/mes",
+      "inferencias_mes": 30000000,
+      "opcion": "Cloud Run por petición (escala a cero)",
+      "usd_mes": 84.16,
+      "usd_por_1000": 0.0028,
+      "replicas_en_pico": 5
+    },
+    {
+      "escenario": "App: 1 M peticiones/mes",
+      "inferencias_mes": 1000000,
+      "opcion": "Fargate x86 siempre encendido · motor NumPy",
+      "usd_mes": 48.3,
+      "usd_por_1000": 0.0483,
+      "replicas_en_pico": 1
+    },
+    {
+      "escenario": "App: 1 M peticiones/mes",
+      "inferencias_mes": 1000000,
+      "opcion": "Cloud Run por petición · motor NumPy",
+      "usd_mes": 15.31,
+      "usd_por_1000": 0.0153,
+      "replicas_en_pico": 1
+    },
+    {
+      "escenario": "App: 30 M peticiones/mes",
+      "inferencias_mes": 30000000,
+      "opcion": "Fargate x86 siempre encendido · motor NumPy",
+      "usd_mes": 84.34,
+      "usd_por_1000": 0.0028,
+      "replicas_en_pico": 2
+    },
+    {
+      "escenario": "App: 30 M peticiones/mes",
+      "inferencias_mes": 30000000,
+      "opcion": "Cloud Run por petición · motor NumPy",
+      "usd_mes": 39.07,
+      "usd_por_1000": 0.0013,
+      "replicas_en_pico": 2
+    }
+  ]
+}

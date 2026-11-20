@@ -1,0 +1,48 @@
+[
+  {
+    "servicio": "mlflow",
+    "configuracion": "fabrica_2_procesos_con_trabajos",
+    "MLFLOW_WORKERS": "2",
+    "MLFLOW_TRABAJOS": "true",
+    "MLFLOW_MEMORIA": "3g",
+    "arranco": false,
+    "cpu_pct": null,
+    "mem_mib": null
+  },
+  {
+    "servicio": "mlflow",
+    "configuracion": "2_procesos_sin_trabajos",
+    "MLFLOW_WORKERS": "2",
+    "MLFLOW_TRABAJOS": "false",
+    "MLFLOW_MEMORIA": "3g",
+    "arranco": true,
+    "cpu_pct": 7.82,
+    "mem_mib": 611.6
+  },
+  {
+    "servicio": "mlflow",
+    "configuracion": "1_proceso_sin_trabajos",
+    "MLFLOW_WORKERS": "1",
+    "MLFLOW_TRABAJOS": "false",
+    "arranco": true,
+    "cpu_pct": 9.39,
+    "mem_mib": 387.6
+  },
+  {
+    "servicio": "api",
+    "configuracion": "1_proceso",
+    "API_WORKERS": "1",
+    "arranco": true,
+    "cpu_pct": 8.85,
+    "mem_mib": 196.8
+  },
+  {
+    "servicio": "api",
+    "configuracion": "2_procesos",
+    "API_WORKERS": "2",
+    "API_CPUS": "2",
+    "arranco": true,
+    "cpu_pct": 11.96,
+    "mem_mib": 446.2
+  }
+]

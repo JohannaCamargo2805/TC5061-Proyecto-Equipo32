@@ -1,0 +1,122 @@
+{
+  "nombre": "lote",
+  "escenario": "lote",
+  "api": {
+    "workers": 1,
+    "cpus": 1.0,
+    "memoria": "1g"
+  },
+  "motor": {
+    "ServerVersion": "29.9.2",
+    "OperatingSystem": "Docker Desktop",
+    "KernelVersion": "6.18.58.1-microsoft-standard-WSL2",
+    "NCPU": 8,
+    "MemTotal": 8199503872,
+    "Architecture": "x86_64"
+  },
+  "slo_p95_ms": 300.0,
+  "peticiones_totales": 1431,
+  "errores_totales_pct": 0.0,
+  "escalones": [
+    {
+      "usuarios": 4,
+      "inicio": 1795196543.0,
+      "segundos": 50.0,
+      "peticiones": 1188,
+      "rps": 23.76,
+      "rps_predict": 0.0,
+      "inferencias_por_s": 2376.0,
+      "p50_ms": 50.3,
+      "p95_ms": 141.4,
+      "p99_ms": 249.5,
+      "predict_p50_ms": NaN,
+      "predict_p95_ms": NaN,
+      "predict_p99_ms": NaN,
+      "errores_pct": 0.0,
+      "cpu_api_pct": 72.1,
+      "mem_api_mib": 210.5
+    }
+  ],
+  "capacidad": {
+    "usuarios": 4.0,
+    "inicio": 1795196543.0,
+    "segundos": 50.0,
+    "peticiones": 1188.0,
+    "rps": 23.76,
+    "rps_predict": 0.0,
+    "inferencias_por_s": 2376.0,
+    "p50_ms": 50.3,
+    "p95_ms": 141.4,
+    "p99_ms": 249.5,
+    "predict_p50_ms": NaN,
+    "predict_p95_ms": NaN,
+    "predict_p99_ms": NaN,
+    "errores_pct": 0.0,
+    "cpu_api_pct": 72.1,
+    "mem_api_mib": 210.5
+  },
+  "saturacion": {
+    "usuarios": 4.0,
+    "inicio": 1795196543.0,
+    "segundos": 50.0,
+    "peticiones": 1188.0,
+    "rps": 23.76,
+    "rps_predict": 0.0,
+    "inferencias_por_s": 2376.0,
+    "p50_ms": 50.3,
+    "p95_ms": 141.4,
+    "p99_ms": 249.5,
+    "predict_p50_ms": NaN,
+    "predict_p95_ms": NaN,
+    "predict_p99_ms": NaN,
+    "errores_pct": 0.0,
+    "cpu_api_pct": 72.1,
+    "mem_api_mib": 210.5
+  },
+  "cpu_s_por_inferencia": 0.000303,
+  "reposo": {
+    "api": {
+      "cpu_pct": 22.6,
+      "mem_mib": 198.3
+    },
+    "locust": {
+      "cpu_pct": 54.8,
+      "mem_mib": 38.9
+    },
+    "mlflow": {
+      "cpu_pct": 11.7,
+      "mem_mib": 398.6
+    },
+    "redis": {
+      "cpu_pct": 0.3,
+      "mem_mib": 11.7
+    },
+    "worker": {
+      "cpu_pct": 22.0,
+      "mem_mib": 199.6
+    }
+  },
+  "pico": {
+    "api": {
+      "cpu_pct_max": 96.7,
+      "mem_mib_max": 210.5
+    },
+    "locust": {
+      "cpu_pct_max": 9.6,
+      "mem_mib_max": 50.0
+    },
+    "mlflow": {
+      "cpu_pct_max": 50.8,
+      "mem_mib_max": 411.3
+    },
+    "redis": {
+      "cpu_pct_max": 7.1,
+      "mem_mib_max": 12.2
+    },
+    "worker": {
+      "cpu_pct_max": 99.0,
+      "mem_mib_max": 232.2
+    }
+  },
+  "asincrono": null
+}
