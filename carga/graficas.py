@@ -7,7 +7,9 @@ Locust, ``recursos.jsonl`` de ``docker stats`` y ``entorno.json``) y escribe:
 
 * ``escalones.csv``: por escalón de usuarios, en su tramo estable (sin los primeros 10 s):
   peticiones por segundo, latencia p50/p95/p99 **exacta** (de cada petición, no de las ventanas
-  móviles de Locust), % de error y CPU/memoria medias de la API.
+  móviles de Locust), % de error y CPU/memoria medias de la API. Las peticiones se asignan al
+  escalón por la hora en que **terminan**: así el rendimiento de un sistema saturado (respuestas
+  de varios segundos) no se subestima y el último escalón no pierde las que seguían en curso.
 * ``resumen.json``: lo anterior más la capacidad de una réplica (el escalón con más peticiones por
   segundo que cumple el SLO de p95 y < 1 % de errores), el CPU por inferencia y el consumo en reposo.
 * ``01_desempeno.png``, ``02_capacidad.png``, ``03_recursos.png`` y ``04_endpoints.png``.
@@ -94,7 +96,7 @@ def resumen_tramo(t: dict, pet: pd.DataFrame, rec: pd.DataFrame) -> dict:
     ini, fin = t["inicio"] + ESTABLE_S, t["fin"]
     if fin - ini < 5:  # tramo corto: se usa completo
         ini = t["inicio"]
-    ventana = pet[(pet["inicio"] >= ini) & (pet["inicio"] < fin)]
+    ventana = pet[(pet["fin"] >= ini) & (pet["fin"] < fin)]
     sinc = ventana[ventana["tipo"] != "ASYNC"]
     dur = max(fin - ini, 1e-9)
     pred = sinc[sinc["nombre"] == "/predict"]
@@ -125,7 +127,7 @@ def resumen_tramo(t: dict, pet: pd.DataFrame, rec: pd.DataFrame) -> dict:
 
 def figura_desempeno(pet, hist, tr, carpeta, t0):
     s = pet[pet["tipo"] != "ASYNC"].copy()
-    s["t"] = s["inicio"] - t0
+    s["t"] = s["fin"] - t0
     s["bin"] = (s["t"] // 5) * 5
     s = s[s["bin"] + 5 <= s["t"].max()]  # sin la última ventana incompleta
     g = s.groupby("bin")
@@ -203,7 +205,7 @@ def figura_recursos(rec, hist, carpeta, t0):
 
 
 def figura_endpoints(pet, tramo, carpeta):
-    v = pet[(pet["inicio"] >= tramo["inicio"]) & (pet["inicio"] < tramo["inicio"] + tramo["segundos"])]
+    v = pet[(pet["fin"] >= tramo["inicio"]) & (pet["fin"] < tramo["inicio"] + tramo["segundos"])]
     if v.empty:
         return
     q = v.groupby("nombre")["ms"].quantile([0.5, 0.95]).unstack()
@@ -229,6 +231,7 @@ def main(carpeta: Path) -> int:
     entorno = json.loads((carpeta / "entorno.json").read_text(encoding="utf-8"))
     slo = float(entorno.get("slo_p95_ms", 300))
     pet = pd.read_csv(carpeta / "peticiones.csv.gz")
+    pet["fin"] = pet["inicio"] + pet["ms"] / 1000
     hist = pd.read_csv(carpeta / "locust_stats_history.csv")
     rec = leer_recursos(carpeta / "recursos.jsonl")
     t0 = float(pet["inicio"].min())
@@ -255,6 +258,8 @@ def main(carpeta: Path) -> int:
         "errores_totales_pct": round(100 * (1 - pet["ok"].mean()), 3),
         "escalones": df.to_dict(orient="records"),
         "capacidad": capacidad,
+        # Rendimiento máximo sostenido (aunque no cumpla el SLO): el techo de la réplica.
+        "saturacion": df.loc[df["rps"].idxmax()].to_dict() if len(df) else None,
         # CPU-segundos que consume la API por inferencia en el escalón de capacidad: la base del
         # costo por inferencia (finops/costo_inferencia.py).
         "cpu_s_por_inferencia": round(cpu_api / 100 / inferencias, 6)
