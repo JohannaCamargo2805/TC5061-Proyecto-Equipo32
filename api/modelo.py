@@ -146,8 +146,13 @@ def _verificar_firma(modelo) -> None:
         )
 
 
-def _verificar_integridad(carpeta: Path, registro: dict) -> None:
-    esperados = registro.get("sha256") or {}
+# MLflow reescribe este archivo al descargar una versión del registry (pone el nombre y el número
+# de versión de ESE registry): en el Compose la v3 del proyecto llega como v1 y su huella cambia.
+META_REGISTRY = "registered_model_meta"
+
+
+def _verificar_integridad(carpeta: Path, registro: dict, omitir: frozenset[str] = frozenset()) -> None:
+    esperados = {k: v for k, v in (registro.get("sha256") or {}).items() if k not in omitir}
     if "model.skops" not in esperados and "MLmodel" not in esperados:
         raise ErrorModelo(f"{ARCHIVO_REGISTRO} no trae las huellas SHA-256 del modelo")
     for relativa, huella in esperados.items():
@@ -228,7 +233,12 @@ def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> Mode
     )
     verificada = verificar and registro is not None
     if verificada:
-        _verificar_integridad(local, registro)
+        # Todo se compara byte a byte salvo registered_model_meta, que MLflow regenera al
+        # descargar; de ese se comprueba que nombre el modelo y la versión que se pidió.
+        _verificar_integridad(local, registro, omitir=frozenset({META_REGISTRY}))
+        meta = (local / META_REGISTRY).read_text(encoding="utf-8") if (local / META_REGISTRY).is_file() else ""
+        if meta and (f"model_name: {nombre}" not in meta or f"'{mv.version}'" not in meta):
+            raise ErrorModelo(f"{META_REGISTRY} no corresponde a {nombre} v{mv.version}")
     modelo = mlflow.pyfunc.load_model(str(local), suppress_warnings=True)
     _verificar_firma(modelo)
     etiquetas = dict(mv.tags or {})
