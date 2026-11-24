@@ -198,7 +198,7 @@ incluido el sistema completo con la imagen `modelo-v3` y la prueba de humo con L
 | Pull Request (rama) | Commits | Contenido |
 |---|---:|---|
 | [#10](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/10) · `feat/ciclo-ct-v3` | 7 | Promoción con compuertas, rollback y `estado_produccion` (`mibici/modeling/promocion.py`, punto de entrada `promote`, `make ciclo-ct`); rango de TRAIN por versión; `version_origen` en la API; corrección de `registered_model_meta` al cargar del registry; la v3 empaquetada con imagen `modelo-v3`; Model Card y `docs/model_registry.md`; 21 pruebas nuevas |
-| [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 5 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1`, evidencia del sistema con la v3 y la prueba de carga final, y `CONTRIBUCIONES.md` |
+| [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 6 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1`, evidencia del sistema con la v3 y la prueba de carga final, y `CONTRIBUCIONES.md` |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. La promoción en el Model Registry, las pruebas, la
