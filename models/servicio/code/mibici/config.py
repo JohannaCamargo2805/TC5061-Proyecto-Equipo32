@@ -7,6 +7,13 @@ Regla del equipo: ningún otro archivo define estas constantes.
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Variables de entorno: un archivo .env local (fuera de Git; plantilla en .env.example)
+# puede definir MLFLOW_TRACKING_URI u otras. Las variables ya definidas en el sistema
+# tienen prioridad sobre el .env. El código nunca guarda credenciales.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+
 # ---------- Rutas ----------
 PROJ_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJ_ROOT / "data"
@@ -122,10 +129,15 @@ P1_BASELINE_LAG_DIAS = 7  # ingenuo estacional: mismo día de la semana anterior
 P1_MIN_DURATION_SECONDS = 60
 P1_MAX_DURATION_SECONDS = 86400
 
-# Días de descanso obligatorio (art. 74 LFT) y Jueves/Viernes Santo de 2025.
+# Días de descanso obligatorio (art. 74 LFT) y Jueves/Viernes Santo de 2025 y 2026.
+# Entrega 5: el calendario original solo traía 2025; sin los días de 2026 la variable
+# ``feriado`` valdría 0 todo el año en producción (sesgo entre entrenamiento y servicio).
+# Agregar 2026 no cambia ninguna fila de 2025, así que la v1 se reproduce igual.
 P1_FERIADOS = [
     "2025-01-01", "2025-02-03", "2025-03-17", "2025-04-17", "2025-04-18",
     "2025-05-01", "2025-09-16", "2025-11-17", "2025-12-25",
+    "2026-01-01", "2026-02-02", "2026-03-16", "2026-04-02", "2026-04-03",
+    "2026-05-01", "2026-09-16", "2026-11-16", "2026-12-25",
 ]  # fmt: skip
 
 P1_LINEAL_ALPHA = 1e-3
@@ -313,3 +325,75 @@ BUSQUEDAS = {
         "grid": {"k": [2, 3, 4, 5, 6, 7, 8]},
     },
 }
+
+
+# =============================================================================
+# Entrega 4: API REST en contenedor (FastAPI + Podman/Docker)
+# =============================================================================
+# La API (paquete ``api/``) sirve el modelo de P1. scripts/exportar_modelo_registry.py
+# lo recupera del Model Registry por nombre y versión (o alias) y lo deja en
+# models/servicio/, la carpeta que el Containerfile copia a la imagen.
+SERVICIO_PREGUNTA = "p1"
+SERVICIO_MODELO_DIR = MODELS_DIR / "servicio"
+
+
+# =============================================================================
+# Entrega 5: monitoreo de drift (Evidently), reentrenamiento y A/B testing de P1
+# =============================================================================
+# Datos "de producción": meses de 2026 publicados en el portal de datos abiertos
+# de MiBici, posteriores a todo lo que vio la v1 (ene-dic 2025). Se ingieren aparte
+# (data/processed/viajes_produccion.parquet + data/manifest_produccion.json) para no
+# cambiar la data_version de las corridas anteriores.
+PRODUCCION_URLS = {
+    "2026_01": "https://www.mibici.net/site/assets/files/120163/datos_abiertos_2026_01.csv",
+    "2026_02": "https://www.mibici.net/site/assets/files/121761/datos_abiertos_2026_02.csv",
+    "2026_03": "https://www.mibici.net/site/assets/files/123236/datos_abiertos_2026_03.csv",
+    "2026_04": "https://www.mibici.net/site/assets/files/124927/datos_abiertos_2026_04.csv",
+    "2026_05": "https://www.mibici.net/site/assets/files/125943/datos_abiertos_2026_05.csv",
+    "2026_06": "https://www.mibici.net/site/assets/files/127734/datos_abiertos_2026_06.csv",
+    "2026_07": "https://www.mibici.net/site/assets/files/129006/datos_abiertos_2026_07.csv",
+    "2026_08": "https://www.mibici.net/site/assets/files/130362/datos_abiertos_2026_08.csv",
+    "2026_09": "https://www.mibici.net/site/assets/files/131825/datos_abiertos_2026_09.csv",
+}
+VIAJES_PRODUCCION_PARQUET = PROCESSED_DATA_DIR / "viajes_produccion.parquet"
+MANIFEST_PRODUCCION_PATH = DATA_DIR / "manifest_produccion.json"
+
+# ---------- Conjuntos del monitoreo ----------
+# Referencia = exactamente el TRAIN con que se ajustó la v1 (@champion): ene-sep 2025.
+# Actual = el último trimestre completo de producción con datos publicados: jul-sep 2026.
+MONITOREO_REFERENCIA = (P1_TRAIN_START, P1_VAL_START)  # [inicio, fin)
+MONITOREO_ACTUAL = ("2026-07-01", "2026-10-01")  # [inicio, fin)
+MONITOREO_DIR = REPORTS_DIR / "monitoreo"
+
+# Criterios de drift de Evidently (valores por defecto de la librería para más de 1000
+# filas, fijados aquí para que el reporte sea reproducible): distancia de Wasserstein
+# normalizada (numéricas) y distancia de Jensen-Shannon (categóricas), umbral 0.1 por
+# columna; el conjunto tiene drift si al menos la mitad de las columnas lo tiene.
+DRIFT_UMBRAL_COLUMNA = 0.1
+DRIFT_UMBRAL_CONJUNTO = 0.5
+# Segunda opinión con el índice de estabilidad poblacional (PSI), umbral habitual 0.2.
+DRIFT_PSI_UMBRAL = 0.2
+P1_CATEGORICAS = ["dia_semana", "fin_semana", "feriado"]
+
+# ---------- Versión alternativa (reentrenamiento, Continuous Training) ----------
+# Mismo pipeline y mismos hiperparámetros que la v1 (Poisson lineal, alpha=1e-3): solo
+# cambia la ventana de datos, así que la diferencia en el A/B se atribuye al reentrenamiento.
+# TRAIN ene 2025-may 2026 · VAL jun 2026 (compuerta) · el A/B se evalúa en jul-sep 2026,
+# que ninguna de las dos versiones vio.
+REENTRENO_MODELO = "poisson"
+REENTRENO_TRAIN = ("2025-01-01", "2026-06-01")
+REENTRENO_VAL = ("2026-06-01", "2026-07-01")
+REENTRENO_RUN_NAME = "p1-reentreno-ventana-2026"
+
+# ---------- A/B testing (offline, pareado, sobre el mismo conjunto) ----------
+AB_EVALUACION = MONITOREO_ACTUAL
+AB_METRICA = "mae"  # métrica primaria, la misma con la que se eligió la v1
+AB_BOOTSTRAP_REPS = 2000  # bootstrap por bloques de día (los errores de un día están correlacionados)
+AB_ALFA = 0.05
+# Reglas de decisión fijadas ANTES de ver el resultado: B reemplaza a A solo si
+# (1) el IC 95 % de MAE_B - MAE_A queda completo por debajo de 0,
+# (2) B no empeora el MAE más de 2 % en ningún mes del periodo (salvaguarda),
+# (3) |sesgo_B| <= |sesgo_A| + 0.5 viajes y (4) su costo de inferencia es < 2x el de A.
+AB_TOLERANCIA_MES = 0.02
+AB_TOLERANCIA_SESGO = 0.5
+AB_MAX_COSTO_RELATIVO = 2.0

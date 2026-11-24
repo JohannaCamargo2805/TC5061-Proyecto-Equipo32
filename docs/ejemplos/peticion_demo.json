@@ -1,0 +1,16 @@
+{
+  "estacion_id": 286,
+  "fecha": "2026-09-30",
+  "dia_semana": 2,
+  "fin_semana": 0,
+  "feriado": 0,
+  "lag_1": 32,
+  "lag_2": 31,
+  "lag_7": 37,
+  "lag_14": 12,
+  "media_7d": 28.5714,
+  "media_28d": 24.5,
+  "media_mismo_dia_4sem": 24.0,
+  "dias_activa": 637,
+  "capacidad": 15
+}

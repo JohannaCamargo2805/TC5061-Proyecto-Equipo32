@@ -18,7 +18,6 @@ import json
 import os
 from pathlib import Path
 import shutil
-import subprocess
 import tempfile
 import time
 
@@ -37,6 +36,7 @@ from mibici.config import (
     TAREAS,
     TEAM_ID,
 )
+from mibici.git_seguro import GitError, git
 
 # Valores de los parámetros del MLproject que significan "usar el valor de config.py" o
 # "decidir automáticamente". Se aceptan también las comillas vacías que produce cmd en Windows.
@@ -66,13 +66,10 @@ def configurar_tracking() -> None:
 def git_info() -> dict:
     """Commit actual, rama y si el árbol de trabajo tiene cambios sin confirmar."""
     try:
-        def _git(*args):
-            return subprocess.check_output(["git", *args], cwd=PROJ_ROOT, text=True).strip()
-
-        commit = _git("rev-parse", "HEAD")
-        rama = _git("rev-parse", "--abbrev-ref", "HEAD")
-        sucio = bool(_git("status", "--porcelain", "--untracked-files=no"))
-    except (subprocess.CalledProcessError, FileNotFoundError):
+        commit = git("rev-parse", "HEAD")
+        rama = git("rev-parse", "--abbrev-ref", "HEAD")
+        sucio = bool(git("status", "--porcelain", "--untracked-files=no"))
+    except (GitError, FileNotFoundError):
         return {"git_commit": "desconocido", "git_rama": "desconocida", "git_sucio": "True"}
     if sucio:
         logger.warning("Hay cambios sin commit: la corrida no será reproducible desde git_commit")

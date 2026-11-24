@@ -182,7 +182,7 @@ def test_uri_por_alias_version_o_carpeta(tmp_path):
 @pytest.mark.lento
 @pytest.mark.skipif(not HAY_PRODUCCION, reason="falta data/processed/viajes_produccion.parquet")
 def test_conjuntos_reales_reproducen_los_de_la_v1():
-    """La referencia es el TRAIN de la v1 y su prueba reproduce el test_mae registrado."""
+    """La referencia es el TRAIN de la v1 y el TEST del modelo empaquetado reproduce su test_mae."""
     import json
 
     import mlflow
@@ -194,6 +194,9 @@ def test_conjuntos_reales_reproducen_los_de_la_v1():
     assert len(datos["prueba_v1"]) == 22_565
     registro = json.loads((config.SERVICIO_MODELO_DIR / "registro.json").read_text(encoding="utf-8"))
     modelo = mlflow.sklearn.load_model(str(config.SERVICIO_MODELO_DIR))
-    t = datos["prueba_v1"]
+    # El modelo empaquetado es el @champion: la v1 (TEST nov-dic 2025) o, desde el proyecto final,
+    # la v3 reentrenada, cuyo TEST es el periodo actual del monitoreo (jul-sep 2026).
+    reentrenada = "+" in registro["etiquetas_version"].get("data_version", "")
+    t = datos["actual"] if reentrenada else datos["prueba_v1"]
     mae = np.abs(t["viajes"] - np.clip(modelo.predict(t[P1_FEATURES]), 0, None)).mean()
     assert mae == pytest.approx(registro["metricas"]["test_mae"], abs=1e-4)

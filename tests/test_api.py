@@ -388,7 +388,13 @@ def test_api_reproduce_el_modelo_empaquetado(cliente_real):
 @pytest.mark.datos
 @pytest.mark.lento
 def test_api_reproduce_test_mae_con_datos_reales(cliente_real):
-    """Las filas reales pasan la validación y la API reproduce el test_mae registrado de la versión."""
+    """Las filas reales pasan la validación y la API reproduce el test_mae registrado de la versión.
+
+    Proyecto final: en jul-sep 2026 aparecen dos estaciones (405 y 407) que no están en el catálogo
+    de estaciones (nomenclatura de sep 2026); el panel les imputa capacidad 0 y la API las rechaza
+    con 422 (capacidad >= 1). El test_mae registrado las incluye, así que se reproduce con el modelo
+    y se comprueba que la API da lo mismo en todas las demás filas.
+    """
     from mibici.config import (
         ESTACIONES_PARQUET,
         P1_FERIADOS,
@@ -411,23 +417,41 @@ def test_api_reproduce_test_mae_con_datos_reales(cliente_real):
 
         if not VIAJES_PRODUCCION_PARQUET.exists():
             pytest.skip("falta data/processed/viajes_produccion.parquet")
-        df = mon.construir_panel(fin=AB_EVALUACION[1]).dropna(subset=P1_FEATURES)
-        prueba = mon.periodo(df, *AB_EVALUACION)
+        prueba = mon.periodo(mon.construir_panel(fin=AB_EVALUACION[1]), *AB_EVALUACION)
     else:
         panel = p1_construir_panel_diario(p1.cargar_viajes(VIAJES_PARQUET), P1_TRAIN_START,
                                           P1_TEST_END)
         df = p1_agregar_features(panel, p1.cargar_capacidad(ESTACIONES_PARQUET), P1_FERIADOS,
                                  P1_LAGS_DIAS, P1_VENTANAS_MEDIA_DIAS, P1_HORIZONTE_DIAS)
-        df = df.dropna(subset=P1_FEATURES)
-        prueba = p1.cortar(df, P1_TEST_START, P1_TEST_END)
-    for fila in df[P1_FEATURES].to_dict(orient="records"):
-        EntradaP1(**fila)  # ninguna fila real se rechaza
+        prueba = p1.cortar(df.dropna(subset=P1_FEATURES), P1_TEST_START, P1_TEST_END)
+
+    # 1. El modelo empaquetado reproduce la métrica registrada con todas las filas del TEST.
+    modelo = mlflow.pyfunc.load_model(str(SERVICIO_MODELO_DIR))
+    pred_modelo = np.clip(modelo.predict(prueba[P1_FEATURES].astype("float64")), 0, None)
+    mae = float(np.mean(np.abs(prueba["viajes"].to_numpy() - pred_modelo)))
+    assert mae == pytest.approx(registrado["metricas"]["test_mae"], abs=1e-3)
+
+    # 2. Solo se rechazan las filas de estaciones fuera del catálogo (capacidad imputada en 0).
+    catalogo = set(p1.cargar_capacidad(ESTACIONES_PARQUET).index)
+    sin_catalogo = (prueba["capacidad"] < 1).to_numpy()
+    estaciones = prueba.index.get_level_values("estacion")
+    assert not set(estaciones[sin_catalogo]) & catalogo
+    assert sin_catalogo.mean() < 0.01  # 171 de 40,512 estación-días (0.4 %) en jul-sep 2026
+    validas = prueba.loc[~sin_catalogo, P1_FEATURES]
     instancias = [{k: (float(v) if k.startswith("media") else int(v)) for k, v in fila.items()}
-                  for fila in prueba[P1_FEATURES].to_dict(orient="records")]
+                  for fila in validas.to_dict(orient="records")]
+    for fila in instancias:
+        EntradaP1(**fila)  # ninguna otra fila real se rechaza
+    if sin_catalogo.any():
+        fila = prueba.loc[sin_catalogo, P1_FEATURES].iloc[0].to_dict()
+        r = cliente_real.post("/predict", json={k: (float(v) if k.startswith("media") else int(v))
+                                                for k, v in fila.items()})
+        assert r.status_code == 422 and "capacidad" in r.text
+
+    # 3. La API da las mismas predicciones que el modelo en todas las filas válidas.
     predicciones = []
     for i in range(0, len(instancias), LOTE_MAXIMO):
         r = cliente_real.post("/predict/lote", json={"instancias": instancias[i:i + LOTE_MAXIMO]})
         assert r.status_code == 200, r.text
         predicciones += [p["viajes_esperados"] for p in r.json()["predicciones"]]
-    mae = float(np.mean(np.abs(prueba["viajes"].to_numpy() - np.asarray(predicciones))))
-    assert mae == pytest.approx(registrado["metricas"]["test_mae"], abs=1e-3)
+    np.testing.assert_allclose(predicciones, pred_modelo[~sin_catalogo], atol=5e-4)
