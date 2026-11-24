@@ -29,7 +29,7 @@ producción con compuertas automáticas.
 |---|---|
 | Repositorio | <https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32> (este) |
 | Presentación | `TC5061_Proyecto_Final_Equipo32.pdf` (Canvas) · fuente editable `docs/proyecto_final/TC5061_Proyecto_Final_Equipo32.pptx` |
-| Video de evidencia (2–5 min) | `TC5061_Proyecto_Final_Equipo32.mp4` (Canvas); guion en [`docs/proyecto_final/guion_video.md`](docs/proyecto_final/guion_video.md) |
+| Video de evidencia (2–5 min) | `TC5061_Proyecto_Final_Equipo32.mp4` (Canvas y [copia en el repositorio](docs/proyecto_final/TC5061_Proyecto_Final_Equipo32.mp4)): 4 min 26 s, una sola toma sin cortes con la demo en vivo y narración con voz sintética (declarada en el video). Guion, línea de tiempo y cómo se grabó: [`docs/proyecto_final/guion_video.md`](docs/proyecto_final/guion_video.md) |
 | Model Card | [`MODEL_CARD.md`](MODEL_CARD.md) |
 | Linaje y estado de producción del Model Registry | [`docs/model_registry.md`](docs/model_registry.md) |
 
@@ -104,7 +104,9 @@ python -m pytest -q                                    # pruebas
 ### 5. Demo: la API respondiendo una petición real
 
 `scripts/demo_final.ps1` (Windows) recorre la demo del video con una pausa entre pasos: servicios del Compose,
-salud, versión y linaje del modelo, una predicción real y una entrada inválida (422). La petición
+salud, versión y linaje del modelo, una predicción real y una entrada inválida (422). Para el video corrió en modo
+de toma sin intervención (`-PausaSegundos`, `-Bitacora` y `-EscalaFuente`): espera lo que dura cada segmento de la
+narración, anota cuándo aparece cada resultado y agranda la letra de la consola. La petición
 `docs/ejemplos/peticion_demo.json` se construyó con `scripts/peticion_real.py` a partir de los datos abiertos: la
 estación 286, la de demanda mediana del 30 de septiembre de 2026 (regla fija para no escoger el caso), en la que se
 iniciaron **31 viajes**.
@@ -187,18 +189,19 @@ Las compuertas, el rollback y el estado de cada versión están en [`docs/model_
 | skops en lugar de pickle | pickle de scikit-learn | Formato que no ejecuta código arbitrario al cargar |
 | Réplicas de 1 vCPU + motor NumPy verificado | Réplicas más grandes | ×4 de capacidad por el mismo costo (USD 0.26 contra 1.03 por millón de peticiones) |
 | Rango de TRAIN que viaja con la versión | Rango fijo en el código | Las advertencias de extrapolación siguen al modelo que se sirve |
-| Pull Requests con CI en verde y notificación | *Merge* directo | Atiende la observación de la entrega 4 y deja evidencia de cada cambio |
+| Pull Requests con CI en verde y notificación | *Merge* directo | Atiende las observaciones de las entregas 4 y 5, y deja evidencia de cada cambio |
 
 ### 8. Historial de Git del proyecto final
 
-Las ramas entraron a `main` mediante *pull requests* con el pipeline de CI/CD en verde (todos los commits a nombre de
-la autora). La ejecución [#26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de la rama de #10 terminó en verde con todos sus jobs,
+Atendiendo la retroalimentación de la entrega 5 (sus ramas se habían integrado sin *pull requests*), todo el proyecto
+final entró a `main` mediante *pull requests* con el pipeline de CI/CD en verde, sin *push* directo a `main` (todos los
+commits a nombre de la autora). La ejecución [#26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de la rama de #10 terminó en verde con todos sus jobs,
 incluido el sistema completo con la imagen `modelo-v3` y la prueba de humo con Locust:
 
 | Pull Request (rama) | Commits | Contenido |
 |---|---:|---|
 | [#10](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/10) · `feat/ciclo-ct-v3` | 7 | Promoción con compuertas, rollback y `estado_produccion` (`mibici/modeling/promocion.py`, punto de entrada `promote`, `make ciclo-ct`); rango de TRAIN por versión; `version_origen` en la API; corrección de `registered_model_meta` al cargar del registry; la v3 empaquetada con imagen `modelo-v3`; Model Card y `docs/model_registry.md`; 21 pruebas nuevas |
-| [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 6 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1`, evidencia del sistema con la v3 y la prueba de carga final, y `CONTRIBUCIONES.md` |
+| [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 8 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1` (con el modo de toma sin intervención), evidencia del sistema con la v3 y la prueba de carga final, cómo se grabó el video (`docs/proyecto_final/video/`) y `CONTRIBUCIONES.md` |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. La promoción en el Model Registry, las pruebas, la
@@ -1468,7 +1471,7 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 │   ├── ejemplos       <- Peticiones de ejemplo para la API (JSON); peticion_demo.json es real (2026)
 │   ├── evidencia      <- Capturas por entrega (entrega4/ a entrega6/ y final/)
 │   ├── model_registry.md  <- Proyecto final: linaje, estado de producción y ciclo de Continuous Training
-│   └── proyecto_final <- Presentación (PDF y PPTX) y guion del video
+│   └── proyecto_final <- Presentación (PDF y PPTX), video, guion y scripts con que se grabó (video/)
 │
 ├── models             <- Trained and serialized models, model predictions, or model summaries
 │   └── servicio       <- Versión @champion del Model Registry que sirve la API (hoy la v3, con registro.json)
@@ -1721,7 +1724,8 @@ y consultarse en `http://localhost:5000`.
 
 Los datos de MiBici, modelos serializados, base de datos de MLflow, artefactos de MLflow y resultados generados por P3 se excluyen mediante `.gitignore`. La excepción es `models/servicio/` (entrega 4): la versión del Model Registry que se empaqueta en la imagen de la API, versionada con su `registro.json` y sin conversión de finales de línea (`.gitattributes`).
 
-El código se desarrolla en ramas independientes. En las entregas en equipo (1 y 2), todo cambio hacia `main` debía incorporarse mediante Pull Request revisado por otro integrante; en este repositorio la entrega 2 entró con el Pull Request #5 y las revisiones de cada integrante se registran en `CONTRIBUCIONES.md`. Las entregas 3 a 6 son versiones individuales, porque el profesor cambió la modalidad: sus ramas se integraron con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3), [de la entrega 4](#historial-de-git-de-la-entrega-4), [de la entrega 5](#historial-de-git-de-la-entrega-5) y [de la entrega 6](#5-historial-de-git-de-la-entrega-6)) y, al final de la entrega 6, de nuevo mediante Pull Request con el pipeline en verde (#6 a #9).
+El código se desarrolla en ramas independientes. En las entregas en equipo (1 y 2), todo cambio hacia `main` debía incorporarse mediante Pull Request revisado por otro integrante; en este repositorio la entrega 2 entró con el Pull Request #5 y las revisiones de cada integrante se registran en `CONTRIBUCIONES.md`. Las entregas 3 a 6 son versiones individuales, porque el profesor cambió la modalidad: sus ramas se integraron con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3), [de la entrega 4](#historial-de-git-de-la-entrega-4), [de la entrega 5](#historial-de-git-de-la-entrega-5) y [de la entrega 6](#5-historial-de-git-de-la-entrega-6)) y, al final de la entrega 6, de nuevo mediante Pull Request con el pipeline en verde (#6 a #9). El proyecto final entró
+completo por Pull Request (#10 y #11), atendiendo la retroalimentación de la entrega 5.
 
 Convenciones: ramas `feat/`, `fix/`, `docs/`, `test/`, `build/` y `chore/` + descripción corta; mensajes de commit
 siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). En el

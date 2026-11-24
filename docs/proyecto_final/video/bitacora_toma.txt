@@ -1,0 +1,29 @@
+preparacion 1795553110815
+api_health ok v2 origen v3
+mlflow_proyecto ok
+navegador msedge | C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+ventana w1 264238 | API MiBici P1: demanda diaria por estación - Swagger UI - [InPrivate]: Microsoft? Edge
+ventana w2 395320 | Model: mibici-equipo32-p1-demanda - MLflow - [InPrivate]: Microsoft? Edge
+ventana w3 3016082 | All Workflow Runs · GitHub - [InPrivate]: Microsoft? Edge
+ffmpeg_inicio 1795553148270
+s01 1795553151374
+s02 1795553171220
+s03 1795553192466
+s04 1795553213646
+s05 1795553230552
+s06 1795553246227
+s07 1795553257688
+s08 1795553274691
+s09 1795553285202
+s10 1795553298882
+s11 1795553309121
+demo_inicio 1795553318139
+demo_fin 1795553375975
+w1 1795553375975
+w2 1795553382566
+w3 1795553392035
+s12_previo 1795553398966
+s12 1795553399102
+lamina13 1795553413902
+ffmpeg_fin 1795553417198
+TERMINADO
