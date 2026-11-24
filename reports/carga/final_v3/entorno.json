@@ -1,0 +1,40 @@
+{
+  "nombre": "final_v3",
+  "escenario": "escalones",
+  "escalones": "10:30,25:30,50:30,100:30",
+  "duracion_s": null,
+  "api": {
+    "workers": 1,
+    "cpus": 1.0,
+    "memoria": "1g",
+    "acelerar": false
+  },
+  "slo_p95_ms": 300.0,
+  "inicio_utc": "2026-11-24T19:06:11+00:00",
+  "anfitrion": {
+    "sistema": "Windows-11-10.0.26200-SP0",
+    "equipo": "JohannaCamargo",
+    "python": "3.14.8"
+  },
+  "motor": {
+    "ServerVersion": "29.9.2",
+    "OperatingSystem": "Docker Desktop",
+    "KernelVersion": "6.18.58.1-microsoft-standard-WSL2",
+    "NCPU": 8,
+    "MemTotal": 8199503872,
+    "Architecture": "x86_64"
+  },
+  "compose": "5.6.1",
+  "git_commit": "ba8d377",
+  "modelo": {
+    "nombre": "mibici-equipo32-p1-demanda",
+    "version": 2,
+    "alias": [
+      "champion"
+    ],
+    "origen": "registry",
+    "uri_registry": "models:/mibici-equipo32-p1-demanda/2",
+    "integridad_verificada": true,
+    "motor_inferencia": "mlflow.pyfunc"
+  }
+}

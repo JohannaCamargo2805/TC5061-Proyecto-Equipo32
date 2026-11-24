@@ -40,9 +40,9 @@ producción con compuertas automáticas.
 
 ### 1. Problema y valor
 
-MiBici, el sistema de bicicleta pública de Guadalajara, rebalancea cada noche cerca de 470 estaciones. **P1**: ¿cuántos
-viajes se iniciarán mañana en cada estación? Con esa predicción el área de operación decide a dónde llevar bicicletas y
-cuántos turnos programar. El modelo (regresión de Poisson con 12 variables conocidas al cierre del día) se equivoca en
+MiBici, el sistema de bicicleta pública de Guadalajara, tiene cerca de 470 estaciones. **P1**: ¿cuántos viajes se
+iniciarán mañana en cada estación? Con esa predicción el área de operación puede planear desde la noche anterior a
+dónde llevar bicicletas y cuántos turnos de rebalanceo programar. El modelo (regresión de Poisson con 12 variables conocidas al cierre del día) se equivoca en
 **5.66 viajes por estación-día** (WAPE 19 %) en jul–sep 2026, y la suma del sistema en 8 %. Las preguntas P2
 (riesgo de vaciado) y P3 (grupos de estaciones) se quedaron en el Model Registry; P1 es la que se lleva a producción.
 
@@ -131,6 +131,37 @@ v3 (con la v1 coincidía por casualidad: en ambos registries era la versión 1);
 contenido. (2) Dos estaciones de 2026 (405 y 407) no están en el catálogo y les queda `capacidad = 0`, que la API
 rechaza con 422 (0.4 % de las estación-días de jul–sep 2026); se documenta en la Model Card.
 
+#### Ejecución en la computadora de la autora (24 de noviembre de 2026)
+
+Windows 11, Python 3.14.8, Docker Desktop 29.9.2 (WSL2, 8 vCPU), Compose 5.6.1, commit `ba8d377`:
+
+* **Pruebas:** 244 aprobadas y 1 omitida con los datos reales (RQ no corre de forma nativa en Windows;
+  `reports/final/pytest_final.txt`); en Linux, 251 aprobadas.
+* **Sistema:** `docker compose up -d --build --wait` construyó `mibici-p1-api:modelo-v3` y dejó los cinco servicios
+  sanos; `registrar-modelo` verificó los 31 SHA-256 y registró la v3 con `@champion` (`reports/final/compose_ps.txt`).
+  El volumen de MLflow del Compose ya tenía la v1 de la entrega 6, así que ahí la v3 quedó como versión 2 con
+  `version_origen = 3`; en un clon limpio queda como versión 1.
+* **Respuestas de la API** (`reports/final/respuesta_*.json`): `/health` 200, `/predict` de la demo 200 en 82 ms,
+  la referencia del pipeline 65.258 viajes, la entrada inválida 422.
+* **Prueba de carga final con la v3** (`reports/carga/final_v3/`, escalones de 30 s, réplica de 1 vCPU):
+
+| Usuarios | Pet/s | p50 (ms) | p95 (ms) | p99 (ms) | Errores (%) | CPU API (%) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 9.0 | 16 | 35 | 52 | 0.00 | 19 |
+| 25 | 22.2 | 24 | 139 | 236 | 0.00 | 52 |
+| 50 | 31.3 | 307 | 1,370 | 1,807 | 0.00 | 89 |
+| 100 | 23.2 | 3,560 | 5,076 | 5,745 | 0.00 | 95 |
+
+  Capacidad bajo el SLO: **22.2 pet/s con p95 de 139 ms**, la misma que la v1 en la entrega 6 (22.1 pet/s): el
+  reentrenamiento no cambió el costo por inferencia (mismo pipeline), como exigía la regla 4 del A/B. Cero errores en
+  2,397 peticiones.
+
+![Demo en la consola](docs/evidencia/final/final_04_demo_consola.png)
+
+![Model Registry del proyecto con la v3 en producción](docs/evidencia/final/final_01_registry_versiones.png)
+
+![Swagger de la API con la v3](docs/evidencia/final/final_05_swagger_v3.png)
+
 ### 6. Ciclo de Continuous Training (valor agregado)
 
 | Paso | Punto de entrada | Corrida en MLflow | Resultado |
@@ -166,7 +197,7 @@ la autora):
 | Pull Request (rama) | Commits | Contenido |
 |---|---:|---|
 | [`feat/ciclo-ct-v3`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Afeat%2Fciclo-ct-v3) | 7 | Promoción con compuertas, rollback y `estado_produccion` (`mibici/modeling/promocion.py`, punto de entrada `promote`, `make ciclo-ct`); rango de TRAIN por versión; `version_origen` en la API; corrección de `registered_model_meta` al cargar del registry; la v3 empaquetada con imagen `modelo-v3`; Model Card y `docs/model_registry.md`; 21 pruebas nuevas |
-| [`docs/proyecto-final`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Adocs%2Fproyecto-final) | 2 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1`, evidencia del sistema con la v3 y la prueba de carga final, y `CONTRIBUCIONES.md` |
+| [`docs/proyecto-final`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Adocs%2Fproyecto-final) | 3 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1`, evidencia del sistema con la v3 y la prueba de carga final, y `CONTRIBUCIONES.md` |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. La promoción en el Model Registry, las pruebas, la

@@ -220,7 +220,7 @@ Versión de **Leydy Johanna Camargo Medina** (`JohannaCamargo2805`), en `main` d
 | Pull Request (rama) | Commits | Qué contiene |
 |---|---:|---|
 | [`feat/ciclo-ct-v3`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Afeat%2Fciclo-ct-v3) | 7 | Promoción a producción con compuertas y rollback, rango de TRAIN por versión, `version_origen` en la API, corrección de la verificación al cargar del registry, la v3 empaquetada (`modelo-v3`), Model Card y documentación del Model Registry |
-| [`docs/proyecto-final`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Adocs%2Fproyecto-final) | 2 | README del proyecto final, presentación, guion y script de la demo, evidencia del sistema con la v3 y de la prueba de carga final |
+| [`docs/proyecto-final`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Adocs%2Fproyecto-final) | 3 | README del proyecto final, presentación, guion y script de la demo, evidencia del sistema con la v3 y de la prueba de carga final |
 
 En su computadora promovió la v3 en el Model Registry del proyecto (corrida `p1-promocion-v1-a-v3`), exportó la
 copia para la imagen, corrió las pruebas con los datos reales, levantó el sistema con Docker Compose, ejecutó la

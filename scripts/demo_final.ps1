@@ -50,7 +50,6 @@ $m = Invoke-RestMethod "$Api/modelo"
     version_compose     = $m.version
     version_proyecto    = $m.version_origen
     alias               = ($m.alias -join ", ")
-    corrida_origen      = $m.run_id
     commit              = $m.git_commit.Substring(0, 7)
     data_version        = $m.data_version
     test_mae            = $m.metricas.test_mae
@@ -62,12 +61,13 @@ Pausa
 Paso "4. Predicción con datos reales: estación 286 (demanda mediana de ese día), 30 de septiembre de 2026" "POST $Api/predict  ($Peticion)"
 Get-Content $Peticion -Raw | Write-Host -ForegroundColor DarkGray
 $r = Invoke-WebRequest -Method Post -Uri "$Api/predict" -ContentType "application/json" -InFile $Peticion -UseBasicParsing
-$p = $r.Content | ConvertFrom-Json
+# La API responde en UTF-8; Windows PowerShell 5.1 supondría ISO-8859-1 sin el charset.
+$p = [System.Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
 Write-Host ""
 Write-Host ("   Viajes esperados : {0}  (redondeado {1})" -f $p.viajes_esperados, $p.viajes_esperados_redondeado) -ForegroundColor Yellow
 Write-Host ("   Viajes reales    : {0}" -f $ViajesReales) -ForegroundColor Yellow
 Write-Host ("   Error            : {0:N1} viajes ({1:P1})" -f ($p.viajes_esperados - $ViajesReales), (($p.viajes_esperados - $ViajesReales) / $ViajesReales))
-Write-Host ("   Modelo           : {0} v{1} · {2} ms" -f $p.modelo.nombre, $p.modelo.version, $r.Headers["X-Tiempo-Respuesta-ms"])
+Write-Host ("   Modelo           : {0} v{1} del proyecto (v{2} en el registry del Compose) · {3} ms" -f $p.modelo.nombre, $m.version_origen, $p.modelo.version, $r.Headers["X-Tiempo-Respuesta-ms"])
 if ($p.advertencias) { $p.advertencias | ForEach-Object { Write-Host "   Advertencia: $_" -ForegroundColor DarkYellow } }
 Pausa
 
