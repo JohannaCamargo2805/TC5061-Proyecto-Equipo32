@@ -1,0 +1,19 @@
+NAME                                 IMAGE                                       COMMAND                  SERVICE            CREATED          STATUS                      PORTS
+mibici-equipo32-api-1                mibici-p1-api:modelo-v3                     "uvicorn api.main:ap…"   api                54 seconds ago   Up 18 seconds (healthy)     127.0.0.1:8000->8000/tcp
+mibici-equipo32-mlflow-1             mibici-mlflow:3.17.2                        "mlflow server --bac…"   mlflow             55 seconds ago   Up 52 seconds (healthy)     127.0.0.1:5050->5000/tcp
+mibici-equipo32-redis-1              docker.io/library/redis:8.10.3-alpine3.23   "docker-entrypoint.s…"   redis              55 seconds ago   Up 51 seconds (healthy)     6379/tcp
+mibici-equipo32-registrar-modelo-1   mibici-mlflow:3.17.2                        "python /app/registr…"   registrar-modelo   54 seconds ago   Exited (0) 18 seconds ago   
+mibici-equipo32-worker-1             mibici-p1-api:modelo-v3                     "python -m api.worker"   worker             53 seconds ago   Up 17 seconds (healthy)     8000/tcp
+CONTAINER                            REPOSITORY          TAG                 PLATFORM            IMAGE ID            SIZE                CREATED
+mibici-equipo32-api-1                mibici-p1-api       modelo-v3           linux/amd64         a62f3ded7fb5        834MB               About a minute ago
+mibici-equipo32-mlflow-1             mibici-mlflow       3.17.2              linux/amd64         f36163b92515        1.29GB              4 days ago
+mibici-equipo32-redis-1              redis               8.10.3-alpine3.23   linux/amd64         7958cfbb9d15        161MB               2 weeks ago
+mibici-equipo32-registrar-modelo-1   mibici-mlflow       3.17.2              linux/amd64         f36163b92515        1.29GB              4 days ago
+mibici-equipo32-worker-1             mibici-p1-api       modelo-v3           linux/amd64         a62f3ded7fb5        834MB               About a minute ago
+registrar-modelo-1  | [registrar-modelo] integridad verificada: 31 archivos coinciden con registro.json
+registrar-modelo-1  | [registrar-modelo] el modelo carga y predice el ejemplo: 47.294 viajes
+registrar-modelo-1  | 🏃 View run registro-compose-v3 at: http://mlflow:5000/#/experiments/1/runs/62ed69f8c9774c7f86853d77c6403478
+registrar-modelo-1  | 🧪 View experiment at: http://mlflow:5000/#/experiments/1
+registrar-modelo-1  | 2026/11/24 19:04:48 INFO mlflow.store.model_registry.abstract_store: Waiting up to 300 seconds for model version to finish creation. Model name: mibici-equipo32-p1-demanda, version 2
+registrar-modelo-1  | [registrar-modelo] registrada mibici-equipo32-p1-demanda v2 (origen: v3, corrida 62ed69f8c9774c7f86853d77c6403478)
+registrar-modelo-1  | [registrar-modelo] alias @champion -> v2; la API puede cargar models:/mibici-equipo32-p1-demanda@champion

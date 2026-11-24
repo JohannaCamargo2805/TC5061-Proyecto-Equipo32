@@ -1,0 +1,122 @@
+[
+ {
+  "id": "s01",
+  "escena": "lamina",
+  "lamina": 1,
+  "texto": "Hola. Este es el proyecto final de Leydy Johanna Camargo Medina para Operaciones de aprendizaje automático: un sistema de machine learning de extremo a extremo que pronostica la demanda de MiBici, la bicicleta pública de Guadalajara. Narra una voz sintética; la demostración es en vivo, en una sola toma."
+ },
+ {
+  "id": "s02",
+  "escena": "lamina",
+  "lamina": 2,
+  "texto": "El problema: el área de operación necesita saber, desde la noche anterior, cuántos viajes se iniciarán mañana en cada estación, para planear a dónde llevar bicicletas. Con cuatro punto cinco millones de viajes de datos abiertos y una red que creció a cuatrocientas setenta y dos estaciones, el modelo en producción se equivoca en cinco punto siete viajes por estación y día."
+ },
+ {
+  "id": "s03",
+  "escena": "lamina",
+  "lamina": 3,
+  "texto": "La solución cubre el ciclo completo de MLOps: datos versionados con SHA doscientos cincuenta y seis, un MLflow Project con diez puntos de entrada, MLflow Tracking y el Model Registry. La versión en producción se exporta verificada, GitHub Actions la prueba y la publica, Docker Compose levanta la API, y el monitoreo cierra el ciclo de entrenamiento continuo."
+ },
+ {
+  "id": "s04",
+  "escena": "lamina",
+  "lamina": 4,
+  "texto": "El repositorio sigue la estructura de Cookiecutter Data Science, y las variables usan solo información del cierre del día anterior, sin fuga de datos. Se eligió una regresión de Poisson con la regla de un error estándar: queda a menos de un error del mejor modelo y es mucho más simple."
+ },
+ {
+  "id": "s05",
+  "escena": "lamina",
+  "lamina": 5,
+  "texto": "En el Model Registry, la versión tres tiene el alias champion, y la versión uno queda como anterior, para revertir en un solo paso. Cada versión guarda su linaje: corrida, commit y versión de datos, y una etiqueta con su estado de producción."
+ },
+ {
+  "id": "s06",
+  "escena": "lamina",
+  "lamina": 6,
+  "texto": "Evidently detectó drift en diez de catorce columnas: la red pasó de trescientas sesenta y nueve a cuatrocientas setenta y dos estaciones, y el modelo original empezó a subestimar la demanda."
+ },
+ {
+  "id": "s07",
+  "escena": "lamina",
+  "lamina": 7,
+  "texto": "Se reentrenó con datos hasta mayo de dos mil veintiséis. Un A B pareado mostró que la versión tres reduce el error en dos décimas de viaje, con un intervalo de confianza completamente debajo de cero. La promoción pasó sus cuatro compuertas y movió champion a la versión tres."
+ },
+ {
+  "id": "s08",
+  "escena": "lamina",
+  "lamina": 8,
+  "texto": "Todo el sistema se levanta con un solo comando de Docker Compose, y el pipeline de integración y despliegue continuos tiene seis jobs, desde la calidad del código hasta el despliegue."
+ },
+ {
+  "id": "s09",
+  "escena": "lamina",
+  "lamina": 9,
+  "texto": "Con Locust, una réplica de un CPU virtual atiende veintidós peticiones por segundo, u ochenta y nueve con el motor en NumPy: un dólar por millón de peticiones en Fargate, o veintiséis centavos con NumPy."
+ },
+ {
+  "id": "s10",
+  "escena": "lamina",
+  "lamina": 10,
+  "texto": "La Model Card documenta el uso previsto, lo que queda fuera de alcance, las limitaciones y las consideraciones éticas, como la minimización de datos personales."
+ },
+ {
+  "id": "s11",
+  "escena": "lamina",
+  "lamina": 11,
+  "texto": "Y estas son las decisiones de MLOps, cada una con la alternativa que se descartó. Ahora, la demostración en vivo."
+ },
+ {
+  "id": "d1",
+  "escena": "demo",
+  "paso": 1,
+  "texto": "Primero, el sistema levantado con Docker Compose: MLflow, la API, Redis y el worker están sanos, y el servicio que registra el modelo terminó sin errores."
+ },
+ {
+  "id": "d2",
+  "escena": "demo",
+  "paso": 2,
+  "texto": "La API responde que está sana y que carga el modelo desde el registry."
+ },
+ {
+  "id": "d3",
+  "escena": "demo",
+  "paso": 3,
+  "texto": "Se sirve la versión tres del registry del proyecto, versión dos en el MLflow del Compose, con su commit, su versión de datos y la integridad verificada."
+ },
+ {
+  "id": "d4",
+  "escena": "demo",
+  "paso": 4,
+  "texto": "Ahora, una petición real: la estación doscientos ochenta y seis, el treinta de septiembre de dos mil veintiséis. La API predice veintiocho viajes, y ese día se iniciaron treinta y uno. Además advierte que días activa está fuera del rango de entrenamiento: el modelo avisa cuando extrapola."
+ },
+ {
+  "id": "d5",
+  "escena": "demo",
+  "paso": 5,
+  "texto": "Si la entrada es inconsistente, la API responde cuatrocientos veintidós y explica por qué."
+ },
+ {
+  "id": "w1",
+  "escena": "web",
+  "url": "swagger",
+  "texto": "Esta es la documentación interactiva de la API, generada por FastAPI."
+ },
+ {
+  "id": "w2",
+  "escena": "web",
+  "url": "mlflow",
+  "texto": "En el Model Registry de MLflow, la versión tres tiene el alias champion, su estado de producción y su linaje en las etiquetas."
+ },
+ {
+  "id": "w3",
+  "escena": "web",
+  "url": "actions",
+  "texto": "Y en GitHub Actions, el pipeline de integración y despliegue continuos está en verde."
+ },
+ {
+  "id": "s12",
+  "escena": "lamina",
+  "lamina": 12,
+  "texto": "En resumen: un sistema reproducible, desplegado, monitoreado y gobernado. Los siguientes pasos: agregar clima y eventos, y disparar el reentrenamiento de forma automática. Gracias."
+ }
+]

@@ -13,7 +13,199 @@ El proyecto responde tres preguntas de negocio:
 
 El ML Canvas y el diagrama de arquitectura se encuentran en `references/`.
 
-**Navegación.** Entregas: [6 · Operación, CI/CD y FinOps](#entrega-6-sistema-operable-con-docker-compose-cicd-prueba-de-carga-y-finops) (la más reciente) · [5 · Drift y A/B testing](#entrega-5-monitoreo-de-drift-con-evidently-reentrenamiento-y-ab-testing) · [4 · API en contenedor](#entrega-4-el-modelo-p1-como-api-rest-en-un-contenedor-fastapi--podmandocker) · [3 · Pruebas y seguridad](#entrega-3-pruebas-automatizadas-validación-de-datos-y-seguridad) · [2 · MLflow Project y Model Registry](#entrega-2-mlflow-project-experimentación-y-model-registry) · [1 · Propuesta](#reproducción-de-la-propuesta-de-proyecto-entrega-1). Estructura del repositorio: [Project Organization](#project-organization); contribuciones: [`CONTRIBUCIONES.md`](CONTRIBUCIONES.md).
+**Navegación.** [**Proyecto final**](#proyecto-final-sistema-de-ml-de-extremo-a-extremo) (la entrega más reciente: [Model Card](MODEL_CARD.md), [Model Registry](docs/model_registry.md), presentación y video) · Entregas: [6 · Operación, CI/CD y FinOps](#entrega-6-sistema-operable-con-docker-compose-cicd-prueba-de-carga-y-finops) · [5 · Drift y A/B testing](#entrega-5-monitoreo-de-drift-con-evidently-reentrenamiento-y-ab-testing) · [4 · API en contenedor](#entrega-4-el-modelo-p1-como-api-rest-en-un-contenedor-fastapi--podmandocker) · [3 · Pruebas y seguridad](#entrega-3-pruebas-automatizadas-validación-de-datos-y-seguridad) · [2 · MLflow Project y Model Registry](#entrega-2-mlflow-project-experimentación-y-model-registry) · [1 · Propuesta](#reproducción-de-la-propuesta-de-proyecto-entrega-1). Estructura del repositorio: [Project Organization](#project-organization); contribuciones: [`CONTRIBUCIONES.md`](CONTRIBUCIONES.md).
+
+## Proyecto final: sistema de ML de extremo a extremo
+
+[![CI/CD](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/workflows/ci-cd.yml)
+
+**Versión individual de Leydy Johanna Camargo Medina (A01840540)**, rama `main` de este repositorio (el profesor cambió
+las actividades del proyecto de grupales a individuales; el número de equipo se conserva en los nombres). Integra en
+un solo sistema todo lo construido en las entregas 1 a 6 y cierra el ciclo de **Continuous Training**: el modelo que
+hoy sirve la API es la **v3**, reentrenada porque Evidently detectó drift, que ganó el A/B a la v1 y que se promovió a
+producción con compuertas automáticas.
+
+| Entregable | Dónde |
+|---|---|
+| Repositorio | <https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32> (este) |
+| Presentación | `TC5061_Proyecto_Final_Equipo32.pdf` (Canvas) · fuente editable `docs/proyecto_final/TC5061_Proyecto_Final_Equipo32.pptx` |
+| Video de evidencia (2–5 min) | `TC5061_Proyecto_Final_Equipo32.mp4` (Canvas y [copia en el repositorio](docs/proyecto_final/TC5061_Proyecto_Final_Equipo32.mp4)): 4 min 26 s, una sola toma sin cortes con la demo en vivo y narración con voz sintética (declarada en el video). Guion, línea de tiempo y cómo se grabó: [`docs/proyecto_final/guion_video.md`](docs/proyecto_final/guion_video.md) |
+| Model Card | [`MODEL_CARD.md`](MODEL_CARD.md) |
+| Linaje y estado de producción del Model Registry | [`docs/model_registry.md`](docs/model_registry.md) |
+
+**Contenido de esta sección:** [1. Problema](#1-problema-y-valor) · [2. Arquitectura](#2-arquitectura-de-extremo-a-extremo) ·
+[3. Rúbrica y evidencia](#3-rúbrica-y-evidencia) · [4. Reproducir](#4-reproducir-de-extremo-a-extremo) ·
+[5. Demo](#5-demo-la-api-respondiendo-una-petición-real) · [6. Ciclo de Continuous Training](#6-ciclo-de-continuous-training-valor-agregado) ·
+[7. Decisiones de MLOps](#7-decisiones-de-mlops) · [8. Historial de Git](#8-historial-de-git-del-proyecto-final)
+
+### 1. Problema y valor
+
+MiBici, el sistema de bicicleta pública de Guadalajara, tiene cerca de 470 estaciones. **P1**: ¿cuántos viajes se
+iniciarán mañana en cada estación? Con esa predicción el área de operación puede planear desde la noche anterior a
+dónde llevar bicicletas y cuántos turnos de rebalanceo programar. El modelo (regresión de Poisson con 12 variables conocidas al cierre del día) se equivoca en
+**5.66 viajes por estación-día** (WAPE 19 %) en jul–sep 2026, y la suma del sistema en 8 %. Las preguntas P2
+(riesgo de vaciado) y P3 (grupos de estaciones) se quedaron en el Model Registry; P1 es la que se lleva a producción.
+
+### 2. Arquitectura de extremo a extremo
+
+```mermaid
+flowchart LR
+  D[(Datos abiertos MiBici<br/>2025 + 2026<br/>manifiesto SHA-256)] --> P[MLflow Project<br/>ingest · train · search<br/>register · verify]
+  P --> T[(MLflow Tracking<br/>experimento mibici-equipo32)]
+  T --> R[(Model Registry<br/>@champion v3 · @anterior v1)]
+  R --> M[Evidently<br/>monitor: drift]
+  M -- drift --> RT[retrain<br/>v3 @challenger]
+  RT --> AB[abtest<br/>A/B pareado]
+  AB --> PR[promote<br/>4 compuertas]
+  PR --> R
+  R --> X[exportar @champion<br/>models/servicio + SHA-256]
+  X --> CI[GitHub Actions<br/>calidad · pruebas · imágenes<br/>sistema · despliegue]
+  CI --> G[(GHCR<br/>mibici-p1-api:modelo-v3)]
+  G --> C[Docker Compose<br/>mlflow · registrar-modelo<br/>api · redis · worker]
+  C --> API[FastAPI<br/>/predict /predict/lote<br/>/predict/asincrono]
+  L[Locust + docker stats] --> API
+  API --> F[FinOps<br/>costo por inferencia]
+```
+
+### 3. Rúbrica y evidencia
+
+| Criterio (peso) | Qué hay en el repositorio | Evidencia |
+|---|---|---|
+| **Estructura y experimentación** (20 %) | Estructura Cookiecutter Data Science (`mibici/`, `data/`, `models/`, `notebooks/`, `reports/`, `references/`, `docs/`); *feature engineering* sin fuga en `mibici/features.py` (rezagos, medias móviles, calendario, capacidad); **MLflow Project** con 10 puntos de entrada (`MLproject`, `python_env.yaml`); **MLflow Tracking** con etiquetas, datos (`log_input`), configuración, gráficas y modelos con firma | [Entrega 2](#entrega-2-mlflow-project-experimentación-y-model-registry), `docs/entrega2_bitacora.md`, `tests/test_mlproject.py`, `tests/test_features_p1.py` |
+| **Modelo y Registry** (15 %) | El mejor modelo (v3, ganador del A/B) es `@champion`; linaje completo por versión; **estado de producción explícito** (`estado_produccion` + aliases `@champion`/`@challenger`/`@anterior`); promoción con compuertas y rollback | [`docs/model_registry.md`](docs/model_registry.md), `mibici/modeling/promocion.py`, `docs/evidencia/final/` |
+| **Despliegue y operación** (25 %) | API FastAPI en contenedor (usuario sin privilegios, salud, SHA-256 del modelo); **Docker Compose** con 5 servicios y un solo comando; **CI/CD** con 6 jobs (calidad, pruebas Ubuntu × Windows, imágenes a GHCR, sistema completo con Locust, despliegue por *digest*, notificación); **Locust** por escalones con `docker stats` | Secciones [de la entrega 6](#entrega-6-sistema-operable-con-docker-compose-cicd-prueba-de-carga-y-finops), `reports/carga/`, `reports/final/` |
+| **Monitoreo, gobernanza y FinOps** (20 %) | **Evidently** (drift de datos, calidad y desempeño); **A/B testing** pareado con *bootstrap* y reglas fijadas antes; **FinOps** (costo por inferencia, escenarios y optimizaciones medidas); **Model Card** | [Entrega 5](#entrega-5-monitoreo-de-drift-con-evidently-reentrenamiento-y-ab-testing), `reports/monitoreo/`, `reports/finops/`, [`MODEL_CARD.md`](MODEL_CARD.md) |
+| **Presentación y demo** (20 %) | Presentación (problema, solución y decisiones de MLOps) y video continuo con la API respondiendo una petición real | `TC5061_Proyecto_Final_Equipo32.pdf`, [guion](docs/proyecto_final/guion_video.md), `scripts/demo_final.ps1` |
+
+### 4. Reproducir de extremo a extremo
+
+```bash
+git clone https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32.git && cd TC5061-Proyecto-Equipo32
+
+# A. El sistema en producción, con un solo comando (solo requiere Docker)
+docker compose up -d --build --wait
+curl -s localhost:8000/health        # {"estado":"ok",...,"version":1,"version_origen":3,"origen":"registry"}
+
+# B. El ciclo de ML completo (Python 3.14 + requirements.txt + servidor de MLflow)
+python -m pip install -r requirements.txt
+make server                                            # MLflow con SQLite (Windows: scripts\servidor_mlflow.ps1)
+mlflow run . -e ingest --env-manager local             # datos 2025 con manifiesto SHA-256
+mlflow run . -e train  --env-manager local -P question=p1 -P model=poisson
+mlflow run . -e register --env-manager local -P question=p1
+mlflow run . -e ingest_produccion --env-manager local  # datos 2026
+mlflow run . -e monitor  --env-manager local           # Evidently
+mlflow run . -e retrain  --env-manager local           # nueva versión @challenger
+mlflow run . -e abtest   --env-manager local           # A/B pareado
+mlflow run . -e promote  --env-manager local           # @champion si pasan las compuertas
+python scripts/exportar_modelo_registry.py --alias champion   # copia para la imagen
+python -m pytest -q                                    # pruebas
+```
+
+### 5. Demo: la API respondiendo una petición real
+
+`scripts/demo_final.ps1` (Windows) recorre la demo del video con una pausa entre pasos: servicios del Compose,
+salud, versión y linaje del modelo, una predicción real y una entrada inválida (422). Para el video corrió en modo
+de toma sin intervención (`-PausaSegundos`, `-Bitacora` y `-EscalaFuente`): espera lo que dura cada segmento de la
+narración, anota cuándo aparece cada resultado y agranda la letra de la consola. La petición
+`docs/ejemplos/peticion_demo.json` se construyó con `scripts/peticion_real.py` a partir de los datos abiertos: la
+estación 286, la de demanda mediana del 30 de septiembre de 2026 (regla fija para no escoger el caso), en la que se
+iniciaron **31 viajes**.
+
+```bash
+curl -s -X POST localhost:8000/predict -H "Content-Type: application/json" --data-binary @docs/ejemplos/peticion_demo.json
+```
+
+```json
+{"estacion_id":286,"fecha":"2026-09-30","viajes_esperados":27.828,"viajes_esperados_redondeado":28,
+ "advertencias":["dias_activa=637 está fuera del rango de entrenamiento [28, 515]: el modelo extrapola"],
+ "modelo":{"nombre":"mibici-equipo32-p1-demanda","version":3,"alias":["champion"],"run_id":"1d685b6b91744c979f3f7ffab5220819"}}
+```
+
+Predice 28 viajes contra 31 reales. La advertencia viene del rango de TRAIN que viaja con la v3 en `registro.json`:
+`dias_activa` crece con el calendario y ya rebasa lo que vio el modelo (limitación documentada en la Model Card).
+`docs/ejemplos/peticion_extrapolacion.json` es el caso extremo: la estación 51, la de más viajes ese día (425
+reales, 356 predichos), con tres variables fuera de rango.
+
+**Hallazgos de la integración final.** Correr todas las pruebas con la v3 y los datos reales encontró dos problemas
+que la v1 escondía, ya corregidos: (1) MLflow reescribe `registered_model_meta` al descargar una versión del
+registry, así que en el Compose la huella SHA-256 de ese archivo ya no coincidía y la API no habría arrancado con la
+v3 (con la v1 coincidía por casualidad: en ambos registries era la versión 1); ahora ese archivo se valida por su
+contenido. (2) Dos estaciones de 2026 (405 y 407) no están en el catálogo y les queda `capacidad = 0`, que la API
+rechaza con 422 (0.4 % de las estación-días de jul–sep 2026); se documenta en la Model Card.
+
+#### Ejecución en la computadora de la autora (24 de noviembre de 2026)
+
+Windows 11, Python 3.14.8, Docker Desktop 29.9.2 (WSL2, 8 vCPU), Compose 5.6.1, commit `ba8d377`:
+
+* **Pruebas:** 244 aprobadas y 1 omitida con los datos reales (RQ no corre de forma nativa en Windows;
+  `reports/final/pytest_final.txt`); en Linux, 251 aprobadas.
+* **Sistema:** `docker compose up -d --build --wait` construyó `mibici-p1-api:modelo-v3` y dejó los cinco servicios
+  sanos; `registrar-modelo` verificó los 31 SHA-256 y registró la v3 con `@champion` (`reports/final/compose_ps.txt`).
+  El volumen de MLflow del Compose ya tenía la v1 de la entrega 6, así que ahí la v3 quedó como versión 2 con
+  `version_origen = 3`; en un clon limpio queda como versión 1.
+* **Respuestas de la API** (`reports/final/respuesta_*.json`): `/health` 200, `/predict` de la demo 200 en 82 ms,
+  la referencia del pipeline 65.258 viajes, la entrada inválida 422.
+* **Prueba de carga final con la v3** (`reports/carga/final_v3/`, escalones de 30 s, réplica de 1 vCPU):
+
+| Usuarios | Pet/s | p50 (ms) | p95 (ms) | p99 (ms) | Errores (%) | CPU API (%) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 9.0 | 16 | 35 | 52 | 0.00 | 19 |
+| 25 | 22.2 | 24 | 139 | 236 | 0.00 | 52 |
+| 50 | 31.3 | 307 | 1,370 | 1,807 | 0.00 | 89 |
+| 100 | 23.2 | 3,560 | 5,076 | 5,745 | 0.00 | 95 |
+
+  Capacidad bajo el SLO: **22.2 pet/s con p95 de 139 ms**, la misma que la v1 en la entrega 6 (22.1 pet/s): el
+  reentrenamiento no cambió el costo por inferencia (mismo pipeline), como exigía la regla 4 del A/B. Cero errores en
+  2,397 peticiones.
+
+![Demo en la consola](docs/evidencia/final/final_04_demo_consola.png)
+
+![Model Registry del proyecto con la v3 en producción](docs/evidencia/final/final_01_registry_versiones.png)
+
+![Swagger de la API con la v3](docs/evidencia/final/final_05_swagger_v3.png)
+
+### 6. Ciclo de Continuous Training (valor agregado)
+
+| Paso | Punto de entrada | Corrida en MLflow | Resultado |
+|---|---|---|---|
+| 1. Monitoreo | `monitor` | `p1-monitoreo-drift` (`b6e0a185…`) | Evidently: drift en 10 de 14 columnas (71.4 %) → disparo |
+| 2. Reentrenamiento | `retrain` | `p1-reentreno-ventana-2026` (`1d685b6b…`) | v3 `@challenger`; compuerta VAL: MAE 7.27 contra 7.47 |
+| 3. A/B testing | `abtest` | `p1-ab-test-v1-vs-v3` (`93d20255…`) | ΔMAE −0.215 [−0.316, −0.119]; 4 de 4 reglas → promover |
+| 4. Promoción | `promote` | `p1-promocion-v1-a-v3` (`95d2c591…`) | 4 de 4 compuertas → v3 `@champion`, v1 `@anterior` |
+| 5. Despliegue | `exportar_modelo_registry.py` + CI/CD | [ejecución #26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de GitHub Actions (PR #10) | imagen `mibici-p1-api:modelo-v3` construida, probada y, al fusionar en `main`, publicada en GHCR |
+
+Las compuertas, el rollback y el estado de cada versión están en [`docs/model_registry.md`](docs/model_registry.md).
+
+### 7. Decisiones de MLOps
+
+| Decisión | Alternativa descartada | Por qué |
+|---|---|---|
+| Aliases (`@champion`, `@challenger`, `@anterior`) + etiqueta `estado_produccion` | Etapas `Staging`/`Production` | Las etapas están obsoletas desde MLflow 2.9; mover un alias promueve o revierte sin cambiar la URI de los consumidores |
+| Poisson lineal elegido con la regla de 1 error estándar | El de menor MAE en VAL (bosque aleatorio) | Dentro de 1 EE del mejor y mucho más simple: 0.18 MB contra 29 MB, coeficientes interpretables |
+| Reentrenar con el mismo pipeline y solo una ventana nueva | Cambiar modelo y datos a la vez | La diferencia del A/B se atribuye solo a los datos recientes |
+| A/B **pareado** offline con *bootstrap* por días | A/B en línea 50/50 por estación | Con los mismos datos el IC pareado es 9 veces más angosto (simulado en la entrega 5) |
+| Promoción con compuertas y registro de la decisión | Mover el alias a mano | Cada paso a producción queda auditado y es reversible en un paso |
+| Modelo empaquetado en la imagen con SHA-256 + registry en Compose | Descargarlo de un MLflow externo al arrancar | La imagen es inmutable y verificable; el sistema se levanta en cualquier máquina |
+| skops en lugar de pickle | pickle de scikit-learn | Formato que no ejecuta código arbitrario al cargar |
+| Réplicas de 1 vCPU + motor NumPy verificado | Réplicas más grandes | ×4 de capacidad por el mismo costo (USD 0.26 contra 1.03 por millón de peticiones) |
+| Rango de TRAIN que viaja con la versión | Rango fijo en el código | Las advertencias de extrapolación siguen al modelo que se sirve |
+| Pull Requests con CI en verde y notificación | *Merge* directo | Atiende las observaciones de las entregas 4 y 5, y deja evidencia de cada cambio |
+
+### 8. Historial de Git del proyecto final
+
+Atendiendo la retroalimentación de la entrega 5 (sus ramas se habían integrado sin *pull requests*), todo el proyecto
+final entró a `main` mediante *pull requests* con el pipeline de CI/CD en verde, sin *push* directo a `main` (todos los
+commits a nombre de la autora). La ejecución [#26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de la rama de #10 terminó en verde con todos sus jobs,
+incluido el sistema completo con la imagen `modelo-v3` y la prueba de humo con Locust:
+
+| Pull Request (rama) | Commits | Contenido |
+|---|---:|---|
+| [#10](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/10) · `feat/ciclo-ct-v3` | 7 | Promoción con compuertas, rollback y `estado_produccion` (`mibici/modeling/promocion.py`, punto de entrada `promote`, `make ciclo-ct`); rango de TRAIN por versión; `version_origen` en la API; corrección de `registered_model_meta` al cargar del registry; la v3 empaquetada con imagen `modelo-v3`; Model Card y `docs/model_registry.md`; 21 pruebas nuevas |
+| [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 8 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1` (con el modo de toma sin intervención), evidencia del sistema con la v3 y la prueba de carga final, cómo se grabó el video (`docs/proyecto_final/video/`) y `CONTRIBUCIONES.md` |
+
+**Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
+(Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. La promoción en el Model Registry, las pruebas, la
+ejecución del sistema y la prueba de carga se hicieron en la computadora de la autora.
 
 ## Entrega 6: sistema operable con Docker Compose, CI/CD, prueba de carga y FinOps
 
@@ -1258,11 +1450,14 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 ├── .gitattributes     <- Entrega 4: el modelo empaquetado se versiona sin cambiar finales de línea
 ├── requirements-api.in / requirements-api.txt <- Entrega 4: dependencias de la imagen (todas fijas)
 ├── api                <- Entrega 4: API REST con FastAPI (main, esquemas, modelo, config)
-├── MLproject          <- MLflow Project: puntos de entrada ingest, train, search, register y verify
+├── MODEL_CARD.md      <- Proyecto final: Model Card del modelo en producción (Mitchell et al., 2019)
+├── MLproject          <- MLflow Project: ingest, train, search, register, verify, ingest_produccion,
+│                         monitor, retrain, abtest y promote
 ├── python_env.yaml    <- Entorno del MLflow Project (mismas versiones que requirements.txt)
 ├── Makefile           <- Comandos: `make server`, `make data`, `make experimentos`, `make verify`,
 │                         `make test`, `make deepchecks`, `make seguridad`, `make calidad`,
-│                         `make modelo-servicio`, `make api`, `make imagen`, `make contenedor`, `make probar-api`
+│                         `make modelo-servicio`, `make api`, `make imagen`, `make contenedor`, `make probar-api`,
+│                         `make entrega5`, `make promover`, `make ciclo-ct`
 ├── .env.example       <- Plantilla de variables de entorno (el .env local no se versiona)
 ├── CONTRIBUCIONES.md  <- Qué hizo cada integrante en cada entrega
 ├── README.md          <- The top-level README for developers using this project.
@@ -1273,11 +1468,13 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 │   └── raw            <- The original, immutable data dump.
 │
 ├── docs               <- A default mkdocs project; see www.mkdocs.org for details
-│   ├── ejemplos       <- Entrega 4: peticiones de ejemplo para la API (JSON)
-│   └── evidencia      <- Capturas de la entrega 3 y, en entrega4/, del contenedor y la API
+│   ├── ejemplos       <- Peticiones de ejemplo para la API (JSON); peticion_demo.json es real (2026)
+│   ├── evidencia      <- Capturas por entrega (entrega4/ a entrega6/ y final/)
+│   ├── model_registry.md  <- Proyecto final: linaje, estado de producción y ciclo de Continuous Training
+│   └── proyecto_final <- Presentación (PDF y PPTX), video, guion y scripts con que se grabó (video/)
 │
 ├── models             <- Trained and serialized models, model predictions, or model summaries
-│   └── servicio       <- Entrega 4: versión del Model Registry que sirve la API (con registro.json)
+│   └── servicio       <- Versión @champion del Model Registry que sirve la API (hoy la v3, con registro.json)
 │
 ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
 │                         the creator's initials, and a short `-` delimited description, e.g.
@@ -1290,7 +1487,9 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 │
 ├── scripts            <- Protocolo de la entrega 2 (Windows/Linux) y servidor de tracking;
 │                         entrega 3: ejecutar_calidad.ps1, chequeos_seguridad.py, escanear_secretos.py;
-│                         entrega 4: exportar_modelo_registry.py, ejecutar_servicio.ps1
+│                         entrega 4: exportar_modelo_registry.py, ejecutar_servicio.ps1;
+│                         entrega 6: prueba_carga.py, medir_reposo.py, perfil_inferencia.py;
+│                         proyecto final: demo_final.ps1, peticion_real.py, rango_entrenamiento.py
 │
 ├── tests              <- Pruebas de PyTest (un solo comando: python -m pytest)
 │
@@ -1299,7 +1498,10 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
 │   ├── deepchecks     <- RESUMEN.md y resumen.json de DeepChecks (los HTML se regeneran)
 │   ├── seguridad      <- Reportes de bandit, pip-audit y del escáner de secretos
 │   ├── calidad        <- Salida completa de pytest, DeepChecks y seguridad
-│   └── servicio       <- Entrega 4: salida de la construcción, el contenedor y las respuestas de la API
+│   ├── servicio       <- Entrega 4: salida de la construcción, el contenedor y las respuestas de la API
+│   ├── monitoreo      <- Entrega 5: reportes de Evidently y resultados del A/B
+│   ├── carga / finops <- Entrega 6: prueba de carga con Locust, consumo y costo por inferencia
+│   └── final          <- Proyecto final: promoción, sistema con la v3 y prueba de carga final
 │
 ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
 │                         generated with `pip freeze > requirements.txt`
@@ -1317,6 +1519,7 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
     ├── validacion.py           <- Entrega 3: suites de DeepChecks y reglas de negocio de MiBici
     ├── compat_deepchecks.py    <- Entrega 3: compatibilidad de DeepChecks con NumPy 2 y pandas 3
     ├── git_seguro.py           <- Entrega 3: llamadas a git sin shell (bandit sin hallazgos)
+    ├── monitoreo.py            <- Entrega 5: ingesta 2026, panel continuo y reportes de Evidently
     │
     ├── modeling                
     │   ├── __init__.py 
@@ -1328,6 +1531,9 @@ Corridas oficiales lanzadas con `mlflow run` desde el commit `e6c1a60` (árbol l
     │   ├── search.py           <- Punto de entrada `search` (nested runs)
     │   ├── registry.py         <- Punto de entrada `register` (Model Registry con aliases)
     │   ├── predict.py          <- Punto de entrada `verify` (carga models:/<nombre>@champion)
+    │   ├── reentrenamiento.py  <- Entrega 5: punto de entrada `retrain` (nueva versión @challenger)
+    │   ├── ab_testing.py       <- Entrega 5: punto de entrada `abtest` (A/B pareado con bootstrap)
+    │   ├── promocion.py        <- Proyecto final: punto de entrada `promote` (compuertas y rollback)
     │   ├── seguimiento.py      <- Etiquetas, versión de datos, config y modelo con firma en MLflow
     │   ├── seleccion.py        <- Regla de selección (1 error estándar / restricciones de P3)
     │   └── estimadores.py      <- Estimadores propios (baseline ingenuo, log1p, aglomerativo, GMM)
@@ -1518,7 +1724,8 @@ y consultarse en `http://localhost:5000`.
 
 Los datos de MiBici, modelos serializados, base de datos de MLflow, artefactos de MLflow y resultados generados por P3 se excluyen mediante `.gitignore`. La excepción es `models/servicio/` (entrega 4): la versión del Model Registry que se empaqueta en la imagen de la API, versionada con su `registro.json` y sin conversión de finales de línea (`.gitattributes`).
 
-El código se desarrolla en ramas independientes. En las entregas en equipo (1 y 2), todo cambio hacia `main` debía incorporarse mediante Pull Request revisado por otro integrante; en este repositorio la entrega 2 entró con el Pull Request #5 y las revisiones de cada integrante se registran en `CONTRIBUCIONES.md`. Las entregas 3 a 6 son versiones individuales, porque el profesor cambió la modalidad: sus ramas se integraron con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3), [de la entrega 4](#historial-de-git-de-la-entrega-4), [de la entrega 5](#historial-de-git-de-la-entrega-5) y [de la entrega 6](#5-historial-de-git-de-la-entrega-6)) y, al final de la entrega 6, de nuevo mediante Pull Request con el pipeline en verde (#6 a #9).
+El código se desarrolla en ramas independientes. En las entregas en equipo (1 y 2), todo cambio hacia `main` debía incorporarse mediante Pull Request revisado por otro integrante; en este repositorio la entrega 2 entró con el Pull Request #5 y las revisiones de cada integrante se registran en `CONTRIBUCIONES.md`. Las entregas 3 a 6 son versiones individuales, porque el profesor cambió la modalidad: sus ramas se integraron con `git merge --no-ff` (ver [Historial de Git de la entrega 3](#historial-de-git-de-la-entrega-3), [de la entrega 4](#historial-de-git-de-la-entrega-4), [de la entrega 5](#historial-de-git-de-la-entrega-5) y [de la entrega 6](#5-historial-de-git-de-la-entrega-6)) y, al final de la entrega 6, de nuevo mediante Pull Request con el pipeline en verde (#6 a #9). El proyecto final entró
+completo por Pull Request (#10 y #11), atendiendo la retroalimentación de la entrega 5.
 
 Convenciones: ramas `feat/`, `fix/`, `docs/`, `test/`, `build/` y `chore/` + descripción corta; mensajes de commit
 siguiendo [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/). En el

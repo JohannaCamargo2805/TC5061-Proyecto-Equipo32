@@ -211,3 +211,21 @@ optimizado, lote y asíncrona), las mediciones en reposo y el perfil de la infer
 (`ENTREGA6_1_ejecutar.cmd` a `ENTREGA6_2c_mlflow_fabrica.cmd`), publicó el repositorio, con lo que el pipeline de
 GitHub Actions corrió en verde en `main` y en las ramas (ejecución #1), y redactó el reporte `TC5061_Operacion_FinOps_Equipo32.pdf`. Los commits incluyen la línea
 `Co-Authored-By: Claude` porque se usó Claude (Anthropic) como asistente de programación.
+
+## Proyecto final: sistema de extremo a extremo (versión individual)
+
+Versión de **Leydy Johanna Camargo Medina** (`JohannaCamargo2805`), en `main` de este repositorio, integrada con
+*pull requests* y el pipeline en verde:
+
+| Pull Request (rama) | Commits | Qué contiene |
+|---|---:|---|
+| [#10](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/10) · `feat/ciclo-ct-v3` | 7 | Promoción a producción con compuertas y rollback, rango de TRAIN por versión, `version_origen` en la API, corrección de la verificación al cargar del registry, la v3 empaquetada (`modelo-v3`), Model Card y documentación del Model Registry |
+| [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 8 | README del proyecto final, presentación, guion y script de la demo, evidencia del sistema con la v3 y de la prueba de carga final, y los scripts y la línea de tiempo del video |
+
+En su computadora promovió la v3 en el Model Registry del proyecto (corrida `p1-promocion-v1-a-v3`), exportó la
+copia para la imagen, corrió las pruebas con los datos reales, levantó el sistema con Docker Compose, ejecutó la
+prueba de carga final y preparó la demo del video de evidencia (`FINAL_1_promover_v3.cmd` a `FINAL_5_subir_captura.cmd`).
+El video se grabó en su computadora en una sola toma (`FINAL_V8_toma_final.cmd`), con la demo en vivo contra la API del
+Compose y narración con voz sintética (Microsoft Edge TTS, `es-MX-DaliaNeural`), declarada en el propio video.
+Los commits incluyen la línea `Co-Authored-By: Claude` porque se usó Claude (Anthropic) como asistente.
+

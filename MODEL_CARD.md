@@ -32,7 +32,8 @@ dónde verificarlo.
 * **Por qué este algoritmo:** en la entrega 2 se compararon un baseline ingenuo (t − 7), Poisson lineal, HGB con
   pérdida de Poisson (con búsqueda de hiperparámetros) y bosque aleatorio. La regla de **un error estándar**
   (`config.py::SELECCION`, calculada solo con VAL) eligió el Poisson lineal: está a menos de 1 EE del mejor y es
-  el más simple (0.18 MB, 2 ms por 1,000 predicciones, coeficientes interpretables).
+  el más simple (0.18 MB contra 29 MB del bosque aleatorio, 3.4 ms por cada 1,000 predicciones contra 24 ms,
+  coeficientes interpretables).
 * **Entradas:** 12 variables numéricas conocidas al cierre del día anterior (firma del modelo en MLflow, idéntica
   al contrato de la API en `api/esquemas.py`):
 
