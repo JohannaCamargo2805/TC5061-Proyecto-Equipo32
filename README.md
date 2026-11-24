@@ -170,7 +170,7 @@ Windows 11, Python 3.14.8, Docker Desktop 29.9.2 (WSL2, 8 vCPU), Compose 5.6.1, 
 | 2. Reentrenamiento | `retrain` | `p1-reentreno-ventana-2026` (`1d685b6b…`) | v3 `@challenger`; compuerta VAL: MAE 7.27 contra 7.47 |
 | 3. A/B testing | `abtest` | `p1-ab-test-v1-vs-v3` (`93d20255…`) | ΔMAE −0.215 [−0.316, −0.119]; 4 de 4 reglas → promover |
 | 4. Promoción | `promote` | `p1-promocion-v1-a-v3` (`95d2c591…`) | 4 de 4 compuertas → v3 `@champion`, v1 `@anterior` |
-| 5. Despliegue | `exportar_modelo_registry.py` + CI/CD | ejecución de GitHub Actions del PR | imagen `mibici-p1-api:modelo-v3` en GHCR |
+| 5. Despliegue | `exportar_modelo_registry.py` + CI/CD | [ejecución #26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de GitHub Actions (PR #10) | imagen `mibici-p1-api:modelo-v3` construida, probada y, al fusionar en `main`, publicada en GHCR |
 
 Las compuertas, el rollback y el estado de cada versión están en [`docs/model_registry.md`](docs/model_registry.md).
 
@@ -192,12 +192,13 @@ Las compuertas, el rollback y el estado de cada versión están en [`docs/model_
 ### 8. Historial de Git del proyecto final
 
 Las ramas entraron a `main` mediante *pull requests* con el pipeline de CI/CD en verde (todos los commits a nombre de
-la autora):
+la autora). La ejecución [#26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de la rama de #10 terminó en verde con todos sus jobs,
+incluido el sistema completo con la imagen `modelo-v3` y la prueba de humo con Locust:
 
 | Pull Request (rama) | Commits | Contenido |
 |---|---:|---|
-| [`feat/ciclo-ct-v3`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Afeat%2Fciclo-ct-v3) | 7 | Promoción con compuertas, rollback y `estado_produccion` (`mibici/modeling/promocion.py`, punto de entrada `promote`, `make ciclo-ct`); rango de TRAIN por versión; `version_origen` en la API; corrección de `registered_model_meta` al cargar del registry; la v3 empaquetada con imagen `modelo-v3`; Model Card y `docs/model_registry.md`; 21 pruebas nuevas |
-| [`docs/proyecto-final`](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pulls?q=is%3Apr+head%3Adocs%2Fproyecto-final) | 3 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1`, evidencia del sistema con la v3 y la prueba de carga final, y `CONTRIBUCIONES.md` |
+| [#10](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/10) · `feat/ciclo-ct-v3` | 7 | Promoción con compuertas, rollback y `estado_produccion` (`mibici/modeling/promocion.py`, punto de entrada `promote`, `make ciclo-ct`); rango de TRAIN por versión; `version_origen` en la API; corrección de `registered_model_meta` al cargar del registry; la v3 empaquetada con imagen `modelo-v3`; Model Card y `docs/model_registry.md`; 21 pruebas nuevas |
+| [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 5 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1`, evidencia del sistema con la v3 y la prueba de carga final, y `CONTRIBUCIONES.md` |
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. La promoción en el Model Registry, las pruebas, la
