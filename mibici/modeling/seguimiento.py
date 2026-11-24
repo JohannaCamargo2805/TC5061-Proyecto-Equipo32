@@ -154,6 +154,31 @@ def registrar_version_datos(question: str, manifiesto: dict, conjuntos: dict, fu
         mlflow.log_input(dataset, context=contexto, tags={"data_version": manifiesto["data_version"]})
 
 
+# Variables con rango acotado en la API (las de calendario ya se validan por su dominio).
+VARIABLES_RANGO = ["lag_1", "lag_2", "lag_7", "lag_14", "media_7d", "media_28d",
+                   "media_mismo_dia_4sem", "dias_activa", "capacidad"]
+
+
+def rango_entrenamiento(x: pd.DataFrame) -> dict[str, list[float]]:
+    """Mínimo y máximo de cada variable en TRAIN: fuera de ellos el modelo extrapola."""
+    return {v: [round(float(x[v].min()), 3), round(float(x[v].max()), 3)]
+            for v in VARIABLES_RANGO if v in x}
+
+
+def registrar_rango_entrenamiento(x: pd.DataFrame, run_id: str | None = None) -> dict:
+    """``data/rango_entrenamiento.json`` en la corrida activa (o en ``run_id``, para corridas
+    anteriores). La copia del modelo para la API lo lleva en su ``registro.json``."""
+    rango = rango_entrenamiento(x)
+    with tempfile.TemporaryDirectory() as tmp:
+        ruta = Path(tmp) / "rango_entrenamiento.json"
+        ruta.write_text(json.dumps(rango, indent=2), encoding="utf-8")
+        if run_id:
+            mlflow.MlflowClient().log_artifact(run_id, str(ruta), artifact_path="data")
+        else:
+            mlflow.log_artifact(str(ruta), artifact_path="data")
+    return rango
+
+
 def registrar_archivos(rutas: list[Path], carpeta: str) -> None:
     """Sube cada archivo a la subcarpeta ``carpeta`` de los artefactos de la corrida."""
     for ruta in rutas:

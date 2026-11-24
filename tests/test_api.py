@@ -28,7 +28,13 @@ from sklearn.preprocessing import StandardScaler
 import typer
 
 from api.config import Ajustes
-from api.esquemas import EJEMPLO_ENTRADA, LOTE_MAXIMO, VARIABLES_P1, EntradaP1
+from api.esquemas import (
+    EJEMPLO_ENTRADA,
+    LOTE_MAXIMO,
+    RANGO_ENTRENAMIENTO,
+    VARIABLES_P1,
+    EntradaP1,
+)
 from api.main import crear_app
 from api.modelo import ErrorModelo, cargar_modelo
 from mibici.config import PROJ_ROOT, SERVICIO_MODELO_DIR
@@ -257,6 +263,32 @@ def test_acepta_numeros_enteros_escritos_como_decimales(cliente):
     assert r.status_code == 200, r.text
 
 
+def test_rango_de_entrenamiento_viaja_con_la_version(registry, tmp_path):
+    """Si la corrida registró data/rango_entrenamiento.json, la copia lo lleva y la API lo usa."""
+    from mibici.modeling.seguimiento import registrar_rango_entrenamiento
+
+    x, _ = _datos_sinteticos(semilla=7)
+    x = x.assign(dias_activa=np.linspace(128, 500, len(x)))  # TRAIN con más historia que la v1
+    mlflow.set_tracking_uri(registry["uri"])
+    rango = registrar_rango_entrenamiento(x, run_id=registry["corridas"][2])
+    assert set(rango) == set(RANGO_ENTRENAMIENTO) and rango["dias_activa"][1] == 500
+    carpeta = tmp_path / "servicio"
+    registro = exportador.exportar(NOMBRE, 2, "champion", carpeta, registry["uri"])
+    assert registro["rango_entrenamiento"] == rango
+    with TestClient(crear_app(_ajustes(carpeta))) as c:
+        assert c.get("/modelo").json()["rango_entrenamiento"]["dias_activa"] == [128.0, 500.0]
+        # dias_activa=307 está dentro del TRAIN de esta versión: ya no es extrapolación
+        avisos = c.post("/predict", json=EJEMPLO_ENTRADA).json()["advertencias"]
+        assert not any(a.startswith("dias_activa") for a in avisos)
+
+
+def test_sin_rango_registrado_se_usa_el_de_la_v1(exportado):
+    _, registro = exportado
+    assert registro["rango_entrenamiento"] is None
+    servicio = cargar_modelo(_ajustes(exportado[0]))
+    assert servicio.info.rango_entrenamiento == RANGO_ENTRENAMIENTO
+
+
 def test_advertencia_fuera_del_rango_de_entrenamiento(cliente):
     fuera = cliente.post("/predict", json=EJEMPLO_ENTRADA).json()["advertencias"]
     assert len(fuera) == 1 and fuera[0].startswith("dias_activa=307")
@@ -335,8 +367,9 @@ def test_modelo_empaquetado_es_p1_champion(cliente_real):
     info = cliente_real.get("/modelo").json()
     assert info["nombre"] == "mibici-equipo32-p1-demanda" and info["version"] >= 1
     assert "champion" in info["alias"] and info["integridad_verificada"]
-    assert info["data_version"] == json.loads((PROJ_ROOT / "data" / "manifest.json")
-                                              .read_text(encoding="utf-8"))["data_version"]
+    # La v1 se entrenó con 2025; una versión reentrenada lleva "<data_version 2025>+<de 2026>".
+    datos_2025 = json.loads((PROJ_ROOT / "data" / "manifest.json").read_text(encoding="utf-8"))
+    assert info["data_version"].split("+")[0] == datos_2025["data_version"]
 
 
 def test_api_reproduce_el_modelo_empaquetado(cliente_real):
@@ -355,7 +388,7 @@ def test_api_reproduce_el_modelo_empaquetado(cliente_real):
 @pytest.mark.datos
 @pytest.mark.lento
 def test_api_reproduce_test_mae_con_datos_reales(cliente_real):
-    """Las 124 mil filas reales pasan la validación y la API reproduce el test_mae registrado."""
+    """Las filas reales pasan la validación y la API reproduce el test_mae registrado de la versión."""
     from mibici.config import (
         ESTACIONES_PARQUET,
         P1_FERIADOS,
@@ -370,13 +403,25 @@ def test_api_reproduce_test_mae_con_datos_reales(cliente_real):
     from mibici.features import P1_FEATURES, p1_agregar_features, p1_construir_panel_diario
     from mibici.modeling import p1_regresion as p1
 
-    panel = p1_construir_panel_diario(p1.cargar_viajes(VIAJES_PARQUET), P1_TRAIN_START, P1_TEST_END)
-    df = p1_agregar_features(panel, p1.cargar_capacidad(ESTACIONES_PARQUET), P1_FERIADOS,
-                             P1_LAGS_DIAS, P1_VENTANAS_MEDIA_DIAS, P1_HORIZONTE_DIAS)
-    df = df.dropna(subset=P1_FEATURES)
+    registrado = json.loads((SERVICIO_MODELO_DIR / "registro.json").read_text(encoding="utf-8"))
+    if "+" in registrado["etiquetas_version"].get("data_version", ""):
+        # Versión reentrenada (ciclo CT): su TEST es el periodo del A/B, jul-sep 2026.
+        from mibici import monitoreo as mon
+        from mibici.config import AB_EVALUACION, VIAJES_PRODUCCION_PARQUET
+
+        if not VIAJES_PRODUCCION_PARQUET.exists():
+            pytest.skip("falta data/processed/viajes_produccion.parquet")
+        df = mon.construir_panel(fin=AB_EVALUACION[1]).dropna(subset=P1_FEATURES)
+        prueba = mon.periodo(df, *AB_EVALUACION)
+    else:
+        panel = p1_construir_panel_diario(p1.cargar_viajes(VIAJES_PARQUET), P1_TRAIN_START,
+                                          P1_TEST_END)
+        df = p1_agregar_features(panel, p1.cargar_capacidad(ESTACIONES_PARQUET), P1_FERIADOS,
+                                 P1_LAGS_DIAS, P1_VENTANAS_MEDIA_DIAS, P1_HORIZONTE_DIAS)
+        df = df.dropna(subset=P1_FEATURES)
+        prueba = p1.cortar(df, P1_TEST_START, P1_TEST_END)
     for fila in df[P1_FEATURES].to_dict(orient="records"):
         EntradaP1(**fila)  # ninguna fila real se rechaza
-    prueba = p1.cortar(df, P1_TEST_START, P1_TEST_END)
     instancias = [{k: (float(v) if k.startswith("media") else int(v)) for k, v in fila.items()}
                   for fila in prueba[P1_FEATURES].to_dict(orient="records")]
     predicciones = []
@@ -385,5 +430,4 @@ def test_api_reproduce_test_mae_con_datos_reales(cliente_real):
         assert r.status_code == 200, r.text
         predicciones += [p["viajes_esperados"] for p in r.json()["predicciones"]]
     mae = float(np.mean(np.abs(prueba["viajes"].to_numpy() - np.asarray(predicciones))))
-    registrado = json.loads((SERVICIO_MODELO_DIR / "registro.json").read_text(encoding="utf-8"))
     assert mae == pytest.approx(registrado["metricas"]["test_mae"], abs=1e-3)

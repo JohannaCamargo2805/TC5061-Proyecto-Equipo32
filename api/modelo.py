@@ -35,6 +35,7 @@ import pandas as pd
 from api.config import Ajustes
 from api.esquemas import (
     DESCRIPCIONES,
+    RANGO_ENTRENAMIENTO,
     VARIABLES_P1,
     EntradaP1,
     InfoModelo,
@@ -92,7 +93,7 @@ def predicciones(servicio: ModeloServicio, entradas: list[EntradaP1]) -> list[Pr
             fecha=e.fecha,
             viajes_esperados=round(float(v), 3),
             viajes_esperados_redondeado=redondear(float(v)),
-            advertencias=e.advertencias(),
+            advertencias=e.advertencias(servicio.info.rango_entrenamiento),
         )
         for e, v in zip(entradas, valores)
     ]
@@ -114,6 +115,17 @@ def metricas_de_corrida(metricas: dict[str, float]) -> dict[str, float]:
         if k.startswith(("val_", "test_", "costo_inferencia", "tamano_modelo"))
         and not k.endswith("prevalencia")
     }
+
+
+def _rango(registro: dict | None) -> dict[str, tuple[float, float]]:
+    """Rango de TRAIN de la versión (``registro.json``) o el de la v1 si no lo trae."""
+    rango = (registro or {}).get("rango_entrenamiento") or {}
+    validos = {
+        v: (float(r[0]), float(r[1]))
+        for v, r in rango.items()
+        if v in RANGO_ENTRENAMIENTO and isinstance(r, (list, tuple)) and len(r) == 2
+    }
+    return validos if len(validos) == len(RANGO_ENTRENAMIENTO) else dict(RANGO_ENTRENAMIENTO)
 
 
 def _variables() -> list[Variable]:
@@ -184,6 +196,7 @@ def _desde_carpeta(carpeta: Path, verificar: bool) -> ModeloServicio:
         salida=SALIDA,
         recuperado=registro.get("recuperado"),
         integridad_verificada=verificar,
+        rango_entrenamiento=_rango(registro),
     )
     return ModeloServicio(modelo=modelo, info=info)
 
@@ -210,9 +223,12 @@ def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> Mode
     # Si la versión trae registro.json (la registra así el servicio registrar-modelo de
     # docker-compose.yml), se comprueban las mismas huellas SHA-256 que en el modo empaquetado.
     ruta_registro = local / ARCHIVO_REGISTRO
-    verificada = verificar and ruta_registro.is_file()
+    registro = (
+        json.loads(ruta_registro.read_text(encoding="utf-8")) if ruta_registro.is_file() else None
+    )
+    verificada = verificar and registro is not None
     if verificada:
-        _verificar_integridad(local, json.loads(ruta_registro.read_text(encoding="utf-8")))
+        _verificar_integridad(local, registro)
     modelo = mlflow.pyfunc.load_model(str(local), suppress_warnings=True)
     _verificar_firma(modelo)
     etiquetas = dict(mv.tags or {})
@@ -234,6 +250,7 @@ def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> Mode
         salida=SALIDA,
         recuperado=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         integridad_verificada=verificada,
+        rango_entrenamiento=_rango(registro),
     )
     return ModeloServicio(modelo=modelo, info=info)
 

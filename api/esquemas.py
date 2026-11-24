@@ -59,8 +59,11 @@ LOTE_MAXIMO = (
 )
 TOLERANCIA = 0.5  # viajes; admite medias redondeadas por el cliente
 
-# Rango de cada variable en TRAIN (ene-sep 2025, 90,230 estación-días). Fuera de él el
-# modelo extrapola: la API responde, pero lo indica en ``advertencias``.
+# Rango de cada variable en TRAIN de la v1 (ene-sep 2025, 90,230 estación-días). Fuera de él el
+# modelo extrapola: la API responde, pero lo indica en ``advertencias``. Proyecto final: si el
+# modelo servido trae su propio rango en ``registro.json`` (``rango_entrenamiento``, lo agrega
+# scripts/exportar_modelo_registry.py desde el artefacto data/rango_entrenamiento.json de su
+# corrida), se usa ese; este es el valor por defecto.
 RANGO_ENTRENAMIENTO: dict[str, tuple[float, float]] = {
     "lag_1": (0, 550),
     "lag_2": (0, 550),
@@ -203,9 +206,9 @@ class EntradaP1(BaseModel):
         """Las 12 variables en el orden y tipo (double) de la firma del modelo."""
         return {v: float(getattr(self, v)) for v in VARIABLES_P1}
 
-    def advertencias(self) -> list[str]:
+    def advertencias(self, rango: dict[str, tuple[float, float]] | None = None) -> list[str]:
         avisos = []
-        for variable, (minimo, maximo) in RANGO_ENTRENAMIENTO.items():
+        for variable, (minimo, maximo) in (rango or RANGO_ENTRENAMIENTO).items():
             valor = getattr(self, variable)
             if not minimo <= valor <= maximo:
                 avisos.append(
@@ -329,6 +332,11 @@ class InfoModelo(BaseModel):
         None, description="Fecha (UTC) en que se descargó del registry."
     )
     integridad_verificada: bool
+    rango_entrenamiento: dict[str, tuple[float, float]] = Field(
+        default_factory=lambda: dict(RANGO_ENTRENAMIENTO),
+        description="Rango de cada variable en el TRAIN de la versión servida; fuera de él la "
+        "respuesta trae una advertencia de extrapolación.",
+    )
     motor_inferencia: str = Field(
         "mlflow.pyfunc",
         description="Cómo se calcula la predicción: pyfunc de MLflow o el motor en NumPy "
