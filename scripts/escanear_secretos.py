@@ -62,8 +62,9 @@ FALSOS_POSITIVOS = [
     ("SHA-256 de archivos, commit o data_version en el registro del modelo empaquetado",
      lambda archivo, linea: archivo == "models/servicio/registro.json"
      and re.search(r'^\s*"[\w./-]+": "[0-9a-f]{12,64}",?\s*$', linea) is not None),
+    # reports/final/ (proyecto final): estado del Model Registry y respuestas de la API con la v3.
     ("commit, data_version o id de MLflow en las respuestas guardadas de la API (evidencia)",
-     lambda archivo, linea: archivo.startswith("reports/servicio/")
+     lambda archivo, linea: archivo.startswith(("reports/servicio/", "reports/final/"))
      and re.search(r'"(git_commit|data_version|run_id|model_id)": "(m-)?[0-9a-f]{12,40}"', linea)
      is not None),
     ("identificador de widget en un reporte HTML generado por Evidently (entrega 5)",
