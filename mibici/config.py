@@ -184,6 +184,9 @@ REGISTRY_NAMES = {
 }
 ALIAS_PRODUCCION = "champion"
 ALIAS_RETADOR = "challenger"
+# Proyecto final: la versión que dejó producción en la última promoción queda con este alias,
+# así el rollback es mover @champion de regreso en un solo paso (mibici/modeling/promocion.py).
+ALIAS_ANTERIOR = "anterior"
 
 PREGUNTAS = {"p1": P1_QUESTION, "p2": P2_QUESTION, "p3": P3_QUESTION}
 TAREAS = {"p1": "regresion", "p2": "clasificacion", "p3": "clustering"}
@@ -397,3 +400,19 @@ AB_ALFA = 0.05
 AB_TOLERANCIA_MES = 0.02
 AB_TOLERANCIA_SESGO = 0.5
 AB_MAX_COSTO_RELATIVO = 2.0
+
+
+# =============================================================================
+# Proyecto final: promoción a producción (cierre del ciclo de Continuous Training)
+# =============================================================================
+# drift (monitor) -> reentrenamiento (retrain, @challenger) -> A/B (abtest) -> promoción (promote).
+# La promoción solo mueve @champion si la corrida de A/B más reciente decidió promover a B con las
+# cuatro reglas de AB_*, si A sigue siendo @champion y si B cumple el contrato de la API.
+# Cada versión del modelo lleva la etiqueta ``estado_produccion`` con uno de estos valores:
+ESTADOS_PRODUCCION = {
+    ALIAS_PRODUCCION: "produccion",  # la sirve la API
+    ALIAS_RETADOR: "retador",  # candidata a reemplazarla (pendiente de A/B)
+    ALIAS_ANTERIOR: "respaldo",  # la anterior: rollback inmediato
+    None: "archivada",  # sin alias: se conserva para auditoría y linaje
+}
+PROMOCION_RUN_NAME = "p1-promocion-v{a}-a-v{b}"

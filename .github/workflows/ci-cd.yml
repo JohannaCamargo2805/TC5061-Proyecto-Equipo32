@@ -44,6 +44,9 @@ env:
   PYTHONUTF8: "1"
   MLFLOW_DISABLE_AGENT_HINT: "1"
   REGISTRO: ghcr.io/johannacamargo2805
+  # Viajes que predice el modelo empaquetado (models/servicio, hoy la v3 @champion) para
+  # docs/ejemplos/peticion_predict.json; tests/test_proyecto_final.py comprueba que coincida.
+  PREDICCION_REFERENCIA: "65.258"
 
 jobs:
   calidad:
@@ -114,7 +117,7 @@ jobs:
       fail-fast: true
       matrix:
         imagen:
-          - { nombre: mibici-p1-api, contexto: ".", local: "mibici-p1-api:modelo-v1", version: modelo-v1 }
+          - { nombre: mibici-p1-api, contexto: ".", local: "mibici-p1-api:modelo-v3", version: modelo-v3 }
           - { nombre: mibici-mlflow, contexto: "docker/mlflow", local: "mibici-mlflow:3.17.2", version: "3.17.2" }
     env:
       PUBLICAR: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -142,13 +145,13 @@ jobs:
       - name: Prueba del contenedor de la API (modelo empaquetado)
         if: matrix.imagen.nombre == 'mibici-p1-api'
         run: |
-          docker run -d --name api -p 8000:8000 mibici-p1-api:modelo-v1
+          docker run -d --name api -p 8000:8000 mibici-p1-api:modelo-v3
           for i in $(seq 1 60); do curl -sf localhost:8000/health && break; sleep 2; done
           echo
           r=$(curl -sf -X POST localhost:8000/predict -H 'Content-Type: application/json' \
                 --data-binary @docs/ejemplos/peticion_predict.json)
           echo "$r"
-          echo "$r" | python -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-64.549)<1e-3, v"
+          echo "$r" | python -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-float('${{ env.PREDICCION_REFERENCIA }}'))<1e-3, v"
           docker inspect --format '{{.State.Health.Status}}' api
           docker image ls mibici-p1-api --format 'Tamaño de la imagen: {{.Size}}'
           docker rm -f api
@@ -182,7 +185,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: mibici-p1-api:modelo-v1
+          tags: mibici-p1-api:modelo-v3
           cache-from: type=gha,scope=mibici-p1-api
       - name: Imagen de MLflow (desde la caché de capas)
         uses: docker/build-push-action@v7
@@ -209,7 +212,7 @@ jobs:
           curl -sf localhost:8000/modelo | python -c "import json,sys; m=json.load(sys.stdin); print(m['nombre'], m['version'], m['origen'], m['alias']); assert m['origen']=='registry' and m['integridad_verificada']"
           r=$(curl -sf -X POST localhost:8000/predict -H 'Content-Type: application/json' \
                 --data-binary @docs/ejemplos/peticion_predict.json)
-          echo "$r" | python -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-64.549)<1e-3, v; print('predict OK', v)"
+          echo "$r" | python -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-float('${{ env.PREDICCION_REFERENCIA }}'))<1e-3, v; print('predict OK', v)"
           curl -sf -o /dev/null localhost:5000/health && echo "MLflow OK"
       - name: Predicción asíncrona (Redis + worker de RQ)
         run: |
@@ -296,7 +299,7 @@ jobs:
           echo
           r=$(curl -sf -X POST localhost:8000/predict -H 'Content-Type: application/json' \
                 --data-binary @docs/ejemplos/peticion_predict.json)
-          echo "$r" | python3 -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-64.549)<1e-3, v; print('predict OK', v)"
+          echo "$r" | python3 -c "import json,sys; v=json.load(sys.stdin)['viajes_esperados']; assert abs(v-float('${{ env.PREDICCION_REFERENCIA }}'))<1e-3, v; print('predict OK', v)"
       - name: Resumen del despliegue
         run: |
           {

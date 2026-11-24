@@ -1,54 +1,62 @@
 {
   "modelo": "mibici-equipo32-p1-demanda",
-  "version": 1,
+  "version": 3,
   "aliases": [
     "champion"
   ],
   "alias_solicitado": "champion",
   "aliases_del_modelo": {
-    "challenger": 2,
-    "champion": 1
+    "anterior": 1,
+    "champion": 3
   },
-  "uri_registry": "models:/mibici-equipo32-p1-demanda/1",
+  "uri_registry": "models:/mibici-equipo32-p1-demanda/3",
   "tracking_uri": "http://127.0.0.1:5000",
-  "run_id": "38260a3c12e84155b76d9c126b7be2e1",
-  "model_id": "m-bdc2bb2472c6450d9e8dd66ec8930800",
-  "source": "models:/m-bdc2bb2472c6450d9e8dd66ec8930800",
+  "run_id": "1d685b6b91744c979f3f7ffab5220819",
+  "model_id": "m-afefa15f0afe4da39c567099812d5521",
+  "source": "models:/m-afefa15f0afe4da39c567099812d5521",
   "estado": "READY",
-  "registrado": "2026-10-19T21:34:47+00:00",
-  "descripcion": "Versión 'champion' de P1. Corrida de origen p1-candidate-poisson (38260a3c12e84155b76d9c126b7be2e1) en el experimento mibici-equipo32; commit e6c1a60; data_version 7aa5e436d887; modelo poisson (glm_poisson). val_mae=5.1037. Métricas: {\"val_mae\": 5.1037, \"val_rmse\": 8.2941, \"val_wape\": 0.1426, \"val_r2\": 0.9493, \"val_sesgo\": -0.6555, \"val_mape_total_dia\": 0.0381, \"test_mae\": 5.4097, \"test_rmse\": 9.1393, \"test_wape\": 0.1753, \"test_r2\": 0.9234, \"test_sesgo\": 1.3576, \"test_mape_total_dia\": 0.0909, \"val_mae_se\": 0.1028, \"test_mae_nov\": 5.0913, \"test_mae_dic\": 5.7177, \"test_mae_semanal_std\": 1.0241}",
+  "registrado": "2026-11-16T00:19:08+00:00",
+  "descripcion": "[Estado: produccion · @champion]\n\nVersión 'challenger' de P1. Corrida de origen p1-reentreno-ventana-2026 (1d685b6b91744c979f3f7ffab5220819) en el experimento mibici-equipo32; commit 62b4cf0; data_version 7aa5e436d887+5fb2c4834870; modelo poisson (glm_poisson). val_mae=7.2710. Métricas: {\"val_mae\": 7.271, \"val_rmse\": 14.4304, \"val_wape\": 0.2483, \"val_r2\": 0.8064, \"val_sesgo\": -0.915, \"val_mape_total_dia\": 0.1109, \"test_mae\": 5.6572, \"test_rmse\": 10.3737, \"test_wape\": 0.19, \"test_r2\": 0.9064, \"test_sesgo\": -1.0562, \"test_mape_total_dia\": 0.08, \"val_mae_se\": 0.259, \"test_mae_2026_07\": 5.5684, \"test_mae_2026_08\": 4.7918, \"test_mae_2026_09\": 6.5838, \"test_mae_semanal_std\": 0.9975, \"val_mae_champion\": 7.4668, \"val_mae_nuevo\": 7.271}",
   "etiquetas_version": {
-    "data_version": "7aa5e436d887",
+    "ab_test_jul_sep_2026": "gana (corrida 93d20255ba2548009bc68e6cbaab990d)",
+    "data_version": "7aa5e436d887+5fb2c4834870",
+    "estado_produccion": "produccion",
     "experimento": "mibici-equipo32",
-    "git_commit": "e6c1a602dd810676a27bad21f2e5dc6b61313282",
-    "git_rama": "feat/mlflow-project-registry",
-    "metrica_seleccion": "val_mae=5.1037",
-    "mlproject_entry_point": "train",
+    "git_commit": "62b4cf02d7b5df2a84c1b34d0ad1740b76b65208",
+    "git_rama": "entrega5-monitoreo",
+    "metrica_seleccion": "val_mae=7.2710",
+    "mlproject_entry_point": "",
     "model": "poisson",
     "model_family": "glm_poisson",
+    "origen": "reentrenamiento por drift (entrega 5)",
+    "promocion_run_id": "95d2c591faf546b6963c742fc26d3635",
+    "promovida": "2026-11-24T18:02:16+00:00 por A/B 93d20255ba2548009bc68e6cbaab990d",
     "question": "p1",
-    "source_run_id": "38260a3c12e84155b76d9c126b7be2e1",
-    "source_run_name": "p1-candidate-poisson"
+    "source_run_id": "1d685b6b91744c979f3f7ffab5220819",
+    "source_run_name": "p1-reentreno-ventana-2026"
   },
   "metricas": {
-    "costo_inferencia_ms_1k": 3.390366,
+    "costo_inferencia_ms_1k": 3.796706,
     "tamano_modelo_mb": 0.178563,
-    "test_mae": 5.409736,
-    "test_mae_dic": 5.717718,
-    "test_mae_nov": 5.091345,
-    "test_mae_semanal_std": 1.024051,
-    "test_mape_total_dia": 0.090893,
-    "test_r2": 0.923407,
-    "test_rmse": 9.139281,
-    "test_sesgo": 1.357608,
-    "test_wape": 0.175256,
-    "val_mae": 5.103696,
-    "val_mae_se": 0.102781,
-    "val_mape_total_dia": 0.038106,
-    "val_r2": 0.949306,
-    "val_rmse": 8.294112,
-    "val_sesgo": -0.655544,
-    "val_wape": 0.142593
+    "test_mae": 5.657177,
+    "test_mae_2026_07": 5.568354,
+    "test_mae_2026_08": 4.791811,
+    "test_mae_2026_09": 6.583808,
+    "test_mae_semanal_std": 0.997522,
+    "test_mape_total_dia": 0.079978,
+    "test_r2": 0.906404,
+    "test_rmse": 10.373684,
+    "test_sesgo": -1.056202,
+    "test_wape": 0.190035,
+    "val_mae": 7.270985,
+    "val_mae_champion": 7.466789,
+    "val_mae_nuevo": 7.270985,
+    "val_mae_se": 0.25903,
+    "val_mape_total_dia": 0.110926,
+    "val_r2": 0.806411,
+    "val_rmse": 14.430409,
+    "val_sesgo": -0.914964,
+    "val_wape": 0.248307
   },
   "firma_entrada": [
     "dia_semana",
@@ -64,33 +72,77 @@
     "dias_activa",
     "capacidad"
   ],
+  "rango_entrenamiento": {
+    "lag_1": [
+      0.0,
+      550.0
+    ],
+    "lag_2": [
+      0.0,
+      550.0
+    ],
+    "lag_7": [
+      0.0,
+      550.0
+    ],
+    "lag_14": [
+      0.0,
+      550.0
+    ],
+    "media_7d": [
+      0.0,
+      281.143
+    ],
+    "media_28d": [
+      0.0,
+      263.464
+    ],
+    "media_mismo_dia_4sem": [
+      0.0,
+      319.0
+    ],
+    "dias_activa": [
+      28.0,
+      515.0
+    ],
+    "capacidad": [
+      11.0,
+      39.0
+    ]
+  },
   "mlflow_version": "3.17.2",
-  "recuperado": "2026-11-07T00:08:12+00:00",
+  "recuperado": "2026-11-24T18:33:52+00:00",
   "sha256": {
     "code/mibici/__init__.py": "7126c11e94de4ccc1085917b0b902bbb8cdf4e3acf75cd58798919b6d0726c62",
-    "code/mibici/config.py": "2964982e2b6eeb761c7fbb2c479287ef99a03daacd855f5940bffe611b3b06d7",
+    "code/mibici/compat_deepchecks.py": "edfbb034c72b6d61dba9769d5a8b86ba06211e9fd8072fd7135649cc04007915",
+    "code/mibici/config.py": "075d24faf57429440fccfa245f2fe7a809a240baf9423aacdb41501f8747c6f4",
     "code/mibici/dataset.py": "8bcfc4b0fe192f976b541bc32c1603bb339171eb465bf32948d923434ca71f68",
     "code/mibici/features.py": "e7a208e6a3dd6126069a4efc5401783ea94f1c6bea2eeec309117b44ef74008f",
+    "code/mibici/git_seguro.py": "ff342988ff84a7d80f37964fa16d1c546efdd892ec955cb25f644133a66e210b",
     "code/mibici/modeling/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "code/mibici/modeling/ab_testing.py": "e213f304d7fc803312b0023420666fac7e23e6e7349bde2223cdb9429d377549",
     "code/mibici/modeling/estimadores.py": "909c8d5e55f9333d91c7b9f8cdd96ed7ffe9a89d3c4fd1f155bbbb51dae0c570",
-    "code/mibici/modeling/p1_regresion.py": "308f0773b490bfbff145aaf2ab3b4c0f9ce8c0a48030735979fab92e3f97ff56",
-    "code/mibici/modeling/p2_clasificacion.py": "089f4d6c30faf752937a60731526297a1ab21427c4d26b907ee019cdd93472fa",
-    "code/mibici/modeling/p3_clustering.py": "f6c08d213a2ed631cf35f2aab43849493e319dbe02f84db51d8a31bdb614939b",
+    "code/mibici/modeling/p1_regresion.py": "bfd67ad6c0d913db1c122473c8f3a4da395df319b8998a9ac2413445b0b2f867",
+    "code/mibici/modeling/p2_clasificacion.py": "20701b0efb93500c50383dc718a1cb632f0e50aa38ef964544100e78488a8a66",
+    "code/mibici/modeling/p3_clustering.py": "56dc8a0bc7bc6876fb2ae5638cebda98be7ac4e5353de9a1f3dc850c02d01583",
     "code/mibici/modeling/predict.py": "7be01f96e8855c8c4d0473d17cbc9a56f584cf4406b638d5b901aea0dd61b3c6",
+    "code/mibici/modeling/reentrenamiento.py": "1946aaab2c83a5f621f25896b2f37d5efc944cd8c72d391e7a51ba5caa914c36",
     "code/mibici/modeling/registry.py": "113fcec30a3ac45333f3b0ce85daead8f7e4ed732f1dfd32d62bcb7f68ee1dc6",
     "code/mibici/modeling/search.py": "3a934a2818d5385b2a176c807cb4672ee7decd43736bb7442eba0dcc5e7afb5e",
-    "code/mibici/modeling/seguimiento.py": "2f143abdcdbebef9a0814dda0b0dd9b7bdfee90aa364bf562ae365f1098ef092",
+    "code/mibici/modeling/seguimiento.py": "09fe5fac19d18177b6f54f2086a0d54f5797ed65e3a53a4a29557bbff191bd72",
     "code/mibici/modeling/seleccion.py": "ecb397f21fb4df671827f8681d204085b631d9544d49fe590ae82a2f0a3ddbc8",
     "code/mibici/modeling/tareas.py": "a10a867660bf826752a59ea508d9e4eb6c9b74a0862b16ce4fd471f3fd182275",
     "code/mibici/modeling/train.py": "e524da1d6ccc09e99e86a491e81c215debcb3248d6960555fd353c4a925d3292",
+    "code/mibici/monitoreo.py": "7ba26b3cefcfd23a63736fe08efc40bbad0ca12ac1c65dbd8441dcc291b22bd4",
     "code/mibici/plots.py": "7c1a36c33011c36affb93404c242b2d95f8bdb7ba3cac27a0b4331d4145ee6fd",
-    "conda.yaml": "1c268837998442af18d3673df5ef77cd5b60077529a0a8ee687e85635aac4b85",
-    "input_example.json": "0567b810ebd514e8a3389140136dd2d310f66c8e04ae1fbe9117b98bd6638ed7",
-    "MLmodel": "a33980126a8ad02b36b2308fe0193a82ade9a890e3e9775370b55200e7919bf7",
-    "model.skops": "22bbf29a28b47e3df3405c6542a7e85fbc207c01b1568a06a9cf5e330b4f8dc6",
+    "code/mibici/validacion.py": "f2722f26ac74a92662588403b5c2ce4ad62db159639a6675c084266a04771001",
+    "conda.yaml": "65a539cddbc21911ecd55f1e66c4ba72f426f487fc1e2713f5f1697330176bf7",
+    "input_example.json": "a701c47cb8e6f16a8da600c174ce596b4957c6aac134fa10b2717793cccf3d01",
+    "MLmodel": "729bac8b2cf7fd990ca3e2485f2e477fdd719bd306dbffc38cf0420631d63e70",
+    "model.skops": "2f67d693f92925b6480800c2814c22a3e110eed6340c457576608f4a68900a6f",
     "python_env.yaml": "23ac7c59d6676bfa0d9379ae047e09785779a4ef4de2c4e1cff18d7048090cc8",
-    "registered_model_meta": "09c71e5a9e99443b863b96db46a7c1984392949ab9e79ff3c3c507b58837d8be",
-    "requirements.txt": "133608160d0e654698a86e4bdc1d53f3b4d744a4768aedc53e747bdd753a5c13",
-    "serving_input_example.json": "b25dcb7a7dd3e81701bb23432415800243711249fa5a3de47abd248276c2dee0"
+    "registered_model_meta": "8dc7491a2b9782de69a28a28f6ea79d6be5c8cf298fd8020ae18b7adc082bef8",
+    "requirements.txt": "ca13e775e7d95608ed86016816bccc5bee941ead2dac9f3307433b8392b492f5",
+    "serving_input_example.json": "f2614a22a2b2b3ce5fd6b0c4cb10b4aaaf0844f53349e213743afa8ea3a4f316"
   }
 }

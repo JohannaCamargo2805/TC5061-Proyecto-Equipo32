@@ -161,6 +161,8 @@ def ejecutar(question: str, model: str, params: dict, familia: str, etapa: str, 
 
         seg.registrar_version_datos(question, manifiesto, tarea.conjuntos(), tarea.fuente,
                                     tarea.objetivo, tarea.resumen())
+        if question == "p1":  # rango de TRAIN para las advertencias de extrapolación de la API
+            seg.registrar_rango_entrenamiento(tarea.x["train"])
         seg.registrar_config({
             "question": question, "model": model, "stage_of_work": etapa, "run_name": nombre,
             "hiperparametros": params, "hiperparametros_modificados": cambios,

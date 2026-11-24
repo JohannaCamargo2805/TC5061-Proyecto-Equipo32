@@ -271,4 +271,13 @@ def test_registrar_modelo_es_idempotente(tmp_path, monkeypatch):
     versiones = cliente.search_model_versions("name = 'mibici-equipo32-p1-demanda'")
     assert len(versiones) == 1
     mv = cliente.get_model_version_by_alias("mibici-equipo32-p1-demanda", "champion")
-    assert mv.tags["version_origen"] == "1" and mv.tags["git_commit"]
+    registro = json.loads((SERVICIO_MODELO_DIR / "registro.json").read_text(encoding="utf-8"))
+    assert mv.tags["version_origen"] == str(registro["version"]) and mv.tags["git_commit"]
+    # La API servida desde ese registry declara la versión del registry del proyecto
+    from api.config import Ajustes
+    from api.modelo import cargar_modelo
+
+    servicio = cargar_modelo(Ajustes(modelo_uri="models:/mibici-equipo32-p1-demanda@champion",
+                                     tracking_uri=uri, verificar_integridad=True))
+    assert servicio.info.version == 1 and servicio.info.version_origen == registro["version"]
+    assert servicio.info.integridad_verificada

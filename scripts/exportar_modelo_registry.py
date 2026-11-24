@@ -82,6 +82,23 @@ def _fecha(ms) -> str | None:
     return datetime.fromtimestamp(int(ms) / 1000, tz=timezone.utc).isoformat(timespec="seconds")
 
 
+ARTEFACTO_RANGO = "data/rango_entrenamiento.json"
+
+
+def rango_de_corrida(cliente: MlflowClient, run_id: str) -> dict | None:
+    """Rango de cada variable en el TRAIN de la corrida (artefacto ``data/rango_entrenamiento.json``).
+
+    La API lo usa para advertir cuando una petición está fuera de lo que vio esa versión; las
+    corridas que no lo registraron devuelven None y la API usa el rango de la v1.
+    """
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            ruta = Path(cliente.download_artifacts(run_id, ARTEFACTO_RANGO, tmp))
+            return json.loads(ruta.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 - la corrida no trae el artefacto (versiones anteriores)
+        return None
+
+
 def _preparar_destino(destino: Path) -> None:
     """Solo reemplaza carpetas dentro de models/ para no borrar nada por error."""
     destino = destino.resolve()
@@ -134,6 +151,7 @@ def exportar(nombre: str, version: int, alias: str, destino: Path, tracking_uri:
         "etiquetas_version": dict(sorted((mv.tags or {}).items())),
         "metricas": metricas_de_corrida(corrida.data.metrics),
         "firma_entrada": list(firma),
+        "rango_entrenamiento": rango_de_corrida(cliente, mv.run_id),
         "mlflow_version": mlflow.__version__,
         "recuperado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sha256": huellas(destino),
@@ -175,6 +193,8 @@ def main(
     print(f"Métricas            : val_mae={m.get('val_mae', float('nan')):.3f}  test_mae={m.get('test_mae', float('nan')):.3f}  "
           f"test_wape={m.get('test_wape', float('nan')):.3f}")
     print(f"Firma de entrada    : {len(registro['firma_entrada'])} variables: {', '.join(registro['firma_entrada'])}")
+    rango = registro["rango_entrenamiento"]
+    print(f"Rango de TRAIN      : {'de la corrida (' + str(len(rango)) + ' variables)' if rango else 'no registrado: la API usa el de la v1'}")
     relativa = destino.resolve().relative_to(PROJ_ROOT) if PROJ_ROOT in destino.resolve().parents else destino
     print(f"Descargado en       : {relativa} ({len(registro['sha256'])} archivos, SHA-256 en {REGISTRO})")
     print(f"Verificación        : mlflow.pyfunc carga la copia y predice el input_example -> {verificar(destino)}")

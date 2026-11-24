@@ -1,0 +1,154 @@
+Ejecución en la computadora de la autora (Windows 11, Python 3.14.8, MLflow 3.17.2, registry del proyecto en http://127.0.0.1:5000)
+FINAL_1 (24/11/2026 11:58–12:12, rama final-promocion, commit 195408f)
+
+=== 3. Registry ANTES de la promocion ===
+Modelo registrado : mibici-equipo32-p1-demanda
+Aliases           : @challenger -> v3, @champion -> v1
+Etiquetas modelo  : {"question": "p1", "tarea": "regresion", "equipo": "equipo32", "pregunta": "¿Cuántos viajes se iniciarán en cada estación el día siguiente?", "esquema_ciclo_vida": "aliases"}
+  v1: @champion              estado_produccion=(sin etiqueta) corrida=p1-candidate-poisson commit=e6c1a60 data=7aa5e436d887 test_mae=5.4097360258323866
+  v2: -                      estado_produccion=(sin etiqueta) corrida=p1-candidate-hgb-tuned commit=e6c1a60 data=7aa5e436d887 test_mae=5.903662199170995
+  v3: @challenger            estado_produccion=(sin etiqueta) corrida=p1-reentreno-ventana-2026 commit=62b4cf0 data=7aa5e436d887+5fb2c4834870 test_mae=5.6571766742072
+=== 4. Rango de TRAIN de v3 y v1 (advertencias de la API) ===
+2026-11-24 12:01:01.809 | INFO     | mibici.modeling.reentrenamiento:preparar:69 - P1 reentreno train: 180,254 estación-días, 371 estaciones
+2026-11-24 12:01:01.813 | INFO     | mibici.modeling.reentrenamiento:preparar:69 - P1 reentreno val: 11,201 estación-días, 388 estaciones
+2026-11-24 12:01:01.817 | INFO     | mibici.modeling.reentrenamiento:preparar:69 - P1 reentreno test: 40,512 estación-días, 472 estaciones
+mibici-equipo32-p1-demanda v3 (corrida p1-reentreno-ventana-2026, retraining): TRAIN 180,254 filas -> data/rango_entrenamiento.json
+{"lag_1": [0.0, 550.0], "lag_2": [0.0, 550.0], "lag_7": [0.0, 550.0], "lag_14": [0.0, 550.0], "media_7d": [0.0, 281.143], "media_28d": [0.0, 263.464], "media_mismo_dia_4sem": [0.0, 319.0], "dias_activa": [28.0, 515.0], "capacidad": [11.0, 39.0]}
+CODIGO_RANGO_V3=[0]
+2026-11-24 12:01:34.536 | INFO     | mibici.modeling.tareas:preparar:187 - P1 train: 90,230 estación-días, 369 estaciones
+2026-11-24 12:01:34.538 | INFO     | mibici.modeling.tareas:preparar:187 - P1 val: 11,439 estación-días, 369 estaciones
+2026-11-24 12:01:34.539 | INFO     | mibici.modeling.tareas:preparar:187 - P1 test: 22,565 estación-días, 370 estaciones
+mibici-equipo32-p1-demanda v1 (corrida p1-candidate-poisson, candidate): TRAIN 90,230 filas -> data/rango_entrenamiento.json
+{"lag_1": [0.0, 550.0], "lag_2": [0.0, 550.0], "lag_7": [0.0, 550.0], "lag_14": [0.0, 325.0], "media_7d": [0.0, 273.857], "media_28d": [0.0, 263.464], "media_mismo_dia_4sem": [0.0, 295.25], "dias_activa": [28.0, 272.0], "capacidad": [11.0, 39.0]}
+CODIGO_RANGO_V1=[0]
+=== 5. Compuertas de la promocion (simulacion, no cambia nada) ===
+
+2026-11-24 12:01:55.262 | SUCCESS  | __main__:promover:211 - 1_ab_decide_promover_B: sí · corrida p1-ab-test-v1-vs-v3 (93d20255): ganadora B, reglas 4/4
+2026-11-24 12:01:55.264 | SUCCESS  | __main__:promover:211 - 2_A_sigue_en_produccion: sí · @champion = v1; el A/B comparó v1
+2026-11-24 12:01:55.264 | SUCCESS  | __main__:promover:211 - 3_B_lista_y_con_el_contrato_de_la_API: sí · v3 READY, pregunta p1, 12 variables de entrada
+2026-11-24 12:01:55.264 | SUCCESS  | __main__:promover:211 - 4_B_paso_su_compuerta_de_validacion: sí · VAL: v3 MAE 7.2710 contra 7.4668 del champion
+2026-11-24 12:01:55.265 | INFO     | __main__:promover:217 - Simulación: @champion: v1 -> v3 · @anterior: -> v1 (rollback en un paso) · @challenger: se quita de v3 (ya es producción) · estado_produccion en todas las versiones
+CODIGO_SIMULAR=[0]
+=== 6. Promocion: @champion a la version ganadora ===
+
+2026-11-24 12:02:16.137 | SUCCESS  | __main__:promover:211 - 1_ab_decide_promover_B: sí · corrida p1-ab-test-v1-vs-v3 (93d20255): ganadora B, reglas 4/4
+2026-11-24 12:02:16.138 | SUCCESS  | __main__:promover:211 - 2_A_sigue_en_produccion: sí · @champion = v1; el A/B comparó v1
+2026-11-24 12:02:16.138 | SUCCESS  | __main__:promover:211 - 3_B_lista_y_con_el_contrato_de_la_API: sí · v3 READY, pregunta p1, 12 variables de entrada
+2026-11-24 12:02:16.139 | SUCCESS  | __main__:promover:211 - 4_B_paso_su_compuerta_de_validacion: sí · VAL: v3 MAE 7.2710 contra 7.4668 del champion
+2026-11-24 12:02:19.959 | SUCCESS  | __main__:promover:230 - mibici-equipo32-p1-demanda: @champion -> v3, @anterior -> v1
+2026-11-24 12:02:24.420 | SUCCESS  | __main__:main:304 - Corrida de la promoción: 95d2c591faf546b6963c742fc26d3635
+2026-11-24 12:02:24.421 | INFO     | __main__:main:306 - v1: respaldo   @anterior
+2026-11-24 12:02:24.421 | INFO     | __main__:main:306 - v2: archivada  -
+2026-11-24 12:02:24.421 | INFO     | __main__:main:306 - v3: produccion @champion
+🏃 View run p1-promocion-v1-a-v3 at: http://127.0.0.1:5000/#/experiments/1/runs/95d2c591faf546b6963c742fc26d3635
+🧪 View experiment at: http://127.0.0.1:5000/#/experiments/1
+CODIGO_PROMOVER=[0]
+=== 7. Registry DESPUES de la promocion ===
+Modelo registrado : mibici-equipo32-p1-demanda
+Aliases           : @anterior -> v1, @champion -> v3
+Etiquetas modelo  : {"question": "p1", "tarea": "regresion", "equipo": "equipo32", "pregunta": "¿Cuántos viajes se iniciarán en cada estación el día siguiente?", "esquema_ciclo_vida": "aliases", "ultima_promocion": "v1 -> v3 el 2026-11-24T18:02:16+00:00", "version_produccion": "3"}
+  v1: @anterior              estado_produccion=respaldo    corrida=p1-candidate-poisson commit=e6c1a60 data=7aa5e436d887 test_mae=5.4097360258323866
+  v2: -                      estado_produccion=archivada   corrida=p1-candidate-hgb-tuned commit=e6c1a60 data=7aa5e436d887 test_mae=5.903662199170995
+  v3: @champion              estado_produccion=produccion  corrida=p1-reentreno-ventana-2026 commit=62b4cf0 data=7aa5e436d887+5fb2c4834870 test_mae=5.6571766742072
+=== 8. Copia de @champion para la imagen de la API (models/servicio) ===
+Model Registry      : http://127.0.0.1:5000
+Modelo registrado   : mibici-equipo32-p1-demanda  (@anterior -> v1, @champion -> v3)
+Versión recuperada  : v3 por alias @champion  ->  models:/mibici-equipo32-p1-demanda/3
+Corrida de origen   : p1-reentreno-ventana-2026 (1d685b6b91744c979f3f7ffab5220819), estado READY
+Linaje              : commit 62b4cf0, data_version 7aa5e436d887+5fb2c4834870, modelo poisson (glm_poisson)
+Métricas            : val_mae=7.271  test_mae=5.657  test_wape=0.190
+Firma de entrada    : 12 variables: dia_semana, fin_semana, feriado, lag_1, lag_2, lag_7, lag_14, media_7d, media_28d, media_mismo_dia_4sem, dias_activa, capacidad
+Rango de TRAIN      : de la corrida (9 variables)
+Descargado en       : models\servicio (31 archivos, SHA-256 en registro.json)
+Verificación        : mlflow.pyfunc carga la copia y predice el input_example -> [47.294, 48.153, 49.117, 39.806, 26.897]
+CODIGO_EXPORTAR=[0]
+ M models/servicio/MLmodel
+ M models/servicio/code/mibici/config.py
+ M models/servicio/code/mibici/modeling/p1_regresion.py
+ M models/servicio/code/mibici/modeling/p2_clasificacion.py
+ M models/servicio/code/mibici/modeling/p3_clustering.py
+ M models/servicio/code/mibici/modeling/seguimiento.py
+ M models/servicio/conda.yaml
+ M models/servicio/input_example.json
+ M models/servicio/model.skops
+ M models/servicio/registered_model_meta
+ M models/servicio/registro.json
+ M models/servicio/requirements.txt
+ M models/servicio/serving_input_example.json
+?? docs/evidencia/entrega5/_perfil_navegador/
+?? docs/evidencia/entrega5/capturas_urls.txt
+?? models/servicio/code/mibici/compat_deepchecks.py
+?? models/servicio/code/mibici/git_seguro.py
+?? models/servicio/code/mibici/modeling/ab_testing.py
+?? models/servicio/code/mibici/modeling/reentrenamiento.py
+?? models/servicio/code/mibici/monitoreo.py
+?? models/servicio/code/mibici/validacion.py
+=== 9. Prediccion de referencia (la usa el CI) y peticion real de la demo ===
+MODELO=mibici-equipo32-p1-demanda v3 alias=['champion']
+REFERENCIA=65.258
+REDONDEADO=65
+{
+  "estacion_id": 51,
+  "fecha": "2026-09-30",
+  "dia_semana": 2,
+  "fin_semana": 0,
+  "feriado": 0,
+  "lag_1": 383,
+  "lag_2": 366,
+  "lag_7": 371,
+  "lag_14": 273,
+  "media_7d": 381.2857,
+  "media_28d": 344.8929,
+  "media_mismo_dia_4sem": 305.25,
+  "dias_activa": 637,
+  "capacidad": 39
+}
+VIAJES_REALES=425
+CODIGO_PETICION=[0]
+
+FINAL_2 (24/11/2026 12:33, rama final-servicio, commit ab44157): promoción idempotente y nueva copia
+
+=== 3. Promocion otra vez: idempotente, refresca estados y descripciones ===
+
+2026-11-24 12:33:25.811 | INFO     | __main__:promover:220 - v3 ya es @champion: nada que promover
+2026-11-24 12:33:26.966 | INFO     | __main__:main:320 - v1: respaldo   @anterior
+2026-11-24 12:33:26.967 | INFO     | __main__:main:320 - v2: archivada  -
+2026-11-24 12:33:26.967 | INFO     | __main__:main:320 - v3: produccion @champion
+CODIGO_PROMOVER=[0]
+Modelo registrado : mibici-equipo32-p1-demanda
+Aliases           : @anterior -> v1, @champion -> v3
+Etiquetas modelo  : {"question": "p1", "tarea": "regresion", "equipo": "equipo32", "pregunta": "¿Cuántos viajes se iniciarán en cada estación el día siguiente?", "esquema_ciclo_vida": "aliases", "ultima_promocion": "v1 -> v3 el 2026-11-24T18:02:16+00:00", "version_produccion": "3"}
+  v1: @anterior              estado_produccion=respaldo    corrida=p1-candidate-poisson commit=e6c1a60 data=7aa5e436d887 test_mae=5.4097360258323866
+  v2: -                      estado_produccion=archivada   corrida=p1-candidate-hgb-tuned commit=e6c1a60 data=7aa5e436d887 test_mae=5.903662199170995
+  v3: @champion              estado_produccion=produccion  corrida=p1-reentreno-ventana-2026 commit=62b4cf0 data=7aa5e436d887+5fb2c4834870 test_mae=5.6571766742072
+=== 4. Copia de @champion para la imagen ===
+Model Registry      : http://127.0.0.1:5000
+Modelo registrado   : mibici-equipo32-p1-demanda  (@anterior -> v1, @champion -> v3)
+Versión recuperada  : v3 por alias @champion  ->  models:/mibici-equipo32-p1-demanda/3
+Corrida de origen   : p1-reentreno-ventana-2026 (1d685b6b91744c979f3f7ffab5220819), estado READY
+Linaje              : commit 62b4cf0, data_version 7aa5e436d887+5fb2c4834870, modelo poisson (glm_poisson)
+Métricas            : val_mae=7.271  test_mae=5.657  test_wape=0.190
+Firma de entrada    : 12 variables: dia_semana, fin_semana, feriado, lag_1, lag_2, lag_7, lag_14, media_7d, media_28d, media_mismo_dia_4sem, dias_activa, capacidad
+Rango de TRAIN      : de la corrida (9 variables)
+Descargado en       : models\servicio (31 archivos, SHA-256 en registro.json)
+Verificación        : mlflow.pyfunc carga la copia y predice el input_example -> [47.294, 48.153, 49.117, 39.806, 26.897]
+CODIGO_EXPORTAR=[0]
+ M models/servicio/MLmodel
+ M models/servicio/code/mibici/config.py
+ M models/servicio/code/mibici/modeling/p1_regresion.py
+ M models/servicio/code/mibici/modeling/p2_clasificacion.py
+ M models/servicio/code/mibici/modeling/p3_clustering.py
+ M models/servicio/code/mibici/modeling/seguimiento.py
+ M models/servicio/conda.yaml
+ M models/servicio/input_example.json
+ M models/servicio/model.skops
+ M models/servicio/registered_model_meta
+ M models/servicio/registro.json
+ M models/servicio/requirements.txt
+ M models/servicio/serving_input_example.json
+?? models/servicio/code/mibici/compat_deepchecks.py
+?? models/servicio/code/mibici/git_seguro.py
+?? models/servicio/code/mibici/modeling/ab_testing.py
+?? models/servicio/code/mibici/modeling/reentrenamiento.py
+?? models/servicio/code/mibici/monitoreo.py
+?? models/servicio/code/mibici/validacion.py

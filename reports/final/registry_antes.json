@@ -1,0 +1,71 @@
+{
+  "modelo": "mibici-equipo32-p1-demanda",
+  "aliases": {
+    "challenger": 3,
+    "champion": 1
+  },
+  "etiquetas_modelo": {
+    "question": "p1",
+    "tarea": "regresion",
+    "equipo": "equipo32",
+    "pregunta": "¿Cuántos viajes se iniciarán en cada estación el día siguiente?",
+    "esquema_ciclo_vida": "aliases"
+  },
+  "versiones": [
+    {
+      "version": 1,
+      "aliases": [
+        "champion"
+      ],
+      "estado": "READY",
+      "run_id": "38260a3c12e84155b76d9c126b7be2e1",
+      "estado_produccion": "",
+      "source_run_name": "p1-candidate-poisson",
+      "git_commit": "e6c1a602dd810676a27bad21f2e5dc6b61313282",
+      "data_version": "7aa5e436d887",
+      "model": "poisson",
+      "ab_test_jul_sep_2026": "pierde (corrida 93d20255ba2548009bc68e6cbaab990d)",
+      "promovida": "",
+      "retirada_de_produccion": "",
+      "promocion_run_id": "",
+      "val_mae": 5.103696175827436,
+      "test_mae": 5.4097360258323866
+    },
+    {
+      "version": 2,
+      "aliases": [],
+      "estado": "READY",
+      "run_id": "41ce1a92611a4a23a31577308360f9e6",
+      "estado_produccion": "",
+      "source_run_name": "p1-candidate-hgb-tuned",
+      "git_commit": "e6c1a602dd810676a27bad21f2e5dc6b61313282",
+      "data_version": "7aa5e436d887",
+      "model": "hgb",
+      "ab_test_jul_sep_2026": "",
+      "promovida": "",
+      "retirada_de_produccion": "",
+      "promocion_run_id": "",
+      "val_mae": 5.129115676902833,
+      "test_mae": 5.903662199170995
+    },
+    {
+      "version": 3,
+      "aliases": [
+        "challenger"
+      ],
+      "estado": "READY",
+      "run_id": "1d685b6b91744c979f3f7ffab5220819",
+      "estado_produccion": "",
+      "source_run_name": "p1-reentreno-ventana-2026",
+      "git_commit": "62b4cf02d7b5df2a84c1b34d0ad1740b76b65208",
+      "data_version": "7aa5e436d887+5fb2c4834870",
+      "model": "poisson",
+      "ab_test_jul_sep_2026": "gana (corrida 93d20255ba2548009bc68e6cbaab990d)",
+      "promovida": "",
+      "retirada_de_produccion": "",
+      "promocion_run_id": "",
+      "val_mae": 7.270984748962342,
+      "test_mae": 5.6571766742072
+    }
+  ]
+}

@@ -133,8 +133,8 @@ services:
       context: .
       args:
         <<: *imagen-python
-        MODELO_VERSION: "1"
-    image: ${API_IMAGEN:-mibici-p1-api:modelo-v1}
+        MODELO_VERSION: "3"
+    image: ${API_IMAGEN:-mibici-p1-api:modelo-v3}
     environment:
       <<: *entorno-modelo
       # Uvicorn lee sus opciones de variables UVICORN_*: procesos y bitácora de accesos.
@@ -162,7 +162,7 @@ services:
     logging: *registros
 
   worker:
-    image: ${API_IMAGEN:-mibici-p1-api:modelo-v1}
+    image: ${API_IMAGEN:-mibici-p1-api:modelo-v3}
     command: ["python", "-m", "api.worker"]
     environment:
       <<: *entorno-modelo

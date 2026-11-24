@@ -1,4 +1,4 @@
-artifact_path: file:C:/Users/jlmed/Downloads/mibici_datos/TC5061-Equipo32-equipo/mlruns/1/models/m-bdc2bb2472c6450d9e8dd66ec8930800/artifacts
+artifact_path: file:C:/Users/jlmed/Downloads/mibici_datos/TC5061-Equipo32-equipo/mlruns/1/models/m-afefa15f0afe4da39c567099812d5521/artifacts
 flavors:
   python_function:
     code: code
@@ -17,16 +17,16 @@ flavors:
     skops_trusted_types: []
 is_signature_from_type_hint: false
 metadata:
-  data_version: 7aa5e436d887
-  git_commit: e6c1a602dd810676a27bad21f2e5dc6b61313282
+  data_version: 7aa5e436d887+5fb2c4834870
+  git_commit: 62b4cf02d7b5df2a84c1b34d0ad1740b76b65208
   model: poisson
   question: p1
-mlflow_version: 3.17.1
-model_id: m-bdc2bb2472c6450d9e8dd66ec8930800
-model_size_bytes: 350602
-model_uuid: m-bdc2bb2472c6450d9e8dd66ec8930800
+mlflow_version: 3.17.2
+model_id: m-afefa15f0afe4da39c567099812d5521
+model_size_bytes: 448050
+model_uuid: m-afefa15f0afe4da39c567099812d5521
 prompts: null
-run_id: 38260a3c12e84155b76d9c126b7be2e1
+run_id: 1d685b6b91744c979f3f7ffab5220819
 saved_input_example_info:
   artifact_path: input_example.json
   pandas_orient: split
@@ -45,4 +45,4 @@ signature:
   outputs: '[{"type": "double", "required": true}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2026-10-19 20:39:48.735750'
+utc_time_created: '2026-11-16 00:18:06.563183'

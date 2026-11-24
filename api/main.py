@@ -135,6 +135,7 @@ def salud(servicio: Servicio) -> EstadoSalud:
         estado="ok",
         modelo=servicio.info.nombre,
         version=servicio.info.version,
+        version_origen=servicio.info.version_origen,
         origen=servicio.info.origen,
     )
 

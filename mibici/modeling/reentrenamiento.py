@@ -157,6 +157,7 @@ def ejecutar(alias: str = ALIAS_RETADOR, registrar_version: bool = True) -> dict
             seg.registrar_archivos([ruta_m], "evaluation")
         seg.registrar_version_datos("p1", manifiesto, tarea.conjuntos(), tarea.fuente,
                                     tarea.objetivo, tarea.resumen())
+        seg.registrar_rango_entrenamiento(tarea.x["train"])  # advertencias de la API
         seg.registrar_config({"question": "p1", "model": REENTRENO_MODELO, "stage_of_work": "retraining",
                               "run_name": REENTRENO_RUN_NAME, "hiperparametros": params,
                               "particion": tarea.particion(), "git": seg.git_info(),

@@ -3,14 +3,14 @@
 # "docker build ." o "podman build ."; tests/test_contenedor.py verifica que no se separen.
 # Sirve igual con Podman o con Docker:
 #
-#   podman build -f Containerfile -t mibici-p1-api:modelo-v1 .
-#   podman run -d --name mibici-p1-api -p 8000:8000 mibici-p1-api:modelo-v1
+#   podman build -f Containerfile -t mibici-p1-api:modelo-v3 .
+#   podman run -d --name mibici-p1-api -p 8000:8000 mibici-p1-api:modelo-v3
 #
-#   docker build -f Containerfile -t mibici-p1-api:modelo-v1 .
-#   docker run -d --name mibici-p1-api -p 8000:8000 mibici-p1-api:modelo-v1
+#   docker build -f Containerfile -t mibici-p1-api:modelo-v3 .
+#   docker run -d --name mibici-p1-api -p 8000:8000 mibici-p1-api:modelo-v3
 #
 # Antes de construir, models/servicio/ debe contener la versión del registry que se va a servir
-# (python scripts/exportar_modelo_registry.py). En el repositorio ya está la v1 (@champion).
+# (python scripts/exportar_modelo_registry.py). En el repositorio ya está la v3 (@champion desde el proyecto final).
 # La etiqueta de la imagen y MODELO_VERSION deben coincidir con models/servicio/registro.json
 # (scripts/ejecutar_servicio.ps1 y "make imagen" los leen de ahí).
 
@@ -32,7 +32,7 @@ RUN /opt/venv/bin/pip install --only-binary=:all: -r /tmp/requirements-api.txt
 
 # ---------- Etapa 2: imagen final (sin pip cache ni archivos de construcción) ----------
 FROM ${IMAGEN_PYTHON}
-ARG MODELO_VERSION=1
+ARG MODELO_VERSION=3
 
 LABEL org.opencontainers.image.title="mibici-p1-api" \
       org.opencontainers.image.description="API REST (FastAPI) del modelo P1 de MiBici registrado en MLflow" \

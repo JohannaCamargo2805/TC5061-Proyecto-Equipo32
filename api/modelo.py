@@ -35,6 +35,7 @@ import pandas as pd
 from api.config import Ajustes
 from api.esquemas import (
     DESCRIPCIONES,
+    RANGO_ENTRENAMIENTO,
     VARIABLES_P1,
     EntradaP1,
     InfoModelo,
@@ -92,7 +93,7 @@ def predicciones(servicio: ModeloServicio, entradas: list[EntradaP1]) -> list[Pr
             fecha=e.fecha,
             viajes_esperados=round(float(v), 3),
             viajes_esperados_redondeado=redondear(float(v)),
-            advertencias=e.advertencias(),
+            advertencias=e.advertencias(servicio.info.rango_entrenamiento),
         )
         for e, v in zip(entradas, valores)
     ]
@@ -116,6 +117,17 @@ def metricas_de_corrida(metricas: dict[str, float]) -> dict[str, float]:
     }
 
 
+def _rango(registro: dict | None) -> dict[str, tuple[float, float]]:
+    """Rango de TRAIN de la versión (``registro.json``) o el de la v1 si no lo trae."""
+    rango = (registro or {}).get("rango_entrenamiento") or {}
+    validos = {
+        v: (float(r[0]), float(r[1]))
+        for v, r in rango.items()
+        if v in RANGO_ENTRENAMIENTO and isinstance(r, (list, tuple)) and len(r) == 2
+    }
+    return validos if len(validos) == len(RANGO_ENTRENAMIENTO) else dict(RANGO_ENTRENAMIENTO)
+
+
 def _variables() -> list[Variable]:
     return [Variable(nombre=v, tipo="double", descripcion=DESCRIPCIONES[v]) for v in VARIABLES_P1]
 
@@ -134,8 +146,13 @@ def _verificar_firma(modelo) -> None:
         )
 
 
-def _verificar_integridad(carpeta: Path, registro: dict) -> None:
-    esperados = registro.get("sha256") or {}
+# MLflow reescribe este archivo al descargar una versión del registry (pone el nombre y el número
+# de versión de ESE registry): en el Compose la v3 del proyecto llega como v1 y su huella cambia.
+META_REGISTRY = "registered_model_meta"
+
+
+def _verificar_integridad(carpeta: Path, registro: dict, omitir: frozenset[str] = frozenset()) -> None:
+    esperados = {k: v for k, v in (registro.get("sha256") or {}).items() if k not in omitir}
     if "model.skops" not in esperados and "MLmodel" not in esperados:
         raise ErrorModelo(f"{ARCHIVO_REGISTRO} no trae las huellas SHA-256 del modelo")
     for relativa, huella in esperados.items():
@@ -170,6 +187,7 @@ def _desde_carpeta(carpeta: Path, verificar: bool) -> ModeloServicio:
     info = InfoModelo(
         nombre=registro["modelo"],
         version=int(registro["version"]),
+        version_origen=int(registro["version"]),
         alias=list(registro.get("aliases", [])),
         run_id=registro["run_id"],
         model_id=registro.get("model_id"),
@@ -183,6 +201,7 @@ def _desde_carpeta(carpeta: Path, verificar: bool) -> ModeloServicio:
         salida=SALIDA,
         recuperado=registro.get("recuperado"),
         integridad_verificada=verificar,
+        rango_entrenamiento=_rango(registro),
     )
     return ModeloServicio(modelo=modelo, info=info)
 
@@ -209,15 +228,25 @@ def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> Mode
     # Si la versión trae registro.json (la registra así el servicio registrar-modelo de
     # docker-compose.yml), se comprueban las mismas huellas SHA-256 que en el modo empaquetado.
     ruta_registro = local / ARCHIVO_REGISTRO
-    verificada = verificar and ruta_registro.is_file()
+    registro = (
+        json.loads(ruta_registro.read_text(encoding="utf-8")) if ruta_registro.is_file() else None
+    )
+    verificada = verificar and registro is not None
     if verificada:
-        _verificar_integridad(local, json.loads(ruta_registro.read_text(encoding="utf-8")))
+        # Todo se compara byte a byte salvo registered_model_meta, que MLflow regenera al
+        # descargar; de ese se comprueba que nombre el modelo y la versión que se pidió.
+        _verificar_integridad(local, registro, omitir=frozenset({META_REGISTRY}))
+        meta = (local / META_REGISTRY).read_text(encoding="utf-8") if (local / META_REGISTRY).is_file() else ""
+        if meta and (f"model_name: {nombre}" not in meta or f"'{mv.version}'" not in meta):
+            raise ErrorModelo(f"{META_REGISTRY} no corresponde a {nombre} v{mv.version}")
     modelo = mlflow.pyfunc.load_model(str(local), suppress_warnings=True)
     _verificar_firma(modelo)
     etiquetas = dict(mv.tags or {})
+    origen = str(etiquetas.get("version_origen", mv.version))
     info = InfoModelo(
         nombre=nombre,
         version=int(mv.version),
+        version_origen=int(origen) if origen.isdigit() else int(mv.version),
         alias=sorted(getattr(mv, "aliases", None) or ([alias] if alias else [])),
         run_id=mv.run_id,
         model_id=modelo.metadata.model_id,
@@ -231,6 +260,7 @@ def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> Mode
         salida=SALIDA,
         recuperado=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         integridad_verificada=verificada,
+        rango_entrenamiento=_rango(registro),
     )
     return ModeloServicio(modelo=modelo, info=info)
 

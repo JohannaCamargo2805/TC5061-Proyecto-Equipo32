@@ -20,7 +20,6 @@ Ejecución::
 
 import json
 from pathlib import Path
-import subprocess
 
 from loguru import logger
 import matplotlib
@@ -72,6 +71,7 @@ from mibici.features import (
     p1_agregar_features,
     p1_construir_panel_diario,
 )
+from mibici.git_seguro import GitError, git
 
 app = typer.Typer()
 
@@ -95,9 +95,9 @@ class BaselineNaiveSemanal:
 def obtener_git_commit() -> tuple[str, bool]:
     """Devuelve el commit actual y si hay cambios sin confirmar."""
     try:
-        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJ_ROOT, text=True).strip()
-        estado = subprocess.check_output(["git", "status", "--porcelain"], cwd=PROJ_ROOT, text=True).strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
+        commit = git("rev-parse", "HEAD")
+        estado = git("status", "--porcelain")
+    except (GitError, FileNotFoundError):
         return "desconocido", True
     return commit, bool(estado)
 
