@@ -170,6 +170,7 @@ def _desde_carpeta(carpeta: Path, verificar: bool) -> ModeloServicio:
     info = InfoModelo(
         nombre=registro["modelo"],
         version=int(registro["version"]),
+        version_origen=int(registro["version"]),
         alias=list(registro.get("aliases", [])),
         run_id=registro["run_id"],
         model_id=registro.get("model_id"),
@@ -215,9 +216,11 @@ def _desde_registry(uri: str, tracking_uri: str, verificar: bool = True) -> Mode
     modelo = mlflow.pyfunc.load_model(str(local), suppress_warnings=True)
     _verificar_firma(modelo)
     etiquetas = dict(mv.tags or {})
+    origen = str(etiquetas.get("version_origen", mv.version))
     info = InfoModelo(
         nombre=nombre,
         version=int(mv.version),
+        version_origen=int(origen) if origen.isdigit() else int(mv.version),
         alias=sorted(getattr(mv, "aliases", None) or ([alias] if alias else [])),
         run_id=mv.run_id,
         model_id=modelo.metadata.model_id,

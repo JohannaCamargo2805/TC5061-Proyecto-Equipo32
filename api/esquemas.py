@@ -290,6 +290,11 @@ class EstadoSalud(BaseModel):
     estado: Literal["ok"]
     modelo: str
     version: int
+    version_origen: int | None = Field(
+        None,
+        description="Versión en el Model Registry del proyecto. El registry de Docker Compose "
+        "vuelve a registrar el modelo empaquetado y lo numera desde 1.",
+    )
     origen: Literal["empaquetado", "registry"]
 
 
@@ -302,6 +307,11 @@ class Variable(BaseModel):
 class InfoModelo(BaseModel):
     nombre: str
     version: int
+    version_origen: int | None = Field(
+        None,
+        description="Versión en el Model Registry del proyecto (la del A/B y la promoción); "
+        "en el registry de Docker Compose la versión se renumera desde 1.",
+    )
     alias: list[str]
     run_id: str
     model_id: str | None = None

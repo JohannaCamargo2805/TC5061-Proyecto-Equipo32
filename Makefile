@@ -176,6 +176,15 @@ ab-test:
 .PHONY: entrega5
 entrega5: monitoreo reentrenar ab-test
 
+## Proyecto final: promueve a @champion la versión que ganó el A/B (ACCION=simular|rollback)
+.PHONY: promover
+promover:
+	MLFLOW_TRACKING_URI=$(TRACKING_URI) $(PYTHON_INTERPRETER) -m mibici.modeling.promocion --accion $(or $(ACCION),promover)
+
+## Proyecto final: ciclo completo de Continuous Training y nueva copia del modelo para la imagen
+.PHONY: ciclo-ct
+ciclo-ct: monitoreo reentrenar ab-test promover modelo-servicio
+
 #################################################################################
 # Self Documenting Commands                                                     #
 #################################################################################

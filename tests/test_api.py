@@ -200,6 +200,7 @@ def test_firma_distinta_no_arranca(registry, tmp_path):
 def test_carga_directa_desde_el_registry(registry, uri, version):
     servicio = cargar_modelo(_ajustes(uri, registry["uri"]))
     assert servicio.info.version == version and servicio.info.origen == "registry"
+    assert servicio.info.version_origen == version  # sin etiqueta version_origen: la misma
     assert servicio.info.uri_registry == f"models:/{NOMBRE}/{version}"
     np.testing.assert_allclose(servicio.predecir([EntradaP1(**EJEMPLO_ENTRADA).fila()]),
                                np.clip(_pred(registry["modelos"][version], [EJEMPLO_ENTRADA]), 0, None))
@@ -216,7 +217,8 @@ def test_uri_del_registry_invalida():
 def test_health_y_modelo(cliente, registry):
     r = cliente.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"estado": "ok", "modelo": NOMBRE, "version": 1, "origen": "empaquetado"}
+    assert r.json() == {"estado": "ok", "modelo": NOMBRE, "version": 1, "version_origen": 1,
+                        "origen": "empaquetado"}
     info = cliente.get("/modelo").json()
     assert info["version"] == 1 and info["alias"] == ["champion"] and info["integridad_verificada"]
     assert info["run_id"] == registry["corridas"][1]

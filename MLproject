@@ -104,3 +104,12 @@ entry_points:
       a: {type: string, default: champion}
       b: {type: string, default: challenger}
     command: "python -m mibici.modeling.ab_testing --a {a} --b {b}"
+
+  # ---------- Proyecto final: cierre del ciclo de Continuous Training ----------
+  # Promueve a @champion la versión que ganó el A/B más reciente (compuertas en el módulo).
+  # La anterior queda como @anterior; rollback = -P accion=rollback; plan sin cambios = simular.
+  promote:
+    parameters:
+      ab_run_id: {type: string, default: auto}   # auto = la corrida de A/B más reciente
+      accion: {type: string, default: promover}  # promover | simular | rollback
+    command: "python -m mibici.modeling.promocion --ab-run-id {ab_run_id} --accion {accion}"
