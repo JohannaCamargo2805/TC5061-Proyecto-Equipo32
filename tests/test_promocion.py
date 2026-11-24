@@ -117,6 +117,8 @@ def test_promueve_y_deja_respaldo_y_estados(registry):
     assert "A/B" in c.get_model_version(NOMBRE, "3").tags["promovida"]
     assert "reemplazada por v3" in c.get_model_version(NOMBRE, "1").tags["retirada_de_produccion"]
     assert c.get_registered_model(NOMBRE).tags["version_produccion"] == "3"
+    assert c.get_model_version(NOMBRE, "3").description.startswith("[Estado: produccion · @champion]")
+    assert c.get_model_version(NOMBRE, "1").description.startswith("[Estado: respaldo · @anterior]")
     # La corrida de la promoción guarda compuertas y plan
     run_id = pr.registrar_corrida(res)
     corrida = c.get_run(run_id)
@@ -182,6 +184,14 @@ def test_rollback_en_un_paso(registry):
 def test_rollback_sin_respaldo_falla(registry):
     with pytest.raises(pr.PromocionRechazada):
         pr.rollback(registry["cliente"])
+
+
+def test_descripcion_con_estado_reemplaza_la_marca_anterior():
+    d = pr.descripcion_con_estado("Versión 'challenger' de P1.", "produccion", ["champion"])
+    assert d == "[Estado: produccion · @champion]\n\nVersión 'challenger' de P1."
+    assert pr.descripcion_con_estado(d, "respaldo", ["anterior"]) == (
+        "[Estado: respaldo · @anterior]\n\nVersión 'challenger' de P1.")
+    assert pr.descripcion_con_estado(None, "archivada", []) == "[Estado: archivada]"
 
 
 def test_estado_segun_aliases():

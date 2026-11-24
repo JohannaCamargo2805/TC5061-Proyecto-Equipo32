@@ -32,6 +32,7 @@ plan y la evidencia del A/B. La API toma la nueva versión al reconstruir su ima
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import re
 import tempfile
 
 from loguru import logger
@@ -55,6 +56,8 @@ from mibici.modeling import seguimiento as seg
 app = typer.Typer(add_completion=False)
 NOMBRE = REGISTRY_NAMES["p1"]
 ETIQUETA_ESTADO = "estado_produccion"
+# Primera línea de la descripción de cada versión: su estado actual (se reemplaza en cada cambio).
+_PREFIJO_ESTADO = re.compile(r"^\[Estado: [^\]]*\]\n\n", re.DOTALL)
 
 
 class PromocionRechazada(RuntimeError):
@@ -166,8 +169,16 @@ def estado_de(aliases: list[str]) -> str:
     return ESTADOS_PRODUCCION[None]
 
 
+def descripcion_con_estado(descripcion: str | None, estado: str, aliases: list[str]) -> str:
+    """La descripción de la versión con su estado vigente en la primera línea."""
+    base = _PREFIJO_ESTADO.sub("", descripcion or "", count=1)
+    marca = f"[Estado: {estado}{' · ' + ', '.join('@' + a for a in aliases) if aliases else ''}]"
+    return f"{marca}\n\n{base}" if base else marca
+
+
 def actualizar_estados(client: MlflowClient, nombre: str = NOMBRE) -> dict[int, dict]:
-    """Etiqueta ``estado_produccion`` en cada versión según sus aliases; devuelve la tabla."""
+    """Etiqueta ``estado_produccion`` y primera línea de la descripción de cada versión según sus
+    aliases (así la interfaz de MLflow muestra el estado vigente); devuelve la tabla."""
     aliases = client.get_registered_model(nombre).aliases or {}
     por_version: dict[int, list[str]] = {}
     for alias, version in aliases.items():
@@ -178,6 +189,9 @@ def actualizar_estados(client: MlflowClient, nombre: str = NOMBRE) -> dict[int, 
         estado = estado_de(por_version.get(v, []))
         if (mv.tags or {}).get(ETIQUETA_ESTADO) != estado:
             client.set_model_version_tag(nombre, str(v), ETIQUETA_ESTADO, estado)
+        nueva = descripcion_con_estado(mv.description, estado, sorted(por_version.get(v, [])))
+        if nueva != (mv.description or ""):
+            client.update_model_version(nombre, str(v), description=nueva)
         tabla[v] = {"aliases": sorted(por_version.get(v, [])), "estado": estado,
                     "run_id": mv.run_id}
     campeon = aliases.get(ALIAS_PRODUCCION)
