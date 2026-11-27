@@ -172,7 +172,7 @@ Windows 11, Python 3.14.8, Docker Desktop 29.9.2 (WSL2, 8 vCPU), Compose 5.6.1, 
 | 2. Reentrenamiento | `retrain` | `p1-reentreno-ventana-2026` (`1d685b6b…`) | v3 `@challenger`; compuerta VAL: MAE 7.27 contra 7.47 |
 | 3. A/B testing | `abtest` | `p1-ab-test-v1-vs-v3` (`93d20255…`) | ΔMAE −0.215 [−0.316, −0.119]; 4 de 4 reglas → promover |
 | 4. Promoción | `promote` | `p1-promocion-v1-a-v3` (`95d2c591…`) | 4 de 4 compuertas → v3 `@champion`, v1 `@anterior` |
-| 5. Despliegue | `exportar_modelo_registry.py` + CI/CD | [ejecución #26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de GitHub Actions (PR #10) | imagen `mibici-p1-api:modelo-v3` construida, probada y, al fusionar en `main`, publicada en GHCR |
+| 5. Despliegue | `exportar_modelo_registry.py` + CI/CD | [ejecución #26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) (PR #10) y [#34](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45474496336) en `main` | imagen `mibici-p1-api:modelo-v3` construida y probada en el PR; al fusionar en `main`, publicada en GHCR y desplegada (8 de 8 jobs en verde) |
 
 Las compuertas, el rollback y el estado de cada versión están en [`docs/model_registry.md`](docs/model_registry.md).
 
@@ -196,12 +196,18 @@ Las compuertas, el rollback y el estado de cada versión están en [`docs/model_
 Atendiendo la retroalimentación de la entrega 5 (sus ramas se habían integrado sin *pull requests*), todo el proyecto
 final entró a `main` mediante *pull requests* con el pipeline de CI/CD en verde, sin *push* directo a `main` (todos los
 commits a nombre de la autora). La ejecución [#26](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45468199353) de la rama de #10 terminó en verde con todos sus jobs,
-incluido el sistema completo con la imagen `modelo-v3` y la prueba de humo con Locust:
+incluido el sistema completo con la imagen `modelo-v3` y la prueba de humo con Locust. Al fusionar cada PR, `main` volvió
+a pasar el pipeline completo, con la publicación en GHCR y el despliegue: [#34](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45474496336) (#10) y
+[#37](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45507340108) (#11), 8 de 8 jobs en verde en ambas.
 
 | Pull Request (rama) | Commits | Contenido |
 |---|---:|---|
 | [#10](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/10) · `feat/ciclo-ct-v3` | 7 | Promoción con compuertas, rollback y `estado_produccion` (`mibici/modeling/promocion.py`, punto de entrada `promote`, `make ciclo-ct`); rango de TRAIN por versión; `version_origen` en la API; corrección de `registered_model_meta` al cargar del registry; la v3 empaquetada con imagen `modelo-v3`; Model Card y `docs/model_registry.md`; 21 pruebas nuevas |
 | [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 8 | Esta sección del README, presentación, guion del video, `scripts/demo_final.ps1` (con el modo de toma sin intervención), evidencia del sistema con la v3 y la prueba de carga final, cómo se grabó el video (`docs/proyecto_final/video/`) y `CONTRIBUCIONES.md` |
+| [#12](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/12) · `docs/cierre-proyecto-final` | 1 | Ejecuciones del pipeline en `main` y conteo exacto de commits de cada PR |
+
+La página de #11 lista 15 commits porque la rama partió de `feat/ciclo-ct-v3` antes de fusionar #10 y muestra también
+sus 7; los 8 propios de #11 van de `ba8d377` a `bed273d`.
 
 **Uso de herramientas de IA.** El código, las pruebas y esta documentación se elaboraron con apoyo de Claude
 (Anthropic); los commits lo declaran con `Co-Authored-By: Claude`. La promoción en el Model Registry, las pruebas, la
