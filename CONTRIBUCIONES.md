@@ -221,6 +221,11 @@ Versión de **Leydy Johanna Camargo Medina** (`JohannaCamargo2805`), en `main` d
 |---|---:|---|
 | [#10](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/10) · `feat/ciclo-ct-v3` | 7 | Promoción a producción con compuertas y rollback, rango de TRAIN por versión, `version_origen` en la API, corrección de la verificación al cargar del registry, la v3 empaquetada (`modelo-v3`), Model Card y documentación del Model Registry |
 | [#11](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/11) · `docs/proyecto-final` | 8 | README del proyecto final, presentación, guion y script de la demo, evidencia del sistema con la v3 y de la prueba de carga final, y los scripts y la línea de tiempo del video |
+| [#12](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/pull/12) · `docs/cierre-proyecto-final` | 1 | Ejecuciones del pipeline en `main` y conteo exacto de commits de cada PR |
+
+La página de #11 lista 15 commits porque la rama partió de `feat/ciclo-ct-v3` antes de fusionar #10 y muestra también
+sus 7; los 8 propios de #11 van de `ba8d377` a `bed273d`. Al fusionar #10 y #11, `main` pasó el pipeline completo
+(ejecuciones [#34](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45474496336) y [#37](https://github.com/JohannaCamargo2805/TC5061-Proyecto-Equipo32/actions/runs/45507340108)).
 
 En su computadora promovió la v3 en el Model Registry del proyecto (corrida `p1-promocion-v1-a-v3`), exportó la
 copia para la imagen, corrió las pruebas con los datos reales, levantó el sistema con Docker Compose, ejecutó la
